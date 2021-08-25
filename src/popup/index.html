@@ -11,67 +11,83 @@
                 {index: 3, icon:'./icons/sol.svg', name: 'SOL', borrow: 0.5, deposit: 0.2, toggle: true},
             ]
         }"
+        
+        x-init="fetch('https://mango-stats-v3.herokuapp.com/spot?mangoGroup=devnet.1')
+            .then(response => {
+                if (!response.ok) alert(`Somthing went wrong: ${response.status} - ${response.statusText}`)
+                return response.json();
+            })
+            .then(data => console.log(data))
+            .then(data => {
+                for (var i = 0; i < data.length; i++) {
+                    for (var j = 0; j < tokens.length; j++) {
+                        if data[i].name.includes(tokens[j].name) {
+                            tokens[j] = {
+                                borrow: this.borrowRate,
+                                deposit: this.depositRate
+                            }
+                        }
+                    }
+                }
+            })
+            "
     >
-    <div class="flex flex-col w-64 bg-bkg-1 p-4">
-        <div 
-        x-show="page == 'home'"
-        >
-            <header class="flex text-orange-default text-base pb-2 mx-auto font-medium">
-              <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
-              <span>Mango Markets Watch</span>
-            </header>
-            <div   
-            class="flex min-w-full p-1 bg-bkg-2 rounded-lg">
-                <table class="table-auto mx-auto flex-col flex-grow">
-                    <thead class="bg-bkg-2">
-                        <tr class="text-center text-fgd-4 mb-2 text-xs">
-                        <th class="flex-auto font-normal text-left px-2">Token</th>
-                        <th class="flex-auto font-normal text-right px-2">Deposit</th>
-                        <th class="flex-auto font-normal text-right">/</th>
-                        <th class="flex-auto font-normal text-right pr-2">Borrow</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="token in tokens">
-                            <tr>
-                                <td class="flex items-end text-fgd-1 flex-auto text-left px-2" >
-                                    <img :src="token.icon" width="18"
-                                    height="18" class='mr-1'>
-                                    <span x-text="token.name"></span>
-                                </td>
-                                <td class="text-green-default flex-auto text-right px-2">
-                                    <span x-text="token.deposit"></span>
-                                    <span>%</span>
-                                </td>
-                                <td class="flex-auto text-fgd-2 font-normal text-right">/</td>
-                                <td class="text-red-default flex-auto text-right pr-2">
-                                    <span x-text="token.borrow"></span>
-                                    <span>%</span>
-                                </td>
+        <div class="flex flex-col w-64 p-4 bg-bkg-1">
+            <div x-show="page == 'home'">
+                <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">
+                <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
+                <span>Mango Markets Watch</span>
+                </header>
+                <div   
+                class="flex min-w-full p-1 rounded-lg bg-bkg-2">
+                    <table class="flex-col flex-grow mx-auto table-auto">
+                        <thead class="bg-bkg-2">
+                            <tr class="mb-2 text-xs text-center text-fgd-4">
+                            <th class="flex-auto px-2 font-normal text-left">Token</th>
+                            <th class="flex-auto px-2 font-normal text-right">Deposit</th>
+                            <th class="flex-auto font-normal text-right">/</th>
+                            <th class="flex-auto pr-2 font-normal text-right">Borrow</th>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <template x-for="token in tokens">
+                                <tr>
+                                    <td class="flex items-end flex-auto px-2 text-left text-fgd-1" >
+                                        <img :src="token.icon" width="18"
+                                        height="18" class='mr-1'>
+                                        <span x-text="token.name"></span>
+                                    </td>
+                                    <td class="flex-auto px-2 text-right text-green-default">
+                                        <span x-text="token.deposit"></span>
+                                        <span>%</span>
+                                    </td>
+                                    <td class="flex-auto font-normal text-right text-fgd-2">/</td>
+                                    <td class="flex-auto pr-2 text-right text-red-default">
+                                        <span x-text="token.borrow"></span>
+                                        <span>%</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-            <div 
-            x-show="page == 'settings'" 
-            >
-                <header class="flex text-orange-default text-base pb-2 mx-auto font-medium">
+            <div x-show="page == 'settings'">
+                <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">
                     Token Settings
                 </header>
                 <div class="rounded-lg bg-bkg-2">
                     <template x-for="token in tokens">
                         <div class="flex flex-row">
                             <div x-text="token.name"></div>
-                            <div class="flex justify-center items-center">
-                                <div class="relative rounded-full w-12 h-6 transition duration-200 ease-linear"
+                            <div class="flex items-center justify-center">
+                                <div class="relative w-12 h-6 transition duration-200 ease-linear rounded-full"
                                     :class="[token.toggle === true ? 'bg-green-DEFAULT' : 'bg-fgd-4']">
                                 <label for="token.index" 
-                                        class="absolute left-0 bg-white border-2 mb-2 w-6 h-6 rounded-full transition transform duration-100 ease-linear cursor-pointer"
+                                        class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full cursor-pointer"
                                         :class="[token.toggle === true ? 'translate-x-full border-green-DEFAULT' : 'translate-x-0 border-fgd-4']"></label>
                                 <input type="checkbox" id="token.index" name="token.index" 
-                                        class="appearance-none w-full h-full active:outline-none focus:outline-none"
+                                        class="w-full h-full appearance-none active:outline-none focus:outline-none"
                                         @click="token.toggle === false ? token.toggle = true : token.toggle = false">
                                 </div>
                             </div>
@@ -79,12 +95,10 @@
                     </template>
                 </div>
             </div>
-            <div 
-            x-show="page == 'alert'" 
-            >
-            <header class="flex text-orange-default text-base pb-2 mx-auto font-medium">alerts here</header>
+            <div x-show="page == 'alert'">
+            <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">alerts here</header>
             </div>
-            <div class="flex flex-row justify-around bg-bkg-1 text-fgd-4 pt-2">
+            <div class="flex flex-row justify-around pt-2 bg-bkg-1 text-fgd-4">
                 <div class="flex-auto text-center">
                     <button x-on:click="page = 'settings'">
                         <img src="./icons/settings.svg" width="24" height="24">
@@ -102,29 +116,6 @@
                 </div>
             </div>
         </div>
-        <!-- <div class="p-6 min-w-popup h-64">
-            <h1 class="text-gray-500 text-2xl">Hello Web Extension</h1>
-            <p class="py-2 text-lg tracking-wide">
-                Update me in <span class="inline-block bg-gray-100 rounded-sm text-sm p-1 leading-none whitespace-no-wrap text-purple-600 font-mono align-baseline">`src/popup/index.html`</span>
-            </p>
-            <hr />
-            <div class="py-2" x-data="{ open: false }">
-                <button
-                    class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                    @click="open = true"
-                >
-                    Test Alpine
-                </button>
-
-                <div
-                    class="mt-4 bg-gray-100 text-center rounded-sm"
-                    x-show="open"
-                    @click.away="open = false"
-                >
-                    <div class="w-full text-4xl text-teal-500 p-4">Great Scott!</div>
-                </div>
-            </div>
-        </div> -->
         <script type="text/javascript" src="./popup.dist.js"></script>
     </body>
 </html>
