@@ -92,14 +92,14 @@
                                 >
                                     <label 
                                         :for="token.name" 
-                                        class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full cursor-pointer"
-                                        :class="[token.toggle === true ? 'translate-x-full border-green-DEFAULT' : 'translate-x-0 border-fgd-4']">
+                                        class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full"
+                                        :class="[token.toggle === true ? 'translate-x-full right-0 left-auto border-green-DEFAULT' : 'translate-x-0 right-auto left-0 border-fgd-4']">
                                     </label>
                                     <input 
                                         type="checkbox" 
                                         :id="token.name" 
                                         :name="token.name" 
-                                        class="w-full h-full appearance-none active:outline-none focus:outline-none"
+                                        class="w-full h-full appearance-none cursor-pointer active:outline-none focus:outline-none"
                                         @click="
                                         token.toggle = ! token.toggle
                                         ">
