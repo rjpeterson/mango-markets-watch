@@ -1,21 +1,24 @@
 {
-  "name": "Change Web Extention Name",
+  "name": "Mango Markets Watch",
   "version": "0.0.1",
-  "description": "Change the description of this web extension",
+  "description": "See current Mango Markets borrow/lend rates and set health alerts for your Mango Markets accounts",
+  "permissions": [
+    "storage"
+  ],
   "manifest_version": 2,
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Shift+Alt+M"
+      }
+    }
+  },
   "browser_action": {
     "default_popup": "./dist/popup.html",
-    "default_title": "Open the popup",
-    "default_icon":"./dist/icons/icon-16.png"
+    "default_title": "Mango Markets Watch",
+    "default_icon":"./dist/icons/logo.png"
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  "content_scripts": [
-    {
-      "js": ["dist/content.dist.js"],
-      "css": ["dist/content.css"],
-      "matches": ["https://*/*"]
-    }
-  ],
   "background": {
     "scripts": ["dist/background.dist.js"]
   },

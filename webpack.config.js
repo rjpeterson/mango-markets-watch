@@ -2,9 +2,9 @@ const ExtensionReloader  = require('webpack-extension-reloader');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
-const contentScripts = {
-  content: './content/index.js'
-}
+// const contentScripts = {
+//   content: './content/index.js'
+// }
 const extensionPages = {
   options: './options/index.js',
   popup: './popup/index.js',
@@ -18,7 +18,7 @@ let config = {
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
       background: './background/index.js',
-      ...contentScripts,
+      // ...contentScripts,
       ...extensionPages
     },
     output: {
@@ -30,7 +30,7 @@ let ExtensionConfig = Object.assign({}, config, {
         port: 9090,
         reloadPage: true,
         entries: {
-          contentScript: Object.keys(contentScripts),
+          // contentScript: Object.keys(contentScripts),
           extensionPage: Object.keys(extensionPages),
           background: 'background'
         }
@@ -56,10 +56,10 @@ let ExtensionConfig = Object.assign({}, config, {
           from: './options/index.css',
           to: __dirname + '/extension/dist/options.css',
         },
-        {
-          from: './content/index.css',
-          to: __dirname + '/extension/dist/content.css',
-        },
+        // {
+        //   from: './content/index.css',
+        //   to: __dirname + '/extension/dist/content.css',
+        // },
       ]),
     ]
 });

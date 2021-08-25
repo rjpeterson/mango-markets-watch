@@ -8,6 +8,9 @@
     "dev": "concurrently \"npm run watch:tailwind\" \"NODE_ENV=development webpack --config webpack.config.js --mode=development --watch\"",
     "build": "npm run build:tailwind && webpack --mode production"
   },
+  "dependencies": {
+    "@blockworks-foundation/mango-client": "git+https://github.com/blockworks-foundation/mango-client-v3.git"
+  },
   "devDependencies": {
     "alpinejs": "^1.9.5",
     "autoprefixer": "^9.7.4",
