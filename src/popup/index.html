@@ -91,14 +91,14 @@
                                     :class="[token.toggle === true ? 'bg-green-DEFAULT' : 'bg-fgd-4']"
                                 >
                                     <label 
-                                        x-bind:for="token.name" 
+                                        :for="token.name" 
                                         class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full cursor-pointer"
                                         :class="[token.toggle === true ? 'translate-x-full border-green-DEFAULT' : 'translate-x-0 border-fgd-4']">
                                     </label>
                                     <input 
                                         type="checkbox" 
-                                        x-bind:id="token.name" 
-                                        x-bind:name="token.name" 
+                                        :id="token.name" 
+                                        :name="token.name" 
                                         class="w-full h-full appearance-none active:outline-none focus:outline-none"
                                         @click="
                                         token.toggle = ! token.toggle
