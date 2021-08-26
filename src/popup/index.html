@@ -75,8 +75,8 @@
                 <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">
                     Token Settings
                 </header>
-                <div class="rounded-lg bg-bkg-2">
-                    <table class="flex-col flex-grow mx-auto table-auto">
+                <div class="text-sm rounded-lg bg-bkg-2">
+                    <table class="flex-col flex-grow mx-auto text-sm table-auto">
                         <template x-for="token in tokensInfo" :key="token">
                             <tr class="flex flex-row pb-1">
                                 <td 
@@ -85,12 +85,12 @@
                                 </td>
                                 <td class="flex items-center justify-center ml-12">
                                     <div 
-                                        class="relative w-12 h-6 transition duration-200 ease-linear rounded-full"
+                                        class="relative w-10 h-5 transition duration-200 ease-linear rounded-full"
                                         :class="[token.toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
                                     >
                                         <label 
                                             :for="token.name" 
-                                            class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full"
+                                            class="absolute left-0 w-5 h-5 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full"
                                             :class="[token.toggle === true ? 'translate-x-full right-0 left-auto border-green-dark' : 'translate-x-0 right-auto left-0 border-fgd-4']">
                                         </label>
                                         <input 
@@ -111,7 +111,7 @@
             <div x-show="page == 'alert'">
             <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">Alerts</header>
             </div>
-            <div class="flex flex-row justify-around pt-2 bg-bkg-1 text-fgd-4">
+            <div class="flex flex-row justify-around h-40 pt-2 bg-bkg-1 text-fgd-4">
                 <div class="flex-auto text-center">
                     <button x-on:click="page = 'settings'">
                         <img src="./icons/settings.svg" width="24" height="24">
