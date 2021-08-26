@@ -16,14 +16,15 @@
                 tokensInfo:[],
                 rawData: []
             }"
-            x-init="(() => {
-                chrome.storage.local.get(
-                    ['tokensInfo'], 
-                    result => {
-                        console.log(`got from storage ${JSON.stringify(result)}`)
-                        tokensInfo = result.tokensInfo
-                    })
-            })()"
+            x-init="chrome.storage.local.get(
+                        ['tokensInfo'], 
+                        result => {
+                            console.log(
+                                `got from storage ${JSON.stringify(result)}`
+                            )
+                            tokensInfo = result.tokensInfo
+                        }
+                    )"
         >
         <!-- add onChange to track chrome storage object and update DOM -->
             <div x-show="page == 'home'">
