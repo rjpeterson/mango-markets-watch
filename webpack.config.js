@@ -15,6 +15,10 @@ let config = {
   context: __dirname + '/src'
 };
 
+config.node = {
+  fs: 'empty',
+}
+
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
       background: './background/index.js',

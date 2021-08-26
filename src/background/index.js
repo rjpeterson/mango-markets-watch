@@ -1,3 +1,35 @@
+// import { IDS, MangoGroup } from '@blockworks-foundation/mango-client';
+// import { Connection, PublicKey } from `@solana/web3.js`;
+const mango_client = require('@blockworks-foundation/mango-client');
+const web3 = require('@solana/web3.js');
+const { IDS, MangoClient } = mango_client;
+const { Connection, PublicKey } = web3;
+// console.log(`IDS: ${JSON.stringify(IDS)}`)
+
+const getRates = async () => {
+  const cluster = 'mainnet';
+  const group = 'mainnet.1';
+  const client = new MangoClient();
+  const clusterIds = IDS.groups[0];
+
+  const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
+  const mangoGroupPk = new PublicKey(clusterIds.mangoProgramId);
+  // const srmVaultPk = new PublicKey(clusterIds.serumProgramId);
+  // const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk);
+  const mangoGroup = await client.getMangoGroup(mangoGroupPk);
+  const rootBanks = mangoGroup.loadRootBanks(connection);
+  let depositRates = []
+  let borrowRates = []
+  rootBanks.forEach(rootBank => {
+    const borrowRate = rootBank.getBorrowRate(mangoGroup)
+    const depositRate = rootBank.getDepositRate(mangoGroup)
+    depositRates.push(depositRate)
+    borrowRates.push(borrowRate)
+  })
+  console.log(`depositRates: ${JSON.stringify(depositRates)}`)
+  console.log(`borrowRates: ${JSON.stringify(borrowRates)}`)
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('onInstalled...');
   scheduleRequest();
@@ -67,3 +99,5 @@ async function startRequest() {
     }
   )
 }
+
+getRates();
