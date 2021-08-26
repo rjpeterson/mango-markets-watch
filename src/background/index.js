@@ -58,7 +58,6 @@ async function startRequest() {
           name: trimmedName,
           borrowRate: token.borrowRate.toFixed(3),
           depositRate: token.depositRate.toFixed(3),
-          toggle: true
       })
   })
   chrome.storage.local.set(
