@@ -56,8 +56,8 @@ async function startRequest() {
       const trimmedName = token.name.replace('/USDC','')
       tokensInfo.push({
           name: trimmedName,
-          borrowRate: token.borrowRate.toFixed(3),
-          depositRate: token.depositRate.toFixed(3),
+          borrowRate: (token.borrowRate * 100).toFixed(2),
+          depositRate: (token.depositRate * 100).toFixed(2),
       })
   })
   chrome.storage.local.set(
