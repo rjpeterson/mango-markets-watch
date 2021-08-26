@@ -13,26 +13,19 @@
                     {index: 2, icon:'./icons/eth.svg', name: 'ETH', borrow: 8.0, deposit: 3.0, toggle: true},
                     {index: 3, icon:'./icons/sol.svg', name: 'SOL', borrow: 0.5, deposit: 0.2, toggle: true},
                 ],
-                tokensInfo: [],
+                tokensInfo:[],
                 rawData: []
             }"
-            x-init="(async () => {
-                const response = await fetch('https://mango-stats-v3.herokuapp.com/spot?mangoGroup=mainnet.1')
-                if (!response.ok) {
-                    alert(`Somthing went wrong: ${response.status} - ${response.statusText}`)
-                }
-                rawData = await response.json()
-                rawData.slice(-7, rawData.length).map(token => {
-                    const trimmedName = token.name.replace('/USDC','')
-                    tokensInfo.push({
-                        name: trimmedName,
-                        borrowRate: token.borrowRate.toFixed(3),
-                        depositRate: token.depositRate.toFixed(3),
-                        toggle: true
+            x-init="(() => {
+                chrome.storage.local.get(
+                    ['tokensInfo'], 
+                    result => {
+                        console.log(`got from storage ${JSON.stringify(result)}`)
+                        tokensInfo = result.tokensInfo
                     })
-                })
             })()"
         >
+        <!-- add onChange to track chrome storage object and update DOM -->
             <div x-show="page == 'home'">
                 <header class="flex pb-2 mx-auto text-base font-medium text-orange-default">
                 <img src="./icons/logo.svg" height="24" width="24" class="mr-1">

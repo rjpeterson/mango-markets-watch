@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "See current Mango Markets borrow/lend rates and set health alerts for your Mango Markets accounts",
   "permissions": [
-    "storage"
+    "storage",
+    "alarms"
   ],
   "manifest_version": 2,
   "commands": {
@@ -20,7 +21,8 @@
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "background": {
-    "scripts": ["dist/background.dist.js"]
+    "scripts": ["dist/background.dist.js"],
+    "persistent": false
   },
   "options_ui": {
     "page": "dist/options.html",
