@@ -56,12 +56,12 @@
                                         height="18" class='mr-1'> -->
                                         <span x-text="token.name"></span>
                                     </td>
-                                    <td class="flex-auto px-2 text-right text-green-default">
+                                    <td class="flex-auto px-2 text-right text-green-dark">
                                         <span x-text="token.depositRate"></span>
                                         <span>%</span>
                                     </td>
                                     <td class="flex-auto font-normal text-right text-fgd-2">/</td>
-                                    <td class="flex-auto pr-2 text-right text-red-default">
+                                    <td class="flex-auto pr-2 text-right text-red-dark">
                                         <span x-text="token.borrowRate"></span>
                                         <span>%</span>
                                     </td>
@@ -86,12 +86,12 @@
                                 <td class="flex items-center justify-center ml-12">
                                     <div 
                                         class="relative w-12 h-6 transition duration-200 ease-linear rounded-full"
-                                        :class="[token.toggle === true ? 'bg-green-DEFAULT' : 'bg-fgd-4']"
+                                        :class="[token.toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
                                     >
                                         <label 
                                             :for="token.name" 
                                             class="absolute left-0 w-6 h-6 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full"
-                                            :class="[token.toggle === true ? 'translate-x-full right-0 left-auto border-green-DEFAULT' : 'translate-x-0 right-auto left-0 border-fgd-4']">
+                                            :class="[token.toggle === true ? 'translate-x-full right-0 left-auto border-green-dark' : 'translate-x-0 right-auto left-0 border-fgd-4']">
                                         </label>
                                         <input 
                                             type="checkbox" 
