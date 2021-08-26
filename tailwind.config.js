@@ -1,7 +1,7 @@
 
 module.exports = {
-  // mode: 'jit',
-  // purge: ['./src/**/*.{js,ts,jsx,tsx}'],
+  mode: 'jit',
+  purge: ['./src/**/*.{html,js,ts,jsx,tsx}'],
   // future: {
   //   removeDeprecatedGapUtilities: true,
   //   purgeLayersByDefault: true,
@@ -91,6 +91,7 @@ module.exports = {
           green: {
             DEFAULT: '#AFD803',
             dark: '#91B503',
+            '400': '#4ADE80',
           },
           orange: { DEFAULT: '#FF9C24' },
           'bkg-1': '#141026',
