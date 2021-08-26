@@ -108,8 +108,9 @@
                                             class="w-full h-full appearance-none cursor-pointer active:outline-none focus:outline-none"
                                             @click="
                                             toggles[token.name] = ! toggles[token.name];
-                                            chrome.storage.local.set({toggles[token.name]: toggles[token.name]})
-                                            ">
+                                            chrome.storage.local.set({toggles: toggles}, () => {console.log(`setting storage toggles: ${JSON.stringify(toggles)}`)})
+                                            "
+                                            >
                                     </div>
                                 </td>
                             </tr>
