@@ -88,6 +88,7 @@
                         </div>
                     </div>
                     <div x-show="page == 'settings'">
+                        <!--TODO Add select for v1,v2,v3 -->
                         <div class="text-sm rounded-lg bg-bkg-2">
                             <table class="flex-col flex-grow mx-auto text-sm table-auto">
                                 <template x-for="token in tokensInfo" :key="token">
@@ -127,6 +128,7 @@
                         <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">Coming Soon</div>
                         <!-- TODO alerts for when interest rates pass a threshold? -->
                         <!-- or liquidation alerts? -->
+                        <!-- `Alert me when {token} {deposit/borrow} interest is {above/below} {percentage} on Mango {v1/v2/v3}` (Save Alert) -->
                     </div>
                 </div>
             </div>
