@@ -5,16 +5,16 @@ const web3 = require('@solana/web3.js');
 const { IDS, MangoClient, Config, I80F48 } = mango_client;
 const { Connection, PublicKey } = web3;
 
+const cluster = 'mainnet';
+const groupName = 'mainnet.1';
+
 const getTokenInfo = async () => {
-  const cluster = 'mainnet';
-  const groupName = 'mainnet.1';
   const config = new Config(IDS);
-  const clusterIds = IDS.groups[0]; //TODO need to find "group" in IDS array
-  // console.log(`clusterIds token info: ${JSON.stringify(clusterIds.tokens)}`)
+  const clusterId = IDS.groups.find(group => {return group.name == groupName && group.cluster == cluster});
 
   const groupConfig = config.getGroup(cluster, groupName);
   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
-  const mangoProgramId = new PublicKey(clusterIds.mangoProgramId);
+  const mangoProgramId = new PublicKey(clusterId.mangoProgramId);
   const mangoGroupKey = groupConfig.publicKey;
   const client = new MangoClient(connection, mangoProgramId);
   // const srmVaultPk = new PublicKey(clusterIds.serumProgramId);
