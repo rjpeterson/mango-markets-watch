@@ -1,5 +1,5 @@
 # Mango Markets Watch
-This is a browser extension for getting current Mango Markets borrow/lend rates as well as setting user alerts for those rates.
+This is a browser extension for getting current mango.markets borrow/lend rates as well as setting user alerts for those rates.
 
 ## Installation
 ### Setup local project
