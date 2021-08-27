@@ -8,7 +8,8 @@
         x-data="{
             page: 'home',
             tokensInfo:[],
-            toggles: {}
+            toggles: {},
+            headerText: 'Mango Markets Watch'
         }"
         x-init="chrome.storage.local.get(
             ['tokensInfo', 'toggles'], 
@@ -44,14 +45,14 @@
             }
         )
         "
-    >        <!-- add onChange to track chrome storage object and update DOM -->
+    > 
+    <header class="flex justify-center pt-4 mx-auto text-base font-medium text-orange-default">
+        <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
+        <span x-text="headerText"></span>
+    </header>      
         <div class="justify-between p-4">
             <div class="overflow-y-auto" style="height: 120px">
                 <div x-show="page == 'home'">
-                    <header class="flex justify-center pb-2 mx-auto text-base font-medium text-orange-default">
-                        <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
-                        <span>Mango Markets Watch</span>
-                    </header>
                     <div class="flex min-w-full p-1 rounded-lg bg-bkg-2">
                         <table class="flex-col flex-grow mx-auto table-auto">
                             <thead class="bg-bkg-2">
@@ -86,9 +87,6 @@
                     </div>
                 </div>
                 <div x-show="page == 'settings'">
-                    <header class="flex justify-center pb-2 mx-auto text-base font-medium text-orange-default">
-                        Token Settings
-                    </header>
                     <div class="text-sm rounded-lg bg-bkg-2">
                         <table class="flex-col flex-grow mx-auto text-sm table-auto">
                             <template x-for="token in tokensInfo" :key="token">
@@ -125,7 +123,6 @@
                     </div>
                 </div>
                 <div x-show="page == 'alert'">
-                    <header class="flex justify-center pb-2 mx-auto text-base font-medium text-orange-default">Alerts</header>
                     <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">Coming Soon</div>
                     <!-- alerts for when interest rates pass a threshold? -->
                     <!-- or liquidation alerts? -->
@@ -133,17 +130,17 @@
             </div>
             <div class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4">
                 <div class="flex text-center">
-                    <button x-on:click="page = 'settings'">
+                    <button x-on:click="page = 'settings'; headerText = 'Token Settings'">
                         <img src="./icons/settings.svg" width="24" height="24">
                     </button>
                 </div>
                 <div class="flex text-center">
-                    <button x-on:click="page = 'home'">
+                    <button x-on:click="page = 'home'; headerText = 'Mango Markets Watch'">
                         <img src="./icons/home.svg" width="24" height="24">
                     </button>
                 </div>
                 <div class="flex text-center">
-                    <button x-on:click="page = 'alert'">
+                    <button x-on:click="page = 'alert'; headerText='Alerts'">
                     <img src="./icons/alert.svg" width="24" height="24">
                 </button>
                 </div>
