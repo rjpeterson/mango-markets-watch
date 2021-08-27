@@ -8,7 +8,6 @@
         x-data="{
             page: 'home',
             tokensInfo:[],
-            rawData: [],
             toggles: {}
         }"
         x-init="chrome.storage.local.get(
@@ -33,11 +32,18 @@
                         }
                     })
                 }
-                console.log(
-                    `toggles ${JSON.stringify(toggles)}`
-                )
+
             }
-        )"
+        )
+        chrome.runtime.onMessage.addListener(
+            function(request, sender, sendResponse) {
+                console.log(`received message ${request.msg}` )
+                if (request.msg === 'tokensInfo updated') {
+                    tokensInfo = request.data.content
+                }
+            }
+        )
+        "
     >        <!-- add onChange to track chrome storage object and update DOM -->
         <div class="justify-between p-4">
             <div class="overflow-y-auto" style="min-height: 220px">

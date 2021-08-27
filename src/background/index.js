@@ -72,6 +72,23 @@ chrome.runtime.onStartup.addListener(() => {
   startRequest();
 })
 
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+  for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+    console.log(
+      `Storage key "${key}" in namespace "${namespace}" changed.`,
+      `Old value was "${oldValue}", new value is "${newValue}".`
+    );
+    if (key == "tokensInfo") {
+      chrome.runtime.sendMessage({
+        msg: "tokensInfo updated", 
+        data: {
+            content: newValue
+        }
+      });
+    }
+  }
+})
+
 // alarm listener
 chrome.alarms.onAlarm.addListener(alarm => {
   // if watchdog is triggered, check whether refresh alarm is there
@@ -95,13 +112,13 @@ chrome.alarms.onAlarm.addListener(alarm => {
 //schedule a new fetch every 30 minutes
 function scheduleRequest() {
   console.log('schedule refresh alarm to 30 minutes...')
-  chrome.alarms.create('refresh', { periodInMinutes: 30 })
+  chrome.alarms.create('refresh', { periodInMinutes: 1 })
 }
 
 // schedule a watchdog check every 5 minutes
 function scheduleWatchdog() {
   console.log('schedule watchdog alarm to 5 minutes...')
-  chrome.alarms.create('watchdog', { periodInMinutes: 5 })
+  chrome.alarms.create('watchdog', { periodInMinutes: 1 })
 }
 
 //fetch data and save to local storage
