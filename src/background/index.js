@@ -124,33 +124,5 @@ function scheduleWatchdog() {
 //fetch data and save to local storage
 async function startRequest() {
   const tokensInfo = await getTokenInfo()
-  // let tokens = [];
-  // let tokensInfo = [];
-  // console.log('start HTTP Request...')
-  // const response = await fetch('https://mango-stats-v3.herokuapp.com/spot?mangoGroup=mainnet.1')
-  // if (!response.ok) {
-  //     alert(`Somthing went wrong: ${response.status} - ${response.statusText}`)
-  // }
-  // rawData = await response.json()
-  // let trimmedData = [];
-  // for (i = rawData.length; i > 0; i--) {
-  //   if (!tokens.includes(rawData[i - 1].name)) {
-  //     tokens.push(rawData[i - 1].name)
-  //     trimmedData.push(rawData[i - 1])
-  //   }
-  // }
-  // trimmedData.map(token => {
-  //     const trimmedName = token.name.replace('/USDC','')
-  //     tokensInfo.push({
-  //         name: trimmedName,
-  //         borrowRate: (token.borrowRate * 100).toFixed(2),
-  //         depositRate: (token.depositRate * 100).toFixed(2),
-  //     })
-  // })
-  chrome.storage.local.set(
-    {tokensInfo: tokensInfo},
-      function() {
-      // console.log(`stored tokensInfo : ${JSON.stringify(tokensInfo)}`)
-    }
-  )
+  chrome.storage.local.set({tokensInfo: tokensInfo})
 }
