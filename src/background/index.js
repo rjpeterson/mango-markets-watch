@@ -9,11 +9,11 @@ const { Connection, PublicKey } = web3;
 const getRates = async () => {
   const cluster = 'mainnet';
   const group = 'mainnet.1';
-  const client = new MangoClient();
-  const clusterIds = IDS.groups[0];
+  const clusterIds = IDS.groups[0]; //TODO need to find "group" in IDS array
 
   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
   const mangoGroupPk = new PublicKey(clusterIds.mangoProgramId);
+  const client = new MangoClient();
   // const srmVaultPk = new PublicKey(clusterIds.serumProgramId);
   // const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupPk);
@@ -77,6 +77,7 @@ function scheduleWatchdog() {
 
 //fetch data and save to local storage
 async function startRequest() {
+  let tokens = [];
   let tokensInfo = [];
   console.log('start HTTP Request...')
   const response = await fetch('https://mango-stats-v3.herokuapp.com/spot?mangoGroup=mainnet.1')
@@ -84,7 +85,14 @@ async function startRequest() {
       alert(`Somthing went wrong: ${response.status} - ${response.statusText}`)
   }
   rawData = await response.json()
-  rawData.slice(-7, rawData.length).map(token => {
+  let trimmedData = [];
+  for (i = rawData.length; i > 0; i--) {
+    if (!tokens.includes(rawData[i - 1].name)) {
+      tokens.push(rawData[i - 1].name)
+      trimmedData.push(rawData[i - 1])
+    }
+  }
+  trimmedData.map(token => {
       const trimmedName = token.name.replace('/USDC','')
       tokensInfo.push({
           name: trimmedName,

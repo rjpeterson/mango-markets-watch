@@ -110,7 +110,7 @@
                                                 toggles[token.name] = ! toggles[token.name];
                                                 chrome.storage.local.set({toggles: toggles}, () => {console.log(`setting storage toggles: ${JSON.stringify(toggles)}`)})
                                                 "
-                                                >
+                                            >
                                         </div>
                                     </td>
                                 </tr>
@@ -119,7 +119,8 @@
                     </div>
                 </div>
                 <div x-show="page == 'alert'">
-                <header class="flex justify-center pb-2 mx-auto text-base font-medium text-orange-default">Alerts</header>
+                    <header class="flex justify-center pb-2 mx-auto text-base font-medium text-orange-default">Alerts</header>
+                    <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">Coming Soon</div>
                 </div>
             </div>
             <div class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4">
