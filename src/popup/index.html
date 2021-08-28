@@ -9,7 +9,8 @@
             page: 'home',
             tokensInfo:[],
             toggles: {},
-            headerText: 'Mango Markets Watch'
+            headerText: 'Mango Markets Watch',
+            version: 3
         }"
         x-init="chrome.storage.local.get(
             ['tokensInfo', 'toggles'], 
@@ -88,13 +89,22 @@
                         </div>
                     </div>
                     <div x-show="page == 'settings'">
-                        <!--TODO Add select for v1,v2,v3 -->
-                        <div class="text-sm rounded-lg bg-bkg-2">
-                            <table class="flex-col flex-grow mx-auto text-sm table-auto">
+                        <div class="text-sm">
+                            <table class="flex-col flex-grow mx-auto text-sm table-auto text-fgd-1">
+                                <tr>
+                                    <th class="flex flex-row justify-around items-center pb-2">
+                                        <input type="radio" id="v1" x-model="version" value="1">
+                                        <label for="v1">v1</label><br>
+                                        <input type="radio" id="v2" x-model="version" value="2">
+                                        <label for="v2">v2</label><br>
+                                        <input type="radio" id="javascript" x-model="version" value="3">
+                                        <label for="v3">v3</label>
+                                    </th>
+                                </tr>
                                 <template x-for="token in tokensInfo" :key="token">
                                     <tr class="flex flex-row pb-1">
                                         <td 
-                                            class="flex items-end flex-auto px-2 text-left text-fgd-1" 
+                                            class="flex items-end flex-auto px-2 text-left " 
                                             x-text="token.name">
                                         </td>
                                         <td class="flex items-center justify-center ml-12">
