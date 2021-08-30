@@ -10,21 +10,21 @@
             tokensInfo:[],
             toggles: {},
             headerText: 'Mango Markets Watch',
-            version: 3
+            version: 3,
+            handleVersionChange(v) {
+                chrome.storage.local.set({version: v}, () => {console.log(`setting storage version: ${v}`)})
+              }
         }"
         x-init="chrome.storage.local.get(
-            ['tokensInfo', 'toggles'], 
+            ['tokensInfo', 'toggles', 'version'], 
             result => {
                 console.log(
                     `got from storage ${JSON.stringify(result)}`
                 )
+                version = result.version
                 tokensInfo = result.tokensInfo
                 if (result.toggles) {
                         toggles = result.toggles
-                } else {
-                    tokensInfo.forEach((token) => {
-                        toggles[token.name] = true
-                    })
                 }
                 
                 if (Object.keys(toggles).length !== tokensInfo.length) {
@@ -74,12 +74,12 @@
                                                 <span x-text="token.name"></span>
                                             </td>
                                             <td class="flex-auto px-2 text-right text-green-dark">
-                                                <span x-text="token.depositRate"></span>
+                                                <span x-text="token.depositRate.toFixed(2)"></span>
                                                 <span>%</span>
                                             </td>
                                             <td class="flex-auto font-normal text-right text-fgd-4">/</td>
                                             <td class="flex-auto pr-2 text-right text-red-dark">
-                                                <span x-text="token.borrowRate"></span>
+                                                <span x-text="token.borrowRate.toFixed(2)"></span>
                                                 <span>%</span>
                                             </td>
                                         </tr>
@@ -93,11 +93,29 @@
                             <table class="flex-col flex-grow mx-auto text-sm table-auto text-fgd-1">
                                 <tr>
                                     <th class="flex flex-row justify-around items-center pb-2">
-                                        <input type="radio" id="v1" x-model="version" value="1">
+                                        <input 
+                                        type="radio" 
+                                        id="v1" 
+                                        x-model="version" 
+                                        value="1"
+                                        @click="handleVersionChange(1)"
+                                        >
                                         <label for="v1">v1</label><br>
-                                        <input type="radio" id="v2" x-model="version" value="2">
+                                        <input 
+                                        type="radio" 
+                                        id="v2" 
+                                        x-model="version" 
+                                        value="2"
+                                        @click="handleVersionChange(2)"
+                                        >
                                         <label for="v2">v2</label><br>
-                                        <input type="radio" id="javascript" x-model="version" value="3">
+                                        <input 
+                                        type="radio" 
+                                        id="javascript" 
+                                        x-model="version" 
+                                        value="3"
+                                        @click="handleVersionChange(3)"
+                                        >
                                         <label for="v3">v3</label>
                                     </th>
                                 </tr>

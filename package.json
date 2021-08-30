@@ -9,7 +9,8 @@
     "build": "npm run build:tailwind && webpack --mode production"
   },
   "dependencies": {
-    "@blockworks-foundation/mango-client": "git+https://github.com/blockworks-foundation/mango-client-v3.git",
+    "@blockworks-foundation/mango-client-v3": "git+https://github.com/blockworks-foundation/mango-client-v3.git",
+    "@blockworks-foundation/mango-client": "2.1.3",
     "@solana/web3.js": "^1.24.1"
   },
   "devDependencies": {
