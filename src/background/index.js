@@ -55,8 +55,8 @@ const getTokenInfo_v1v2 = async (version) => {
         console.log(`borrowRate: ${JSON.stringify(borrowRate)}`)
         return {
           name: tokenSymbol,
-          depositRate: depositRate,
-          borrowRate: borrowRate
+          depositRate: depositRate.toFixed(2),
+          borrowRate: borrowRate.toFixed(2)
         }
         debugger
     }})

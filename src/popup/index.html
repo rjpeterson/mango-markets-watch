@@ -27,12 +27,18 @@
                         toggles = result.toggles
                 }
                 
-                if (Object.keys(toggles).length !== tokensInfo.length) {
-                    tokensInfo.forEach((token) => {
-                        if (toggles[token.name] === undefined) {
-                            toggles[token.name] = true
-                        }
-                    })
+                if (Object.keys(toggles).length !== result.tokensInfo.length) {
+                    if Array.isArray(result.tokensInfo) {
+                        result.tokensInfo.forEach((token) => {
+                            if(token) {
+                                if (toggles[token.name] === undefined) {
+                                    toggles[token.name] = true
+                                }
+                            }
+                        })
+                    } else {
+                        console.log('result.tokensInfo is not an array')
+                    }
                 }
 
             }
@@ -74,12 +80,12 @@
                                                 <span x-text="token.name"></span>
                                             </td>
                                             <td class="flex-auto px-2 text-right text-green-dark">
-                                                <span x-text="token.depositRate.toFixed(2)"></span>
+                                                <span x-text="token.depositRate"></span>
                                                 <span>%</span>
                                             </td>
                                             <td class="flex-auto font-normal text-right text-fgd-4">/</td>
                                             <td class="flex-auto pr-2 text-right text-red-dark">
-                                                <span x-text="token.borrowRate.toFixed(2)"></span>
+                                                <span x-text="token.borrowRate"></span>
                                                 <span>%</span>
                                             </td>
                                         </tr>
