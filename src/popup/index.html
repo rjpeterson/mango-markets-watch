@@ -12,47 +12,39 @@
             headerText: 'Mango Markets Watch',
             version: 3,
             handleVersionChange(v) {
-                chrome.storage.local.set({version: v}, () => {console.log(`setting storage version: ${v}`)})
+                chrome.storage.local.set({version: v})
               }
         }"
         x-init="chrome.storage.local.get(
             ['tokensInfo', 'toggles', 'version'], 
             result => {
-                console.log(
-                    `got from storage ${JSON.stringify(result)}`
-                )
                 version = result.version
                 tokensInfo = result.tokensInfo
-                if (result.toggles) {
+                if (result.toggles && Object.keys(result.toggles)) {
                         toggles = result.toggles
+                        if (Array.isArray(result.tokensInfo) && result.tokensInfo.length && Object.keys(result.toggles).length && Object.keys(result.toggles).length !== result.tokensInfo.length) {
+                            if (Array.isArray(result.tokensInfo)) {
+                                result.tokensInfo.forEach((token) => {
+                                    if(token) {
+                                        if (toggles[token.name] === undefined) {
+                                            toggles[token.name] = true
+                                }}})
+                            } else {
+                                console.log('result.tokensInfo is not an array')
+                }}
+                } else {
+                    console.log('result.toggles is undefined')
                 }
                 
-                if (Object.keys(toggles).length !== result.tokensInfo.length) {
-                    if Array.isArray(result.tokensInfo) {
-                        result.tokensInfo.forEach((token) => {
-                            if(token) {
-                                if (toggles[token.name] === undefined) {
-                                    toggles[token.name] = true
-                                }
-                            }
-                        })
-                    } else {
-                        console.log('result.tokensInfo is not an array')
-                    }
-                }
+                })
 
-            }
-        )
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
                 console.log(`received message ${request.msg}` )
                 if (request.msg === 'tokensInfo updated') {
                     tokensInfo = request.data.content
-                }
-            }
-        )
-        "
-    > 
+        }})"
+    >
     <header class="flex justify-center pt-4 mx-auto text-base font-medium text-orange-default">
         <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
         <span x-text="headerText"></span>
@@ -148,7 +140,7 @@
                                                     class="w-full h-full appearance-none cursor-pointer active:outline-none focus:outline-none"
                                                     @click="
                                                     toggles[token.name] = ! toggles[token.name];
-                                                    chrome.storage.local.set({toggles: toggles}, () => {console.log(`setting storage toggles: ${JSON.stringify(toggles)}`)})
+                                                    chrome.storage.local.set({toggles: toggles})
                                                     "
                                                 >
                                             </div>

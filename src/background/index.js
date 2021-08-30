@@ -9,59 +9,78 @@ const tokenInfoSwitch = async (version) => {
   const actions = {
     '1' : function() {
       console.log('getting tokenInfo version 1 ');
-      return getTokenInfo_v1v2(1)
+      return getTokenInfo_v1()
     },
     '2' : function() {
-      console.log('getting tokenInfo version 2 ');
-      return getTokenInfo_v1v2(2)
+      // console.log('getting tokenInfo version 2 ');
+      return getTokenInfo_v2()
     },
     '3' : function() {
-      console.log('getting tokenInfo version 3 ');
+      // console.log('getting tokenInfo version 3 ');
       return getTokenInfo_v3()
     },
   }
   return await (actions[version]() || actions[3]())
 }
 
-const getTokenInfo_v1v2 = async (version) => {
-  console.log(`getting v${version} token info...`)
-  let cluster = ''
-  let group = ''
-  if (version === 1) {
-    cluster = 'mainnet-beta', group = 'BTC_ETH_USDT'
-  } else {
-    cluster = 'mainnet-beta', group = 'BTC_ETH_SOL_SRM_USDC'
-  }
+const getTokenInfo_v1 = async () => {
+  let tokens = []
+  let tokensInfo = []
+  await fetch('https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT')
+    .then(response => response.json())
+    .then(response => {
+      console.log(`v1 api response: ${JSON.stringify(response)}`)
+      for (var i = response.length -1; i > 0; i--) {
+        if (!tokens.includes(response[i].symbol)) {
+          tokens.push(response[i].symbol)
+          tokensInfo.push({
+            name: response[i].symbol,
+            depositRate: (response[i].depositInterest * 100).toFixed(2),
+            borrowRate: (response[i].borrowInterest * 100).toFixed(2)
+          })
+        }
+      }
+    })
+  
+  return tokensInfo
+}
+
+const getTokenInfo_v2 = async () => {
+  // console.log(`getting v2 token info...`)
+  let cluster = 'mainnet-beta'
+  let group = 'BTC_ETH_SOL_SRM_USDC'
+
   const connection = new Connection(IDS.cluster_urls[cluster], 'singleGossip');
 
-  const mangoGroupPk = new PublicKey(IDS[cluster].mango_groups[group].mango_group_pk);
-  const srmVaultPk = new PublicKey(IDS[cluster].mango_groups[group].srm_vault_pk)
+  const cluster_group = IDS[cluster].mango_groups[group]
+  // console.log(`cluster_group: ${JSON.stringify(cluster_group)}`)
+  const mangoGroupPk = new PublicKey(cluster_group.mango_group_pk);
+  const srmVaultPk = new PublicKey(cluster_group.srm_vault_pk)
   const client = new MangoClient();
   const mangoGroup = await client.getMangoGroup(connection, mangoGroupPk, srmVaultPk);
 
   if (mangoGroup) {
-    const symbols = IDS[cluster].mango_groups[group].symbols
-    console.log(`symbols: ${JSON.stringify(symbols)}`)
-    const latestStats = Object.keys(symbols).map((tokenSymbol) => {
+    const symbols = cluster_group.symbols
+    // console.log(`symbols: ${JSON.stringify(symbols)}`)
+    const tokensInfo = Object.keys(symbols).map((tokenSymbol) => {
       if(!tokenSymbol) {
         return false
       } else {
-        console.log(`tokenSymbol: ${JSON.stringify(tokenSymbol)}`)
+        // console.log(`tokenSymbol: ${JSON.stringify(tokenSymbol)}`)
         const tokenIndex = mangoGroup.getTokenIndex(new PublicKey(symbols[tokenSymbol]))
-        console.log(`tokenIndex: ${JSON.stringify(tokenIndex)}`)
+        // console.log(`tokenIndex: ${JSON.stringify(tokenIndex)}`)
         const depositRate = mangoGroup.getDepositRate(tokenIndex)
-        console.log(`depositRate: ${JSON.stringify(depositRate)}`)
+        // console.log(`depositRate: ${JSON.stringify(depositRate)}`)
         const borrowRate = mangoGroup.getBorrowRate(tokenIndex)
-        console.log(`borrowRate: ${JSON.stringify(borrowRate)}`)
+        // console.log(`borrowRate: ${JSON.stringify(borrowRate)}`)
         return {
           name: tokenSymbol,
           depositRate: depositRate.toFixed(2),
           borrowRate: borrowRate.toFixed(2)
         }
-        debugger
     }})
-    console.log(`v${version} latestStats: ${JSON.stringify(latestStats)}`)
-    return latestStats
+    // console.log(`v${version} latestStats: ${JSON.stringify(latestStats)}`)
+    return tokensInfo
   } else {
     console.log(`Mango Group not found`)
   }
@@ -83,7 +102,7 @@ const getTokenInfo_v3 = async () => {
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
   if (mangoGroup) {
     const rootBanks = await mangoGroup.loadRootBanks(connection)
-    const latestStats = groupConfig.tokens.map((token) => {
+    const tokensInfo = groupConfig.tokens.map((token) => {
       const rootBank = rootBanks.find((bank) => {
         if (!bank) {
           return false
@@ -113,8 +132,8 @@ const getTokenInfo_v3 = async () => {
         //   : I80F48.fromNumber(0),
       }
     })
-    console.log(`v3 tokenInfo: ${JSON.stringify(latestStats)}`)
-    return latestStats
+    // console.log(`v3 tokenInfo: ${JSON.stringify(latestStats)}`)
+    return tokensInfo
   } else {
     console.log(`Mango Group not found`)
   }
@@ -128,7 +147,7 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('scheduling watchdog...');
   scheduleWatchdog();
   console.log('getting initial token info...');
-  startRequest(3);
+  getVersionStartRequest();
 });
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
@@ -138,12 +157,12 @@ chrome.runtime.onStartup.addListener(() => {
   getVersionStartRequest()
 })
 
-chrome.storage.onChanged.addListener(function (changes, namespace) {
+chrome.storage.onChanged.addListener(async function (changes, namespace) {
   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-    console.log(
-      `Storage key "${key}" in namespace "${namespace}" changed.`,
-      `Old value: ${JSON.stringify(oldValue)}, new value: ${JSON.stringify(newValue)}.`
-    );
+    // console.log(
+    //   `Storage key "${key}" in namespace "${namespace}" changed.`,
+    //   `Old value: ${JSON.stringify(oldValue)}, new value: ${JSON.stringify(newValue)}.`
+    // );
     if (key == "tokensInfo") {
       chrome.runtime.sendMessage({
         msg: "tokensInfo updated", 
@@ -152,9 +171,15 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
         }
       });
     } else if (key == "version") { 
-      const tokensInfo = tokenInfoSwitch(newValue)
+      const tokensInfo = await tokenInfoSwitch(newValue)
       console.log(`version changed to ${newValue}. New tokenInfo: ${JSON.stringify(tokensInfo)}`)
       chrome.storage.local.set({tokensInfo: tokensInfo})
+      chrome.runtime.sendMessage({
+        msg: "version updated", 
+        data: {
+            content: tokensInfo
+        }
+      });
     }
   }
 })
@@ -182,11 +207,11 @@ chrome.alarms.onAlarm.addListener(alarm => {
 
 function getVersionStartRequest() {
   chrome.storage.local.get(['version'], result => {
-    if (result) {
+    if (result.version) {
       console.log(`got version from storage. starting request for tokenInfo version: ${result.version}`)
       startRequest(result.version)
     } else {
-      console.log(`No version # in storage. starting request for tokenInfo version: 3`)
+      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)
       startRequest(3)
     }
   })
@@ -209,8 +234,5 @@ async function startRequest(version) {
   console.log('getting token info...')
   const tokensInfo =  await tokenInfoSwitch(version)
   console.log(`got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`)
-    // const tokensInfo = await getTokenInfo_v3()
-  chrome.storage.local.set({tokensInfo: tokensInfo}, () => {
-    console.log(`sending to chrome storage tokensInfo:${JSON.stringify(tokensInfo)}`)
-  })
+  chrome.storage.local.set({tokensInfo: tokensInfo})
 }
