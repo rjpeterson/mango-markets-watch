@@ -219,14 +219,14 @@ function getVersionStartRequest() {
 
 //schedule a new fetch every 30 minutes
 function scheduleRequest() {
-  console.log('schedule refresh alarm to 30 minutes...')
-  chrome.alarms.create('refresh', { periodInMinutes: 1 })//TODO reset timer
+  console.log('schedule refresh alarm to 20 minutes...')
+  chrome.alarms.create('refresh', { periodInMinutes: 20 })
 }
 
 // schedule a watchdog check every 5 minutes
 function scheduleWatchdog() {
   console.log('schedule watchdog alarm to 5 minutes...')
-  chrome.alarms.create('watchdog', { periodInMinutes: 1 })//TODO reset timer
+  chrome.alarms.create('watchdog', { periodInMinutes: 5 })
 }
 
 //fetch data and save to local storage
