@@ -6,7 +6,7 @@
     "dev:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
     "build:tailwind": "NODE_ENV=production postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
     "dev": "concurrently \"yarn watch:tailwind\" \"NODE_ENV=development webpack --config webpack.config.js --mode=development --watch\"",
-    "build": "yarn build:tailwind && webpack --mode production"
+    "build": "yarn build:tailwind && webpack --config webpack.config.js --mode=production"
   },
   "dependencies": {
     "@blockworks-foundation/mango-client": "2.1.3",

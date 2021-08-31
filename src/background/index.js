@@ -220,6 +220,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.msg == "get stored info") {
     main(sendResponse);
   }
+  return true
 })
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
