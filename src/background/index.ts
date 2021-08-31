@@ -280,7 +280,7 @@ async function startRequest(version: Version) {
   chrome.storage.local.set({ tokensInfo: tokensInfo });
 }
 
-function main() {// get data from storage and fill in anything missing
+function main() {// get data from storage and fill in data if missing
   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
     const version: Version = result.version || 3;
     const tokensInfo : (TokensInfo[] | undefined) = result.tokensInfo || undefined;

@@ -7,7 +7,7 @@ const path = require('path');
 // }
 const extensionPages = {
   // options: './options/index.js',
-  popup: './popup/index.js',
+  popup: './popup/index.ts',
 }
 
 let config = {

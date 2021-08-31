@@ -15,9 +15,11 @@
                 chrome.storage.local.set({version: v})
               }
         }"
-    x-init="chrome.runtime.getBackgroundPage(function(backgroundPage) {
-        { tokensInfo, toggles, version } = backgroundPage.main()
-    })
+    x-init="
+        chrome.runtime.getBackgroundPage(
+            function(backgroundPage) {
+                { tokensInfo, toggles, version } = backgroundPage.main()
+        })
 
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
