@@ -15,36 +15,9 @@
                 chrome.storage.local.set({version: v})
               }
         }"
-    x-init="chrome.storage.local.get(
-            ['tokensInfo', 'toggles', 'version'], 
-            result => {
-                version = result.version
-                tokensInfo = result.tokensInfo
-                if (result.toggles && Object.keys(result.toggles)) {
-                        toggles = result.toggles
-                        if (Array.isArray(result.tokensInfo) && result.tokensInfo.length && Object.keys(result.toggles).length && Object.keys(result.toggles).length !== result.tokensInfo.length) {
-                            if (Array.isArray(result.tokensInfo)) {
-                                result.tokensInfo.forEach((token) => {
-                                    if(token) {
-                                        if (toggles[token.name] === undefined) {
-                                            toggles[token.name] = true
-                                }}})
-                            } else {
-                                console.log('result.tokensInfo is not an array')
-                }}
-                } else {
-                    console.log('result.toggles is undefined')
-                    result.tokensInfo.forEach(
-                            (token) => {
-                                toggles[token] = true
-                            }
-                        )
-                    chrome.storage.local.set({
-                        toggles: toggles
-                    })
-                }
-                
-                })
+    x-init="chrome.runtime.getBackgroundPage(function(backgroundPage) {
+        { tokensInfo, toggles, version } = backgroundPage.main()
+    })
 
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
