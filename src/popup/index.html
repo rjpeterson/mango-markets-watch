@@ -11,22 +11,22 @@
             toggles: {'loading...': true},
             headerText: 'Mango Markets Watch',
             version: 3,
-            handleVersionChange(v) {
-              chrome.runtime.sendMessage({
-                msg: 'change version',
-                data: {version: v}
-                }, function(response) {
-                  if (!response) {
-                    throw new Error('could not update version')
-                  }
-                  console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-                  this.tokensInfo = response.tokensInfo
-                  this.toggles = response.toggles
-                  this.version = response.version
-                })
-              }
         }"
-    x-init="chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
+    x-init="$watch('version', value => {
+      chrome.runtime.sendMessage({
+        msg: 'change version',
+        data: {version: value}
+        }, function(response) {
+          if (!response) {
+            throw new Error('could not update version')
+          }
+          console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
+          tokensInfo = response.tokensInfo
+          toggles = response.toggles
+        })
+    })
+    
+    chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
         if (!response) {
           throw new Error('could not get stored info')
         }
@@ -127,7 +127,7 @@
                       id="v1"
                       x-model="version"
                       value="1"
-                      @click="handleVersionChange(1)"
+                      @click="version = 1"
                     />
                     <label for="v1">v1</label><br />
                     <input
@@ -135,7 +135,7 @@
                       id="v2"
                       x-model="version"
                       value="2"
-                      @click="handleVersionChange(2)"
+                      @click="version = 2"
                     />
                     <label for="v2">v2</label><br />
                     <input
@@ -143,7 +143,7 @@
                       id="v3"
                       x-model="version"
                       value="3"
-                      @click="handleVersionChange(3)"
+                      @click="version = 3"
                     />
                     <label for="v3">v3</label>
                   </th>

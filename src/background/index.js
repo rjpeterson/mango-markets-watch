@@ -8,7 +8,6 @@ import {
 } from "@blockworks-foundation/mango-client-v3";
 import {
   IDS,
-  MangoGroup,
   MangoClient,
 } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -16,7 +15,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 const tokenInfoSwitch = async (version) => {
   const actions = {
     1: function () {
-      console.log("getting tokenInfo version 1 ");
+      // console.log("getting tokenInfo version 1 ");
       return getTokenInfo_v1();
     },
     2: function () {
@@ -37,19 +36,16 @@ const getTokenInfo_v1 = async () => {
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
     .then((response) => {
-      console.log(`v1 api response: ${JSON.stringify(response)}`);
-      for (var i = response.length - 1; i > 0; i--) {
-        if (!tokens.includes(response[i].symbol)) {
-          tokens.push(response[i].symbol);
+      const slicedResponse = response.slice(-3)
+      console.log(`v1 api response: ${JSON.stringify(slicedResponse)}`);
+      slicedResponse.forEach(entry => {
           tokensInfo.push({
-            name: response[i].symbol,
-            depositRate: (response[i].depositInterest * 100).toFixed(2),
-            borrowRate: (response[i].borrowInterest * 100).toFixed(2),
+            name: entry.symbol,
+            depositRate: (entry.depositInterest * 100).toFixed(2),
+            borrowRate: (entry.borrowInterest * 100).toFixed(2),
           });
-        }
-      }
+      })
     });
-
   return tokensInfo;
 };
 
@@ -290,13 +286,17 @@ async function versionChange(version, sendResponse) {
         }
       });
     }
-    const requestObject = {
+    const storageObject = {
       version: version,
       tokensInfo: tokensInfo,
       toggles: toggles,
     };
+    const requestObject = {
+      tokensInfo: tokensInfo,
+      toggles: toggles,
+    };
     console.log(`versionChange sending requestObject: ${JSON.stringify(requestObject)}`)
-    chrome.storage.local.set(requestObject);
+    chrome.storage.local.set(storageObject);
     sendResponse(requestObject)
   })
 }

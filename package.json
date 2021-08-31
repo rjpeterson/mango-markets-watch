@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.0.154",
-    "alpinejs": "^1.9.5",
+    "alpinejs": "^3.2.4",
     "autoprefixer": "^9.7.4",
     "concurrently": "^5.1.0",
     "copy-webpack-plugin": "^5.1.1",

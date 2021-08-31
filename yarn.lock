@@ -382,6 +382,18 @@
   dependencies:
     "@types/node" "*"
 
+"@vue/reactivity@^3.0.2":
+  version "3.2.6"
+  resolved "https://registry.yarnpkg.com/@vue/reactivity/-/reactivity-3.2.6.tgz#b8993fa6f48545178e588e25a9c9431a1c1b7d50"
+  integrity sha512-8vIDD2wpCnYisNNZjmcIj+Rixn0uhZNY3G1vzlgdVdLygeRSuFjkmnZk6WwvGzUWpKfnG0e/NUySM3mVi59hAA==
+  dependencies:
+    "@vue/shared" "3.2.6"
+
+"@vue/shared@3.2.6":
+  version "3.2.6"
+  resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.6.tgz#2c22bae88fe2b7b59fa68a9c9c4cd60bae2c1794"
+  integrity sha512-uwX0Qs2e6kdF+WmxwuxJxOnKs/wEkMArtYpHSm7W+VY/23Tl8syMRyjnzEeXrNCAP0/8HZxEGkHJsjPEDNRuHw==
+
 "@webassemblyjs/ast@1.8.5":
   version "1.8.5"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.8.5.tgz#51b1c5fe6576a34953bf4b253df9f0d490d9e359"
@@ -590,10 +602,12 @@ ajv@^6.1.0, ajv@^6.10.2:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-alpinejs@^1.9.5:
-  version "1.12.0"
-  resolved "https://registry.yarnpkg.com/alpinejs/-/alpinejs-1.12.0.tgz#d252d94cab899bf2674619b41b81308c6ed5415c"
-  integrity sha512-0Kd2RjnIb2xynGn3VNy36pzz23NK2MUXba9bsP9LSZY0BkIX58P7YxMadPGye0pZIGywiiw6L4z47X/t3mPurA==
+alpinejs@^3.2.4:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/alpinejs/-/alpinejs-3.2.4.tgz#04dbda9df483cd686d3f0d183a074c5c98060810"
+  integrity sha512-nUHI7QarOyqFX1vKTP5MC54yBFh9/J+YyxE50aP3lb6aZGxwX0HIPGVuAwy2SXQFP45P4/jKHv1LOuvRp/etiQ==
+  dependencies:
+    "@vue/reactivity" "^3.0.2"
 
 ansi-colors@^3.0.0:
   version "3.2.4"
