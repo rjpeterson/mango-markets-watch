@@ -5,25 +5,25 @@ const path = require('path');
 // const contentScripts = {
 //   content: './content/index.js'
 // }
-const extensionPages = {
-  // options: './options/index.js',
-  popup: './popup/index.ts',
-}
+// const extensionPages = {
+//   // options: './options/index.js',
+//   popup: './popup/index.ts',
+// }
 
 let config = {
   mode: process.env.NODE_ENV,
-  context: __dirname + '/src'
+  context: __dirname + '/src',
+  node: {
+    fs: 'empty'
+  }
 };
-
-config.node = {
-  fs: 'empty',
-}
 
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
-      background: './background/index.ts',
+      background: './background/index.js',
+      popup: './popup/index.js',
       // ...contentScripts,
-      ...extensionPages
+      // ...extensionPages
     },
     module: {
       rules: [
@@ -38,14 +38,14 @@ let ExtensionConfig = Object.assign({}, config, {
       path: __dirname + '/extension/dist/',
       filename: '[name].dist.js',
     },
-    devtool: "source-map",
     plugins: [
       new ExtensionReloader({
         port: 9090,
         reloadPage: true,
         entries: {
           // contentScript: Object.keys(contentScripts),
-          extensionPage: Object.keys(extensionPages),
+          // extensionPage: Object.keys(extensionPages),
+          popup: 'popup',
           background: 'background'
         }
       }),

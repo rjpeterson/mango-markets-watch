@@ -7,19 +7,21 @@
     class="w-64 bg-bkg-1"
     x-data="{
             page: 'home',
-            tokensInfo:[],
-            toggles: {},
+            tokensInfo:[{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}],
+            toggles: {'loading...': true},
             headerText: 'Mango Markets Watch',
             version: 3,
             handleVersionChange(v) {
                 chrome.storage.local.set({version: v})
               }
         }"
-    x-init="
-        chrome.runtime.getBackgroundPage(
-            function(backgroundPage) {
-                { tokensInfo, toggles, version } = backgroundPage.main()
-        })
+    x-init="chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
+        if (!response) {throw new Error('could not get get stored info')}
+        console.log(`got response from background script: ${JSON.stringify(response)}`)
+        tokensInfo = response.tokensInfo
+        toggles = response.toggles
+        version = response.version
+      });
 
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
@@ -61,7 +63,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <template x-for="token in tokensInfo">
+                  <template x-for="token in tokensInfo" :key="token.name">
                     <tr x-show="toggles[token.name]">
                       <td
                         class="
@@ -133,7 +135,7 @@
                     <label for="v3">v3</label>
                   </th>
                 </tr>
-                <template x-for="token in tokensInfo" :key="token">
+                <template x-for="token in tokensInfo" :key="token.name">
                   <tr class="flex flex-row pb-1">
                     <td
                       class="flex items-end flex-auto px-2 text-left"
@@ -209,19 +211,19 @@
         class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4"
       >
         <div class="flex text-center">
-          <button x-on:click="page = 'settings'; headerText = 'Token Settings'">
+          <button @click="page = 'settings'; headerText = 'Token Settings'">
             <img src="./icons/settings.svg" width="24" height="24" />
           </button>
         </div>
         <div class="flex text-center">
           <button
-            x-on:click="page = 'home'; headerText = 'Mango Markets Watch'"
+            @click="page = 'home'; headerText = 'Mango Markets Watch'"
           >
             <img src="./icons/home.svg" width="24" height="24" />
           </button>
         </div>
         <div class="flex text-center">
-          <button x-on:click="page = 'alert'; headerText='Alerts'">
+          <button @click="page = 'alert'; headerText='Alerts'">
             <img src="./icons/alert.svg" width="24" height="24" />
           </button>
         </div>

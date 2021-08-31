@@ -13,14 +13,7 @@ import {
 } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-type Version = 1 | 2 | 3;
-interface TokensInfo {
-  name: string,
-  depositRate: string,
-  borrowRate: string
-}
-
-const tokenInfoSwitch = async (version: Version) => {
+const tokenInfoSwitch = async (version) => {
   const actions = {
     1: function () {
       console.log("getting tokenInfo version 1 ");
@@ -39,8 +32,8 @@ const tokenInfoSwitch = async (version: Version) => {
 };
 
 const getTokenInfo_v1 = async () => {
-  let tokens: String[] = [];
-  let tokensInfo: TokensInfo[] = [];
+  let tokens = [];
+  let tokensInfo = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
     .then((response) => {
@@ -113,7 +106,7 @@ const getTokenInfo_v3 = async () => {
   const cluster = "mainnet";
   const groupName = "mainnet.1";
   const config = new Config_v3(IDS_v3);
-  const clusterId = IDS_v3.groups.find((group: { name: string; cluster: string; }) => {
+  const clusterId = IDS_v3.groups.find((group) => {
     return group.name == groupName && group.cluster == cluster;
   });
 
@@ -222,6 +215,12 @@ chrome.storage.onChanged.addListener(async function (changes, namespace) {
   }
 });
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  console.log(`background received message: ${request.msg}`)
+  if (request.msg == "get stored info") {
+    main(sendResponse);
+  }
+})
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
   // if watchdog is triggered, check whether refresh alarm is there
@@ -271,7 +270,7 @@ function scheduleWatchdog() {
 }
 
 //fetch data and save to local storage
-async function startRequest(version: Version) {
+async function startRequest(version) {
   console.log("getting token info...");
   const tokensInfo = await tokenInfoSwitch(version);
   console.log(
@@ -280,15 +279,15 @@ async function startRequest(version: Version) {
   chrome.storage.local.set({ tokensInfo: tokensInfo });
 }
 
-function main() {// get data from storage and fill in data if missing
+function main(sendResponse) {// get data from storage and fill in data if missing
   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
-    const version: Version = result.version || 3;
-    const tokensInfo : (TokensInfo[] | undefined) = result.tokensInfo || undefined;
-    const toggles: {[key: string]: boolean} = result.toggles || {};
+    const version = result.version || 3;
+    const tokensInfo = result.tokensInfo || undefined;
+    const toggles = result.toggles || {};
 
     if (!tokensInfo) {throw new Error('tokensInfo could not be retrieved')}
     if (Object.keys(toggles).length !== tokensInfo.length) {
-      tokensInfo.forEach((token: TokensInfo) => {
+      tokensInfo.forEach((token) => {
         if (toggles[token.name] === undefined) {
           toggles[token.name] = true;
         }
@@ -296,10 +295,12 @@ function main() {// get data from storage and fill in data if missing
       chrome.storage.local.set({toggles: toggles})
     }
 
-    return {
+    const storedInfo = {
       version: version,
       tokensInfo: tokensInfo,
       toggles: toggles
     }
+    console.log(`background sending response: ${JSON.stringify(storedInfo)}`)
+    sendResponse(storedInfo)
   });
 }
