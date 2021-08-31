@@ -1,5 +1,3 @@
-// import { Connection, PublicKey } from `@solana/web3.js`;
-// const mango_client_v3 = require('@blockworks-foundation/mango-client-v3');
 import {
   IDS as IDS_v3,
   MangoClient as MangoClient_v3,
@@ -12,26 +10,7 @@ import {
 } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-const tokenInfoSwitch = async (version) => {
-  const actions = {
-    1: function () {
-      // console.log("getting tokenInfo version 1 ");
-      return getTokenInfo_v1();
-    },
-    2: function () {
-      // console.log('getting tokenInfo version 2 ');
-      return getTokenInfo_v2();
-    },
-    3: function () {
-      // console.log('getting tokenInfo version 3 ');
-      return getTokenInfo_v3();
-    },
-  };
-  return await (actions[version]() || actions[3]());
-};
-
 const getTokenInfo_v1 = async () => {
-  let tokens = [];
   let tokensInfo = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
@@ -163,6 +142,24 @@ const getTokenInfo_v3 = async () => {
   }
 };
 
+const tokenInfoSwitch = async (version) => {
+  const actions = {
+    1: function () {
+      // console.log("getting tokenInfo version 1 ");
+      return getTokenInfo_v1();
+    },
+    2: function () {
+      // console.log('getting tokenInfo version 2 ');
+      return getTokenInfo_v2();
+    },
+    3: function () {
+      // console.log('getting tokenInfo version 3 ');
+      return getTokenInfo_v3();
+    },
+  };
+  return await (actions[version]() || actions[3]());
+};
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
   console.log("scheduling request...");
@@ -180,52 +177,38 @@ chrome.runtime.onStartup.addListener(() => {
   getVersionStartRequest();
 });
 
-// chrome.storage.onChanged.addListener(async function (changes, namespace) {
-//   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-//     // console.log(
-//     //   `Storage key "${key}" in namespace "${namespace}" changed.`,
-//     //   `Old value: ${JSON.stringify(oldValue)}, new value: ${JSON.stringify(newValue)}.`
-//     // );
-//     if (key == "tokensInfo") {
-//       chrome.runtime.sendMessage({
-//         msg: "tokensInfo updated",
-//         data: {
-//           content: newValue,
-//         },
-//       });
-//     } 
-    // else if (key == "version") {
-    //   const tokensInfo = await tokenInfoSwitch(newValue);
-    //   console.log(
-    //     `version changed to ${newValue}. New tokenInfo: ${JSON.stringify(
-    //       tokensInfo
-    //     )}`
-    //   );
-    //   chrome.storage.local.set({ tokensInfo: tokensInfo });
-    //   chrome.runtime.sendMessage({
-    //     msg: "version updated",
-    //     data: {
-    //       content: tokensInfo,
-    //     },
-    //   });
-    // }
-//   }
-// });
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(`background received message: ${request.msg}`);
-  if (request.msg == "get stored info") {
-    main(sendResponse);
-  }
-  if (request.msg == "change version") {
-    versionChange(request.data.version, sendResponse)
+  switch(request.msg) {
+    case 'get stored info': 
+      getStoredInfo(sendResponse);
+      break;
+    case 'change version': 
+      versionChange(request.data.version, sendResponse);
+      break;
+    default: 
+      throw new Error('unfamiliar message received')
   }
   return true;
 });
+
+//schedule a new fetch every 30 minutes
+function scheduleRequest() {
+  console.log("schedule refresh alarm to 20 minutes...");
+  chrome.alarms.create("refresh", { periodInMinutes: 20 });
+}
+
+// schedule a watchdog check every 5 minutes
+function scheduleWatchdog() {
+  console.log("schedule watchdog alarm to 5 minutes...");
+  chrome.alarms.create("watchdog", { periodInMinutes: 5 });
+}
+
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
+  if(!alarm) {throw new Error('alarm triggered with no alarm')}
   // if watchdog is triggered, check whether refresh alarm is there
-  if (alarm && alarm.name === "watchdog") {
+  if (alarm.name == "watchdog") {
     chrome.alarms.get("refresh", (alarm) => {
       if (alarm) {
         console.log("Refresh alarm exists.");
@@ -236,7 +219,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         scheduleRequest();
       }
     });
-  } else {
+  } else if (alarm.name == "refresh"){
     //if refresh alarm triggered, start a new request
     console.log("Refresh alarm triggered");
     getVersionStartRequest();
@@ -256,18 +239,6 @@ function getVersionStartRequest() {
       startRequest(3);
     }
   });
-}
-
-//schedule a new fetch every 30 minutes
-function scheduleRequest() {
-  console.log("schedule refresh alarm to 20 minutes...");
-  chrome.alarms.create("refresh", { periodInMinutes: 20 });
-}
-
-// schedule a watchdog check every 5 minutes
-function scheduleWatchdog() {
-  console.log("schedule watchdog alarm to 5 minutes...");
-  chrome.alarms.create("watchdog", { periodInMinutes: 5 });
 }
 
 async function versionChange(version, sendResponse) {
@@ -318,7 +289,7 @@ async function startRequest(version) {
   });
 }
 
-function main(sendResponse) {
+function getStoredInfo(sendResponse) {
   // get data from storage and fill in data if missing
   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
     const version = result.version || 3;
