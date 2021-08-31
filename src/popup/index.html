@@ -1,11 +1,11 @@
 <html>
-    <head>
-        <meta charset="UTF-8"/>
-        <link rel="stylesheet" type="text/css" href="./popup.css">
-    </head>
-    <body 
-        class="w-64 bg-bkg-1"
-        x-data="{
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="./popup.css" />
+  </head>
+  <body
+    class="w-64 bg-bkg-1"
+    x-data="{
             page: 'home',
             tokensInfo:[],
             toggles: {},
@@ -15,7 +15,7 @@
                 chrome.storage.local.set({version: v})
               }
         }"
-        x-init="chrome.storage.local.get(
+    x-init="chrome.storage.local.get(
             ['tokensInfo', 'toggles', 'version'], 
             result => {
                 version = result.version
@@ -34,6 +34,14 @@
                 }}
                 } else {
                     console.log('result.toggles is undefined')
+                    result.tokensInfo.forEach(
+                            (token) => {
+                                toggles[token] = true
+                            }
+                        )
+                    chrome.storage.local.set({
+                        toggles: toggles
+                    })
                 }
                 
                 })
@@ -44,140 +52,206 @@
                 if (request.msg === 'tokensInfo updated') {
                     tokensInfo = request.data.content
         }})"
+  >
+    <header
+      class="
+        flex
+        justify-center
+        pt-4
+        mx-auto
+        text-base
+        font-medium
+        text-orange-default
+      "
     >
-    <header class="flex justify-center pt-4 mx-auto text-base font-medium text-orange-default">
-        <img src="./icons/logo.svg" height="24" width="24" class="mr-1">
-        <span x-text="headerText"></span>
-    </header>      
-        <div class="justify-between p-4">
-            <div class="p-1 rounded-lg bg-bkg-2">
-                <div class="min-w-full overflow-y-auto" style="height: 185px">
-                    <div x-show="page == 'home'">
-                        <div class="flex">
-                            <table class="flex-col flex-grow mx-auto table-auto">
-                                <thead class="bg-bkg-2">
-                                    <tr class="mb-2 text-xs text-center text-fgd-4">
-                                        <th class="flex-auto px-2 font-normal text-left">Token</th>
-                                        <th class="flex-auto px-2 font-normal text-right">Deposit</th>
-                                        <th class="flex-auto font-normal text-right">/</th>
-                                        <th class="flex-auto pr-2 font-normal text-right">Borrow</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="token in tokensInfo">
-                                        <tr x-show="toggles[token.name]">
-                                            <td class="flex items-end flex-auto px-2 text-left text-fgd-1" >
-                                                <!--TODO <img :src="token.icon" width="18"
+      <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
+      <span x-text="headerText"></span>
+    </header>
+    <div class="justify-between p-4">
+      <div class="p-1 rounded-lg bg-bkg-2">
+        <div class="min-w-full overflow-y-auto" style="height: 185px">
+          <div x-show="page == 'home'">
+            <div class="flex">
+              <table class="flex-col flex-grow mx-auto table-auto">
+                <thead class="bg-bkg-2">
+                  <tr class="mb-2 text-xs text-center text-fgd-4">
+                    <th class="flex-auto px-2 font-normal text-left">Token</th>
+                    <th class="flex-auto px-2 font-normal text-right">
+                      Deposit
+                    </th>
+                    <th class="flex-auto font-normal text-right">/</th>
+                    <th class="flex-auto pr-2 font-normal text-right">
+                      Borrow
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="token in tokensInfo">
+                    <tr x-show="toggles[token.name]">
+                      <td
+                        class="
+                          flex
+                          items-end
+                          flex-auto
+                          px-2
+                          text-left text-fgd-1
+                        "
+                      >
+                        <!--TODO <img :src="token.icon" width="18"
                                                 height="18" class='mr-1'> -->
-                                                <span x-text="token.name"></span>
-                                            </td>
-                                            <td class="flex-auto px-2 text-right text-green-dark">
-                                                <span x-text="token.depositRate"></span>
-                                                <span>%</span>
-                                            </td>
-                                            <td class="flex-auto font-normal text-right text-fgd-4">/</td>
-                                            <td class="flex-auto pr-2 text-right text-red-dark">
-                                                <span x-text="token.borrowRate"></span>
-                                                <span>%</span>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div x-show="page == 'settings'">
-                        <div class="text-sm">
-                            <table class="flex-col flex-grow mx-auto pt-2 text-sm table-auto text-fgd-1">
-                                <tr>
-                                    <th class="flex flex-row justify-around items-center py-2">
-                                        <input 
-                                        type="radio" 
-                                        id="v1" 
-                                        x-model="version" 
-                                        value="1"
-                                        @click="handleVersionChange(1)"
-                                        >
-                                        <label for="v1">v1</label><br>
-                                        <input 
-                                        type="radio" 
-                                        id="v2" 
-                                        x-model="version" 
-                                        value="2"
-                                        @click="handleVersionChange(2)"
-                                        >
-                                        <label for="v2">v2</label><br>
-                                        <input 
-                                        type="radio" 
-                                        id="v3" 
-                                        x-model="version" 
-                                        value="3"
-                                        @click="handleVersionChange(3)"
-                                        >
-                                        <label for="v3">v3</label>
-                                    </th>
-                                </tr>
-                                <template x-for="token in tokensInfo" :key="token">
-                                    <tr class="flex flex-row pb-1">
-                                        <td 
-                                            class="flex items-end flex-auto px-2 text-left " 
-                                            x-text="token.name">
-                                        </td>
-                                        <td class="flex items-center justify-center ml-12">
-                                            <div 
-                                                class="relative w-10 h-5 transition duration-200 ease-linear rounded-full"
-                                                :class="[toggles[token.name] === true ? 'bg-green-dark' : 'bg-fgd-4']"
-                                            >
-                                                <label 
-                                                    :for="token.name" 
-                                                    class="absolute left-0 w-5 h-5 mb-2 transition duration-100 ease-linear transform bg-white border-2 rounded-full"
-                                                    :class="[toggles[token.name] === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']">
-                                                </label>
-                                                <input 
-                                                    type="checkbox" 
-                                                    :id="token.name" 
-                                                    :name="token.name" 
-                                                    class="w-full h-full appearance-none cursor-pointer active:outline-none focus:outline-none"
-                                                    @click="
+                        <span x-text="token.name"></span>
+                      </td>
+                      <td class="flex-auto px-2 text-right text-green-dark">
+                        <span x-text="token.depositRate"></span>
+                        <span>%</span>
+                      </td>
+                      <td class="flex-auto font-normal text-right text-fgd-4">
+                        /
+                      </td>
+                      <td class="flex-auto pr-2 text-right text-red-dark">
+                        <span x-text="token.borrowRate"></span>
+                        <span>%</span>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div x-show="page == 'settings'">
+            <div class="text-sm">
+              <table
+                class="
+                  flex-col flex-grow
+                  mx-auto
+                  pt-2
+                  text-sm
+                  table-auto
+                  text-fgd-1
+                "
+              >
+                <tr>
+                  <th class="flex flex-row justify-around items-center py-2">
+                    <input
+                      type="radio"
+                      id="v1"
+                      x-model="version"
+                      value="1"
+                      @click="handleVersionChange(1)"
+                    />
+                    <label for="v1">v1</label><br />
+                    <input
+                      type="radio"
+                      id="v2"
+                      x-model="version"
+                      value="2"
+                      @click="handleVersionChange(2)"
+                    />
+                    <label for="v2">v2</label><br />
+                    <input
+                      type="radio"
+                      id="v3"
+                      x-model="version"
+                      value="3"
+                      @click="handleVersionChange(3)"
+                    />
+                    <label for="v3">v3</label>
+                  </th>
+                </tr>
+                <template x-for="token in tokensInfo" :key="token">
+                  <tr class="flex flex-row pb-1">
+                    <td
+                      class="flex items-end flex-auto px-2 text-left"
+                      x-text="token.name"
+                    ></td>
+                    <td class="flex items-center justify-center ml-12">
+                      <div
+                        class="
+                          relative
+                          w-10
+                          h-5
+                          transition
+                          duration-200
+                          ease-linear
+                          rounded-full
+                        "
+                        :class="[toggles[token.name] === true ? 'bg-green-dark' : 'bg-fgd-4']"
+                      >
+                        <label
+                          :for="token.name"
+                          class="
+                            absolute
+                            left-0
+                            w-5
+                            h-5
+                            mb-2
+                            transition
+                            duration-100
+                            ease-linear
+                            transform
+                            bg-white
+                            border-2
+                            rounded-full
+                          "
+                          :class="[toggles[token.name] === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
+                        >
+                        </label>
+                        <input
+                          type="checkbox"
+                          :id="token.name"
+                          :name="token.name"
+                          class="
+                            w-full
+                            h-full
+                            appearance-none
+                            cursor-pointer
+                            active:outline-none
+                            focus:outline-none
+                          "
+                          @click="
                                                     toggles[token.name] = ! toggles[token.name];
                                                     chrome.storage.local.set({toggles: toggles})
                                                     "
-                                                >
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </table>
-                        </div>
-                    </div>
-                    <div x-show="page == 'alert'">
-                        <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">Coming Soon</div>
-                        <!-- TODO alerts for when interest rates pass a threshold? -->
-                        <!-- or liquidation alerts? -->
-                        <!-- `Alert me when {token} {deposit/borrow} interest is {above/below} {percentage} on Mango {v1/v2/v3}` (Save Alert) -->
-                    </div>
-                </div>
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </table>
             </div>
-            <div class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4">
-                <div class="flex text-center">
-                    <button x-on:click="page = 'settings'; headerText = 'Token Settings'">
-                        <img src="./icons/settings.svg" width="24" height="24">
-                    </button>
-                </div>
-                <div class="flex text-center">
-                    <button x-on:click="page = 'home'; headerText = 'Mango Markets Watch'">
-                        <img src="./icons/home.svg" width="24" height="24">
-                    </button>
-                </div>
-                <div class="flex text-center">
-                    <button x-on:click="page = 'alert'; headerText='Alerts'">
-                    <img src="./icons/alert.svg" width="24" height="24">
-                </button>
-                </div>
+          </div>
+          <div x-show="page == 'alert'">
+            <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">
+              Coming Soon
             </div>
+            <!-- TODO alerts for when interest rates pass a threshold? -->
+            <!-- or liquidation alerts? -->
+            <!-- `Alert me when {token} {deposit/borrow} interest is {above/below} {percentage} on Mango {v1/v2/v3}` (Save Alert) -->
+          </div>
         </div>
-        <script type="text/javascript" src="./popup.dist.js"></script>
-    </body>
+      </div>
+      <div
+        class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4"
+      >
+        <div class="flex text-center">
+          <button x-on:click="page = 'settings'; headerText = 'Token Settings'">
+            <img src="./icons/settings.svg" width="24" height="24" />
+          </button>
+        </div>
+        <div class="flex text-center">
+          <button
+            x-on:click="page = 'home'; headerText = 'Mango Markets Watch'"
+          >
+            <img src="./icons/home.svg" width="24" height="24" />
+          </button>
+        </div>
+        <div class="flex text-center">
+          <button x-on:click="page = 'alert'; headerText='Alerts'">
+            <img src="./icons/alert.svg" width="24" height="24" />
+          </button>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="./popup.dist.js"></script>
+  </body>
 </html>
-
-
