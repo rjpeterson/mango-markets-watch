@@ -6,7 +6,7 @@ const path = require('path');
 //   content: './content/index.js'
 // }
 const extensionPages = {
-  options: './options/index.js',
+  // options: './options/index.js',
   popup: './popup/index.js',
 }
 
@@ -21,9 +21,18 @@ config.node = {
 
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
-      background: './background/index.js',
+      background: './background/index.ts',
       // ...contentScripts,
       ...extensionPages
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
+      ],
     },
     output: {
       path: __dirname + '/extension/dist/',
@@ -52,14 +61,14 @@ let ExtensionConfig = Object.assign({}, config, {
           from: './popup/index.css',
           to: __dirname + '/extension/dist/popup.css',
         },
-        {
-          from: './options/index.html',
-          to: __dirname + '/extension/dist/options.html',
-        },
-        {
-          from: './options/index.css',
-          to: __dirname + '/extension/dist/options.css',
-        },
+        // {
+        //   from: './options/index.html',
+        //   to: __dirname + '/extension/dist/options.html',
+        // },
+        // {
+        //   from: './options/index.css',
+        //   to: __dirname + '/extension/dist/options.css',
+        // },
         // {
         //   from: './content/index.css',
         //   to: __dirname + '/extension/dist/content.css',

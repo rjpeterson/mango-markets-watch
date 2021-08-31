@@ -14,7 +14,7 @@ import {
 } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-const tokenInfoSwitch = async (version) => {
+const tokenInfoSwitch = async (version: number) => {
   const actions = {
     1: function () {
       console.log("getting tokenInfo version 1 ");
