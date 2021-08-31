@@ -5,24 +5,27 @@
     "watch:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css -w",
     "dev:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
     "build:tailwind": "NODE_ENV=production postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
-    "dev": "concurrently \"npm run watch:tailwind\" \"NODE_ENV=development webpack --config webpack.config.js --mode=development --watch\"",
-    "build": "npm run build:tailwind && webpack --mode production"
+    "dev": "concurrently \"yarn watch:tailwind\" \"NODE_ENV=development webpack --config webpack.config.js --mode=development --watch\"",
+    "build": "yarn build:tailwind && webpack --mode production"
   },
   "dependencies": {
-    "@blockworks-foundation/mango-client": "git+https://github.com/blockworks-foundation/mango-client-v3.git",
+    "@blockworks-foundation/mango-client": "2.1.3",
+    "@blockworks-foundation/mango-client-v3": "git+https://github.com/blockworks-foundation/mango-client-v3.git",
     "@solana/web3.js": "^1.24.1"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.154",
     "alpinejs": "^1.9.5",
     "autoprefixer": "^9.7.4",
     "concurrently": "^5.1.0",
     "copy-webpack-plugin": "^5.1.1",
     "cross-env": "^7.0.0",
+    "loader-utils": "^2.0.0",
     "postcss-cli": "^7.1.0",
     "postcss-loader": "^3.0.0",
     "tailwindcss": "^1.1.4",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10",
+    "webpack": "4.41.5",
+    "webpack-cli": "3.3.10",
     "webpack-extension-reloader": "^1.1.4"
   }
 }
