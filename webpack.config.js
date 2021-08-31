@@ -38,6 +38,7 @@ let ExtensionConfig = Object.assign({}, config, {
       path: __dirname + '/extension/dist/',
       filename: '[name].dist.js',
     },
+    devtool: "source-map",
     plugins: [
       new ExtensionReloader({
         port: 9090,

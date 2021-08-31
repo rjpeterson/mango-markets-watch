@@ -113,7 +113,7 @@ const getTokenInfo_v3 = async () => {
   const cluster = "mainnet";
   const groupName = "mainnet.1";
   const config = new Config_v3(IDS_v3);
-  const clusterId = IDS_v3.groups.find((group) => {
+  const clusterId = IDS_v3.groups.find((group: { name: string; cluster: string; }) => {
     return group.name == groupName && group.cluster == cluster;
   });
 
@@ -285,7 +285,7 @@ function main() {// get data from storage and fill in anything missing
     const version: Version = result.version || 3;
     const tokensInfo : (TokensInfo[] | undefined) = result.tokensInfo || undefined;
     const toggles: {[key: string]: boolean} = result.toggles || {};
-    
+
     if (!tokensInfo) {throw new Error('tokensInfo could not be retrieved')}
     if (Object.keys(toggles).length !== tokensInfo.length) {
       tokensInfo.forEach((token: TokensInfo) => {
