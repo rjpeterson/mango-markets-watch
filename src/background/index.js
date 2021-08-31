@@ -117,9 +117,9 @@ const getTokenInfo_v3 = async () => {
   );
   const mangoProgramId = new PublicKey(clusterId.mangoProgramId);
   if (!groupConfig) {
-    throw new Error('groupConfig is undefined')
+    throw new Error("groupConfig is undefined");
   }
-  const mangoGroupKey = groupConfig.publicKey
+  const mangoGroupKey = groupConfig.publicKey;
   const client = new MangoClient_v3(connection, mangoProgramId);
 
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
@@ -136,7 +136,7 @@ const getTokenInfo_v3 = async () => {
       // const totalBorrows = rootBank.getUiTotalBorrow(mangoGroup)
 
       if (!rootBank) {
-        throw new Error('rootBanks is undefined')
+        throw new Error("rootBanks is undefined");
       }
       return {
         // time: new Date(),
@@ -215,13 +215,13 @@ chrome.storage.onChanged.addListener(async function (changes, namespace) {
   }
 });
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log(`background received message: ${request.msg}`)
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log(`background received message: ${request.msg}`);
   if (request.msg == "get stored info") {
     main(sendResponse);
   }
-  return true
-})
+  return true;
+});
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
   // if watchdog is triggered, check whether refresh alarm is there
@@ -251,8 +251,8 @@ function getVersionStartRequest() {
       );
       startRequest(result.version);
     } else {
-      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)    
-      chrome.storage.local.set({version: 3})
+      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)
+      chrome.storage.local.set({ version: 3 });
       startRequest(3);
     }
   });
@@ -280,28 +280,31 @@ async function startRequest(version) {
   chrome.storage.local.set({ tokensInfo: tokensInfo });
 }
 
-function main(sendResponse) {// get data from storage and fill in data if missing
+function main(sendResponse) {
+  // get data from storage and fill in data if missing
   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
     const version = result.version || 3;
     const tokensInfo = result.tokensInfo || undefined;
     const toggles = result.toggles || {};
 
-    if (!tokensInfo) {throw new Error('tokensInfo could not be retrieved')}
+    if (!tokensInfo) {
+      throw new Error("tokensInfo could not be retrieved");
+    }
     if (Object.keys(toggles).length !== tokensInfo.length) {
       tokensInfo.forEach((token) => {
         if (toggles[token.name] === undefined) {
           toggles[token.name] = true;
         }
       });
-      chrome.storage.local.set({toggles: toggles})
+      chrome.storage.local.set({ toggles: toggles });
     }
 
     const storedInfo = {
       version: version,
       tokensInfo: tokensInfo,
-      toggles: toggles
-    }
-    console.log(`background sending response: ${JSON.stringify(storedInfo)}`)
-    sendResponse(storedInfo)
+      toggles: toggles,
+    };
+    console.log(`background sending response: ${JSON.stringify(storedInfo)}`);
+    sendResponse(storedInfo);
   });
 }

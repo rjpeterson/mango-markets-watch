@@ -16,7 +16,9 @@
               }
         }"
     x-init="chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
-        if (!response) {throw new Error('could not get get stored info')}
+        if (!response) {
+          throw new Error('could not get get stored info')
+        }
         console.log(`got response from background script: ${JSON.stringify(response)}`)
         tokensInfo = response.tokensInfo
         toggles = response.toggles
@@ -216,9 +218,7 @@
           </button>
         </div>
         <div class="flex text-center">
-          <button
-            @click="page = 'home'; headerText = 'Mango Markets Watch'"
-          >
+          <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
             <img src="./icons/home.svg" width="24" height="24" />
           </button>
         </div>
