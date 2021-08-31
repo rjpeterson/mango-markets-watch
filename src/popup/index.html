@@ -12,12 +12,23 @@
             headerText: 'Mango Markets Watch',
             version: 3,
             handleVersionChange(v) {
-                chrome.storage.local.set({version: v})
+              chrome.runtime.sendMessage({
+                msg: 'change version',
+                data: {version: v}
+                }, function(response) {
+                  if (!response) {
+                    throw new Error('could not update version')
+                  }
+                  console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
+                  this.tokensInfo = response.tokensInfo
+                  this.toggles = response.toggles
+                  this.version = response.version
+                })
               }
         }"
     x-init="chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
         if (!response) {
-          throw new Error('could not get get stored info')
+          throw new Error('could not get stored info')
         }
         console.log(`got response from background script: ${JSON.stringify(response)}`)
         tokensInfo = response.tokensInfo

@@ -184,41 +184,45 @@ chrome.runtime.onStartup.addListener(() => {
   getVersionStartRequest();
 });
 
-chrome.storage.onChanged.addListener(async function (changes, namespace) {
-  for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-    // console.log(
-    //   `Storage key "${key}" in namespace "${namespace}" changed.`,
-    //   `Old value: ${JSON.stringify(oldValue)}, new value: ${JSON.stringify(newValue)}.`
-    // );
-    if (key == "tokensInfo") {
-      chrome.runtime.sendMessage({
-        msg: "tokensInfo updated",
-        data: {
-          content: newValue,
-        },
-      });
-    } else if (key == "version") {
-      const tokensInfo = await tokenInfoSwitch(newValue);
-      console.log(
-        `version changed to ${newValue}. New tokenInfo: ${JSON.stringify(
-          tokensInfo
-        )}`
-      );
-      chrome.storage.local.set({ tokensInfo: tokensInfo });
-      chrome.runtime.sendMessage({
-        msg: "version updated",
-        data: {
-          content: tokensInfo,
-        },
-      });
-    }
-  }
-});
+// chrome.storage.onChanged.addListener(async function (changes, namespace) {
+//   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+//     // console.log(
+//     //   `Storage key "${key}" in namespace "${namespace}" changed.`,
+//     //   `Old value: ${JSON.stringify(oldValue)}, new value: ${JSON.stringify(newValue)}.`
+//     // );
+//     if (key == "tokensInfo") {
+//       chrome.runtime.sendMessage({
+//         msg: "tokensInfo updated",
+//         data: {
+//           content: newValue,
+//         },
+//       });
+//     } 
+    // else if (key == "version") {
+    //   const tokensInfo = await tokenInfoSwitch(newValue);
+    //   console.log(
+    //     `version changed to ${newValue}. New tokenInfo: ${JSON.stringify(
+    //       tokensInfo
+    //     )}`
+    //   );
+    //   chrome.storage.local.set({ tokensInfo: tokensInfo });
+    //   chrome.runtime.sendMessage({
+    //     msg: "version updated",
+    //     data: {
+    //       content: tokensInfo,
+    //     },
+    //   });
+    // }
+//   }
+// });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(`background received message: ${request.msg}`);
   if (request.msg == "get stored info") {
     main(sendResponse);
+  }
+  if (request.msg == "change version") {
+    versionChange(request.data.version, sendResponse)
   }
   return true;
 });
@@ -270,6 +274,33 @@ function scheduleWatchdog() {
   chrome.alarms.create("watchdog", { periodInMinutes: 5 });
 }
 
+async function versionChange(version, sendResponse) {
+  console.log("updating version...");
+  const tokensInfo = await tokenInfoSwitch(version);
+  console.log(
+    `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
+  );
+  chrome.storage.local.get(["toggles"], (result) => {
+    const toggles = result.toggles || {};
+
+    if (Object.keys(toggles).length !== tokensInfo.length) {
+      tokensInfo.forEach((token) => {
+        if (toggles[token.name] === undefined) {
+          toggles[token.name] = true;
+        }
+      });
+    }
+    const requestObject = {
+      version: version,
+      tokensInfo: tokensInfo,
+      toggles: toggles,
+    };
+    console.log(`versionChange sending requestObject: ${JSON.stringify(requestObject)}`)
+    chrome.storage.local.set(requestObject);
+    sendResponse(requestObject)
+  })
+}
+
 //fetch data and save to local storage
 async function startRequest(version) {
   console.log("getting token info...");
@@ -277,7 +308,14 @@ async function startRequest(version) {
   console.log(
     `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
   );
-  chrome.storage.local.set({ tokensInfo: tokensInfo });
+  chrome.storage.local.set({ tokensInfo: tokensInfo }, function() {
+    chrome.runtime.sendMessage({
+      msg: "tokensInfo updated",
+      data: {
+        content: tokensInfo,
+      },
+    });
+  });
 }
 
 function main(sendResponse) {
