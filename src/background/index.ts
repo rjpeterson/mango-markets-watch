@@ -1,4 +1,3 @@
-// import { IDS, MangoGroup } from '@blockworks-foundation/mango-client';
 // import { Connection, PublicKey } from `@solana/web3.js`;
 // const mango_client_v3 = require('@blockworks-foundation/mango-client-v3');
 import {
@@ -14,7 +13,14 @@ import {
 } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-const tokenInfoSwitch = async (version: number) => {
+type Version = 1 | 2 | 3;
+interface TokensInfo {
+  name: string,
+  depositRate: string,
+  borrowRate: string
+}
+
+const tokenInfoSwitch = async (version: Version) => {
   const actions = {
     1: function () {
       console.log("getting tokenInfo version 1 ");
@@ -33,8 +39,8 @@ const tokenInfoSwitch = async (version: number) => {
 };
 
 const getTokenInfo_v1 = async () => {
-  let tokens = [];
-  let tokensInfo = [];
+  let tokens: String[] = [];
+  let tokensInfo: TokensInfo[] = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
     .then((response) => {
@@ -117,7 +123,10 @@ const getTokenInfo_v3 = async () => {
     "singleGossip"
   );
   const mangoProgramId = new PublicKey(clusterId.mangoProgramId);
-  const mangoGroupKey = groupConfig.publicKey;
+  if (!groupConfig) {
+    throw new Error('groupConfig is undefined')
+  }
+  const mangoGroupKey = groupConfig.publicKey
   const client = new MangoClient_v3(connection, mangoProgramId);
 
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
@@ -133,6 +142,9 @@ const getTokenInfo_v3 = async () => {
       // const totalDeposits = rootBank.getUiTotalDeposit(mangoGroup)
       // const totalBorrows = rootBank.getUiTotalBorrow(mangoGroup)
 
+      if (!rootBank) {
+        throw new Error('rootBanks is undefined')
+      }
       return {
         // time: new Date(),
         name: token.symbol,
@@ -239,7 +251,8 @@ function getVersionStartRequest() {
       );
       startRequest(result.version);
     } else {
-      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)
+      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)    
+      chrome.storage.local.set({version: 3})
       startRequest(3);
     }
   });
@@ -258,7 +271,7 @@ function scheduleWatchdog() {
 }
 
 //fetch data and save to local storage
-async function startRequest(version) {
+async function startRequest(version: Version) {
   console.log("getting token info...");
   const tokensInfo = await tokenInfoSwitch(version);
   console.log(
@@ -267,38 +280,26 @@ async function startRequest(version) {
   chrome.storage.local.set({ tokensInfo: tokensInfo });
 }
 
-function main() {
+function main() {// get data from storage and fill in anything missing
   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
-    version = result.version;
-    tokensInfo = result.tokensInfo;
-    if (result.toggles && Object.keys(result.toggles)) {
-      toggles = result.toggles;
-      if (
-        Array.isArray(result.tokensInfo) &&
-        result.tokensInfo.length &&
-        Object.keys(result.toggles).length &&
-        Object.keys(result.toggles).length !== result.tokensInfo.length
-      ) {
-        if (Array.isArray(result.tokensInfo)) {
-          result.tokensInfo.forEach((token) => {
-            if (token) {
-              if (toggles[token.name] === undefined) {
-                toggles[token.name] = true;
-              }
-            }
-          });
-        } else {
-          console.log("result.tokensInfo is not an array");
+    const version: Version = result.version || 3;
+    const tokensInfo : (TokensInfo[] | undefined) = result.tokensInfo || undefined;
+    const toggles: {[key: string]: boolean} = result.toggles || {};
+    
+    if (!tokensInfo) {throw new Error('tokensInfo could not be retrieved')}
+    if (Object.keys(toggles).length !== tokensInfo.length) {
+      tokensInfo.forEach((token: TokensInfo) => {
+        if (toggles[token.name] === undefined) {
+          toggles[token.name] = true;
         }
-      }
-    } else {
-      console.log("result.toggles is undefined");
-      result.tokensInfo.forEach((token) => {
-        toggles[token] = true;
       });
-      chrome.storage.local.set({
-        toggles: toggles,
-      });
+      chrome.storage.local.set({toggles: toggles})
+    }
+
+    return {
+      version: version,
+      tokensInfo: tokensInfo,
+      toggles: toggles
     }
   });
 }
