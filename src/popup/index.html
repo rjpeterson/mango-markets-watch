@@ -87,8 +87,13 @@
                           text-left text-fgd-1
                         "
                       >
-                        <!--TODO <img :src="token.icon" width="18"
-                                                height="18" class='mr-1'> -->
+                        <img 
+                          x-data="{icon: './icons/'+(token.name.toLowerCase())+'.svg'}" 
+                          :src="icon" 
+                          width="18"
+                          height="18" 
+                          class='mr-1'
+                        >
                         <span x-text="token.name"></span>
                       </td>
                       <td class="flex-auto px-2 text-right text-green-dark">
@@ -152,9 +157,18 @@
                   <tr class="flex flex-row pb-1">
                     <td
                       class="flex items-end flex-auto px-2 text-left"
-                      x-text="token.name"
-                    ></td>
-                    <td class="flex items-center justify-center ml-12">
+                      
+                    >
+                      <img 
+                        x-data="{icon: './icons/'+(token.name.toLowerCase())+'.svg'}" 
+                        :src="icon" 
+                        width="18"
+                        height="18" 
+                        class='mr-1'
+                      >
+                      <span x-text="token.name"></span>
+                    </td>
+                    <td class="flex items-center justify-center ml-10">
                       <div
                         class="
                           relative
