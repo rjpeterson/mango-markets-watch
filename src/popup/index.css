@@ -1,5 +1,12 @@
 @import "../dist/tailwind.dist.css";
 
+/* firefox */
+.scroller {
+  scrollbar-color: #706C81 #2A2440;
+  scrollbar-width: thin;
+}
+
+
 /* width */
 ::-webkit-scrollbar {
   width: 8px;

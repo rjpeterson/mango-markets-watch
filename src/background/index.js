@@ -78,25 +78,24 @@ const getTokenInfo_v2 = async () => {
 
 const getTokenInfo_v3 = async () => {
   console.log(`getting v3 token info...`);
-  const cluster = "mainnet";
-  const groupName = "mainnet.1";
+  const cluster = 'mainnet';
+  const group = 'mainnet.1';
+
   const config = new Config_v3(IDS_v3);
-  const clusterId = IDS_v3.groups.find((group) => {
-    return group.name == groupName && group.cluster == cluster;
-  });
-
-  const groupConfig = config.getGroup(cluster, groupName);
-  const connection = new Connection(
-    IDS_v3.cluster_urls[cluster],
-    "singleGossip"
-  );
-  const mangoProgramId = new PublicKey(clusterId.mangoProgramId);
+  const groupConfig = config.getGroup(cluster, group);
   if (!groupConfig) {
-    throw new Error("groupConfig is undefined");
-  }
+      throw new Error("unable to get mango group config");
+    }
   const mangoGroupKey = groupConfig.publicKey;
-  const client = new MangoClient_v3(connection, mangoProgramId);
 
+  const clusterData = IDS_v3.groups.find((g) => {
+      return g.name == group && g.cluster == cluster;
+    });
+  const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
+
+  const clusterUrl = IDS_v3.cluster_urls[cluster];
+  const connection = new Connection(clusterUrl, 'singleGossip');
+  const client = new MangoClient_v3(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
   if (mangoGroup) {
     const rootBanks = await mangoGroup.loadRootBanks(connection);
