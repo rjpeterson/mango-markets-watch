@@ -88,7 +88,7 @@
                         "
                       >
                         <img 
-                          x-data="{icon: './icons/'+(token.name.toLowerCase())+'.svg'}" 
+                          x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}" 
                           :src="icon" 
                           width="18"
                           height="18" 
@@ -160,7 +160,7 @@
                       
                     >
                       <img 
-                        x-data="{icon: './icons/'+(token.name.toLowerCase())+'.svg'}" 
+                        x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}" 
                         :src="icon" 
                         width="18"
                         height="18" 
