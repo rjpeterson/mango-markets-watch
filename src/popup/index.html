@@ -6,42 +6,46 @@
   <body
     class="w-64 bg-bkg-1"
     x-data="{
-            page: 'home',
-            tokensInfo:[{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}],
-            toggles: {'loading...': true},
-            headerText: 'Mango Markets Watch',
-            version: 3,
-        }"
-    x-init="$watch('version', value => {
-      chrome.runtime.sendMessage({
-        msg: 'change version',
-        data: {version: value}
-        }, function(response) {
-          if (!response) {
-            throw new Error('could not update version')
-          }
-          console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-          tokensInfo = response.tokensInfo
-          toggles = response.toggles
-        })
-    })
-    
-    chrome.runtime.sendMessage({msg: 'get stored info'}, function(response) {
-        if (!response) {
-          throw new Error('could not get stored info')
-        }
-        console.log(`got response from background script: ${JSON.stringify(response)}`)
-        tokensInfo = response.tokensInfo
-        toggles = response.toggles
-        version = response.version
-      });
+      page: 'home',
+      tokensInfo:[{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}],
+      toggles: {'loading...': true},
+      headerText: 'Mango Markets Watch',
+      version: 3,
+  }"
+    x-init="chrome.runtime.sendMessage({msg: 'get stored info'},
+function(response) {
+  if (!response) {
+    throw new Error('could not get stored info')
+  }
+  console.log(`got response from background script: ${JSON.stringify(response)}`)
+  tokensInfo = response.tokensInfo
+  toggles = response.toggles
+  version = response.version
+});
 
-        chrome.runtime.onMessage.addListener(
-            function(request, sender, sendResponse) {
-                console.log(`received message ${request.msg}` )
-                if (request.msg === 'tokensInfo updated') {
-                    tokensInfo = request.data.content
-        }})"
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        console.log(`received message ${request.msg}` )
+        if (request.msg === 'tokensInfo updated') {
+            tokensInfo = request.data.content
+}});
+
+$watch('version', value => {
+  if (!value) {return}
+  chrome.runtime.sendMessage({
+    msg: 'change version',
+    data: {
+      version: value
+    }
+  }, function(response) {
+    if (!response) {
+      throw new Error('could not update version')
+    }
+    console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
+    tokensInfo = response.tokensInfo
+    toggles = response.toggles
+  })
+})"
   >
     <header
       class="
@@ -87,13 +91,13 @@
                           text-left text-fgd-1
                         "
                       >
-                        <img 
-                          x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}" 
-                          :src="icon" 
+                        <img
+                          x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                          :src="icon"
                           width="18"
-                          height="18" 
-                          class='mr-1'
-                        >
+                          height="18"
+                          class="mr-1"
+                        />
                         <span x-text="token.name"></span>
                       </td>
                       <td class="flex-auto pr-1 text-right text-green-dark">
@@ -155,17 +159,14 @@
                 </tr>
                 <template x-for="token in tokensInfo" :key="token.name">
                   <tr class="flex flex-row pb-1">
-                    <td
-                      class="flex items-end flex-auto px-2 text-left"
-                      
-                    >
-                      <img 
-                        x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}" 
-                        :src="icon" 
+                    <td class="flex items-end flex-auto px-2 text-left">
+                      <img
+                        x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        :src="icon"
                         width="18"
-                        height="18" 
-                        class='mr-1'
-                      >
+                        height="18"
+                        class="mr-1"
+                      />
                       <span x-text="token.name"></span>
                     </td>
                     <td class="flex items-center justify-center ml-10">

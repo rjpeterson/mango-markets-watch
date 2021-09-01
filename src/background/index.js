@@ -4,27 +4,35 @@ import {
   Config as Config_v3,
   I80F48,
 } from "@blockworks-foundation/mango-client-v3";
-import {
-  IDS,
-  MangoClient,
-} from "@blockworks-foundation/mango-client";
+import { IDS, MangoClient } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
+
+const compare = (a, b) => {
+  if (a.name < b.name) {
+    return -1;
+  }
+  if (a.name > b.name) {
+    return 1;
+  }
+  return 0;
+};
 
 const getTokenInfo_v1 = async () => {
   let tokensInfo = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
     .then((response) => {
-      const slicedResponse = response.slice(-3)
+      const slicedResponse = response.slice(-3);
       console.log(`v1 api response: ${JSON.stringify(slicedResponse)}`);
-      slicedResponse.forEach(entry => {
-          tokensInfo.push({
-            name: entry.symbol,
-            depositRate: (entry.depositInterest * 100).toFixed(2),
-            borrowRate: (entry.borrowInterest * 100).toFixed(2),
-          });
-      })
+      slicedResponse.forEach((entry) => {
+        tokensInfo.push({
+          name: entry.symbol,
+          depositRate: (entry.depositInterest * 100).toFixed(2),
+          borrowRate: (entry.borrowInterest * 100).toFixed(2),
+        });
+      });
     });
+  tokensInfo.sort(compare);
   return tokensInfo;
 };
 
@@ -70,6 +78,7 @@ const getTokenInfo_v2 = async () => {
       }
     });
     // console.log(`v${version} latestStats: ${JSON.stringify(latestStats)}`)
+    tokensInfo.sort(compare);
     return tokensInfo;
   } else {
     console.log(`Mango Group not found`);
@@ -78,23 +87,23 @@ const getTokenInfo_v2 = async () => {
 
 const getTokenInfo_v3 = async () => {
   console.log(`getting v3 token info...`);
-  const cluster = 'mainnet';
-  const group = 'mainnet.1';
+  const cluster = "mainnet";
+  const group = "mainnet.1";
 
   const config = new Config_v3(IDS_v3);
   const groupConfig = config.getGroup(cluster, group);
   if (!groupConfig) {
-      throw new Error("unable to get mango group config");
-    }
+    throw new Error("unable to get mango group config");
+  }
   const mangoGroupKey = groupConfig.publicKey;
 
   const clusterData = IDS_v3.groups.find((g) => {
-      return g.name == group && g.cluster == cluster;
-    });
+    return g.name == group && g.cluster == cluster;
+  });
   const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
 
   const clusterUrl = IDS_v3.cluster_urls[cluster];
-  const connection = new Connection(clusterUrl, 'singleGossip');
+  const connection = new Connection(clusterUrl, "singleGossip");
   const client = new MangoClient_v3(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
   if (mangoGroup) {
@@ -135,6 +144,7 @@ const getTokenInfo_v3 = async () => {
       };
     });
     // console.log(`v3 tokenInfo: ${JSON.stringify(latestStats)}`)
+    tokensInfo.sort(compare);
     return tokensInfo;
   } else {
     console.log(`Mango Group not found`);
@@ -178,15 +188,21 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(`background received message: ${request.msg}`);
-  switch(request.msg) {
-    case 'get stored info': 
+  switch (request.msg) {
+    case "get stored info":
       getStoredInfo(sendResponse);
       break;
-    case 'change version': 
+    case "change version":
       versionChange(request.data.version, sendResponse);
       break;
-    default: 
-      throw new Error('unfamiliar message received')
+    case "tokensInfo updated":
+      return false;
+      break;
+    case undefined:
+      return false;
+      break;
+    default:
+      throw new Error(`unfamiliar message received: ${request.msg}`);
   }
   return true;
 });
@@ -205,7 +221,9 @@ function scheduleWatchdog() {
 
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if(!alarm) {throw new Error('alarm triggered with no alarm')}
+  if (!alarm) {
+    throw new Error("alarm triggered with no alarm");
+  }
   // if watchdog is triggered, check whether refresh alarm is there
   if (alarm.name == "watchdog") {
     chrome.alarms.get("refresh", (alarm) => {
@@ -218,7 +236,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         scheduleRequest();
       }
     });
-  } else if (alarm.name == "refresh"){
+  } else if (alarm.name == "refresh") {
     //if refresh alarm triggered, start a new request
     console.log("Refresh alarm triggered");
     getVersionStartRequest();
@@ -265,10 +283,12 @@ async function versionChange(version, sendResponse) {
       tokensInfo: tokensInfo,
       toggles: toggles,
     };
-    console.log(`versionChange sending requestObject: ${JSON.stringify(requestObject)}`)
+    console.log(
+      `versionChange sending requestObject: ${JSON.stringify(requestObject)}`
+    );
     chrome.storage.local.set(storageObject);
-    sendResponse(requestObject)
-  })
+    sendResponse(requestObject);
+  });
 }
 
 //fetch data and save to local storage
@@ -278,13 +298,13 @@ async function startRequest(version) {
   console.log(
     `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
   );
-  chrome.storage.local.set({ tokensInfo: tokensInfo }, function() {
-    chrome.runtime.sendMessage({
-      msg: "tokensInfo updated",
-      data: {
-        content: tokensInfo,
-      },
-    });
+  chrome.storage.local.set({ tokensInfo: tokensInfo }, function () {
+    // chrome.runtime.sendMessage({
+    //   msg: "tokensInfo updated",
+    //   data: {
+    //     content: tokensInfo,
+    //   },
+    // });
   });
 }
 
