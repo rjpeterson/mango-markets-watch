@@ -61,64 +61,91 @@ $watch('version', value => {
       <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
       <span x-text="headerText"></span>
     </header>
-    <div class="justify-between p-4">
-      <div class="p-1 rounded-lg bg-bkg-2">
-        <div class="scroller min-w-full overflow-y-auto" style="height: 185px">
+    <div class="justify-between px-4 pb-3 pt-2">
+      <div class="p-1 rounded-lg bg-bkg-2" style="height: 13rem">
           <div x-show="page == 'home'">
-            <div class="flex">
-              <table class="flex-col flex-grow mx-auto table-auto">
-                <thead class="bg-bkg-2">
-                  <tr class="mb-2 text-xs text-center text-fgd-4">
-                    <th class="flex-auto px-2 font-normal text-left">Token</th>
-                    <th class="flex-auto px-2 font-normal text-right">
-                      Deposit
-                    </th>
-                    <th class="flex-auto font-normal text-right">/</th>
-                    <th class="flex-auto pr-2 font-normal text-right">
-                      Borrow
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="token in tokensInfo" :key="token.name">
-                    <tr x-show="toggles[token.name]">
-                      <td
-                        class="
-                          flex
-                          items-end
-                          flex-auto
-                          pl-2
-                          text-left text-fgd-1
-                        "
-                      >
-                        <img
-                          x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
-                          :src="icon"
-                          width="18"
-                          height="18"
-                          class="mr-1"
-                        />
-                        <span x-text="token.name"></span>
-                      </td>
-                      <td class="flex-auto pr-1 text-right text-green-dark">
-                        <span x-text="token.depositRate"></span>
-                        <span>%</span>
-                      </td>
-                      <td class="flex-auto font-normal text-right text-fgd-4">
-                        /
-                      </td>
-                      <td class="flex-auto pr-2 text-right text-red-dark">
-                        <span x-text="token.borrowRate"></span>
-                        <span>%</span>
-                      </td>
+              <div class="flex flex-row justify-around items-center pb-2 mx-3 text-fgd-1">
+                <input
+                  type="radio"
+                  id="v1"
+                  x-model="version"
+                  value="1"
+                  @click="version = 1"
+                />
+                <label for="v1">v1</label><br />
+                <input
+                  type="radio"
+                  id="v2"
+                  x-model="version"
+                  value="2"
+                  @click="version = 2"
+                />
+                <label for="v2">v2</label><br />
+                <input
+                  type="radio"
+                  id="v3"
+                  x-model="version"
+                  value="3"
+                  @click="version = 3"
+                />
+                <label for="v3">v3</label>
+              </div>
+            <div class="flex"></div>
+              <div class="flex scroller min-w-full overflow-y-auto" >
+                <table class="flex-col flex-grow mx-auto table-auto">
+                  <thead class="bg-bkg-2">
+                    <tr class="mb-2 text-xs text-center text-fgd-4">
+                      <th class="flex-auto px-2 font-normal text-left">Token</th>
+                      <th class="flex-auto px-2 font-normal text-right">
+                        Deposit
+                      </th>
+                      <th class="flex-auto font-normal text-right">/</th>
+                      <th class="flex-auto pr-2 font-normal text-right">
+                        Borrow
+                      </th>
                     </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    <template x-for="token in tokensInfo" :key="token.name">
+                      <tr x-show="toggles[token.name]">
+                        <td
+                          class="
+                            flex
+                            items-end
+                            flex-auto
+                            pl-2
+                            text-left text-fgd-1
+                          "
+                        >
+                          <img
+                            x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                            :src="icon"
+                            width="18"
+                            height="18"
+                            class="mr-1"
+                          />
+                          <span x-text="token.name"></span>
+                        </td>
+                        <td class="flex-auto pr-1 text-right text-green-dark">
+                          <span x-text="token.depositRate"></span>
+                          <span>%</span>
+                        </td>
+                        <td class="flex-auto font-normal text-right text-fgd-4">
+                          /
+                        </td>
+                        <td class="flex-auto pr-2 text-right text-red-dark">
+                          <span x-text="token.borrowRate"></span>
+                          <span>%</span>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            
           </div>
           <div x-show="page == 'settings'">
-            <div class="text-sm">
+            <div class="text-sm scroller min-w-full overflow-y-auto" >
               <table
                 class="
                   flex-col flex-grow
@@ -129,34 +156,6 @@ $watch('version', value => {
                   text-fgd-1
                 "
               >
-                <tr>
-                  <th class="flex flex-row justify-around items-center py-2">
-                    <input
-                      type="radio"
-                      id="v1"
-                      x-model="version"
-                      value="1"
-                      @click="version = 1"
-                    />
-                    <label for="v1">v1</label><br />
-                    <input
-                      type="radio"
-                      id="v2"
-                      x-model="version"
-                      value="2"
-                      @click="version = 2"
-                    />
-                    <label for="v2">v2</label><br />
-                    <input
-                      type="radio"
-                      id="v3"
-                      x-model="version"
-                      value="3"
-                      @click="version = 3"
-                    />
-                    <label for="v3">v3</label>
-                  </th>
-                </tr>
                 <template x-for="token in tokensInfo" :key="token.name">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
@@ -223,6 +222,7 @@ $watch('version', value => {
                   </tr>
                 </template>
               </table>
+
             </div>
           </div>
           <div x-show="page == 'alert'">
@@ -233,7 +233,6 @@ $watch('version', value => {
             <!-- or liquidation alerts? -->
             <!-- `Alert me when {token} {deposit/borrow} interest is {above/below} {percentage} on Mango {v1/v2/v3}` (Save Alert) -->
           </div>
-        </div>
       </div>
       <div
         class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4"
