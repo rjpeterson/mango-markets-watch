@@ -4,31 +4,42 @@
     <link rel="stylesheet" type="text/css" href="./popup.css" />
   </head>
   <body
-    class="w-64 bg-bkg-1"
+    class="bg-bkg-1 flex flex-col justify-between"
+    style="height:auto; width:18rem"
     x-data="{
       page: 'home',
-      tokensInfo:[{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}],
+      versionsInfo:{loading: [{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}]},
       toggles: {'loading...': true},
       headerText: 'Mango Markets Watch',
-      version: 3,
+      version: 'loading',
   }"
-    x-init="chrome.runtime.sendMessage({msg: 'get stored info'},
-function(response) {
-  if (!response) {
-    throw new Error('could not get stored info')
-  }
-  console.log(`got response from background script: ${JSON.stringify(response)}`)
-  tokensInfo = response.tokensInfo
-  toggles = response.toggles
-  version = response.version
-});
+    x-init="
+    chrome.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            console.log(`received message ${request.msg}` )
+            if (request.msg === 'versionsInfo updated') {
+                versionsInfo = request.data.versionsInfo
+    }})
+    
+    chrome.runtime.sendMessage({msg: 'onPopup'},
+      function(response) {
+        if (!response) {
+          throw new Error('could not get stored versions info')
+        }
+        console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
+        versionsInfo = response.versionsInfo
+        toggles = response.toggles
+        version = response.version
+      });
 
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        console.log(`received message ${request.msg}` )
-        if (request.msg === 'tokensInfo updated') {
-            tokensInfo = request.data.content
-}});
+    chrome.runtime.sendMessage({msg: 'refresh version'}, 
+    function(response) {
+      if (!response) {
+        throw new Error('could not refresh version info')
+      }
+      console.log(`got response from background script for msg 'refresh version': ${JSON.stringify(response)}`)
+      versionsInfo[version] = response
+    });
 
 $watch('version', value => {
   if (!value) {return}
@@ -42,7 +53,7 @@ $watch('version', value => {
       throw new Error('could not update version')
     }
     console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-    tokensInfo = response.tokensInfo
+    versionsInfo[value] = response.versionInfo
     toggles = response.toggles
   })
 })"
@@ -61,10 +72,10 @@ $watch('version', value => {
       <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
       <span x-text="headerText"></span>
     </header>
-    <div class="justify-between px-4 pb-3 pt-2">
-      <div class="p-1 rounded-lg bg-bkg-2" style="height: 13rem">
+    <div class="justify-between px-4 pb-3 pt-2 flex flex-col">
+      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14rem">
           <div x-show="page == 'home'">
-              <div class="flex flex-row justify-around items-center pb-2 mx-3 text-fgd-1">
+              <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
                 <input
                   type="radio"
                   id="v1"
@@ -90,8 +101,7 @@ $watch('version', value => {
                 />
                 <label for="v3">v3</label>
               </div>
-            <div class="flex"></div>
-              <div class="flex scroller min-w-full overflow-y-auto" >
+              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 11.2rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
                   <thead class="bg-bkg-2">
                     <tr class="mb-2 text-xs text-center text-fgd-4">
@@ -106,7 +116,7 @@ $watch('version', value => {
                     </tr>
                   </thead>
                   <tbody>
-                    <template x-for="token in tokensInfo" :key="token.name">
+                    <template x-for="token in versionsInfo[version]" :key="token.name">
                       <tr x-show="toggles[token.name]">
                         <td
                           class="
@@ -145,7 +155,7 @@ $watch('version', value => {
             
           </div>
           <div x-show="page == 'settings'">
-            <div class="text-sm scroller min-w-full overflow-y-auto" >
+            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 13.5rem;">
               <table
                 class="
                   flex-col flex-grow
@@ -156,7 +166,7 @@ $watch('version', value => {
                   text-fgd-1
                 "
               >
-                <template x-for="token in tokensInfo" :key="token.name">
+                <template x-for="token in versionsInfo[version]" :key="token.name">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
                       <img
