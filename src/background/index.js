@@ -4,6 +4,8 @@
 //  const DataLoader = () => (
 //   <div className="animate-pulse bg-th-bkg-3 h-5 w-10 rounded-sm" />
 //   )
+// TODO toggles currently broken when changing versions or closing popup. Not being stored in chrome.storage???
+// TODO version changing still funny. takes a second to display tokens from new version that arent in old version
   
 import {
   IDS as IDS_v3,
