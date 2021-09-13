@@ -1,11 +1,7 @@
-//TODO fetch tokenInfo for all versions every 15 minutes and save in storage,
-// on popup first fetch stored data to reduce lag, then update when new version specific fetch comes in
-// maybe use pulsing load animation 
+// pulsing load animation 
 //  const DataLoader = () => (
 //   <div className="animate-pulse bg-th-bkg-3 h-5 w-10 rounded-sm" />
 //   )
-// TODO toggles currently broken when changing versions or closing popup. Not being stored in chrome.storage???
-// TODO version changing still funny. takes a second to display tokens from new version that arent in old version
   
 import {
   IDS as IDS_v3,

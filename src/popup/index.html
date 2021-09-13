@@ -11,6 +11,7 @@
       versionsInfo:{loading: [{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}]},
       toggles: {'loading...': true},
       headerText: 'Mango Markets Watch',
+      prevVersion: null,
       version: 'loading',
   }"
     x-init="
@@ -39,24 +40,28 @@
       }
       console.log(`got response from background script for msg 'refresh version': ${JSON.stringify(response)}`)
       versionsInfo[version] = response
+      console.log(`new versionsInfo: ${JSON.stringify(versionsInfo)}`)
+
+      $watch('version', value => {
+        if (!value || value == prevVersion) {return}
+        prevVersion = value;
+        chrome.runtime.sendMessage({
+          msg: 'change version',
+          data: {
+            version: value
+          }
+        }, function(response) {
+          if (!response) {
+            throw new Error('could not update version')
+          }
+          console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
+          versionsInfo[value] = response.versionInfo
+
+        })
+      })
     });
 
-$watch('version', value => {
-  if (!value) {return}
-  chrome.runtime.sendMessage({
-    msg: 'change version',
-    data: {
-      version: value
-    }
-  }, function(response) {
-    if (!response) {
-      throw new Error('could not update version')
-    }
-    console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-    versionsInfo[value] = response.versionInfo
-    toggles = response.toggles
-  })
-})"
+"
   >
     <header
       class="
