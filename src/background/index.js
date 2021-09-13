@@ -1,11 +1,7 @@
-//TODO fetch tokenInfo for all versions every 15 minutes and save in storage,
-// on popup first fetch stored data to reduce lag, then update when new version specific fetch comes in
-// maybe use pulsing load animation 
+// pulsing load animation 
 //  const DataLoader = () => (
 //   <div className="animate-pulse bg-th-bkg-3 h-5 w-10 rounded-sm" />
 //   )
-
-//TODO move version radio buttons to home panel
   
 import {
   IDS as IDS_v3,
@@ -27,12 +23,13 @@ const compare = (a, b) => {
 };
 
 const getTokenInfo_v1 = async () => {
+  console.log(`getting v1 token info...`)
   let tokensInfo = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
     .then((response) => response.json())
     .then((response) => {
       const slicedResponse = response.slice(-3);
-      console.log(`v1 api response: ${JSON.stringify(slicedResponse)}`);
+      // console.log(`v1 api response: ${JSON.stringify(slicedResponse)}`);
       slicedResponse.forEach((entry) => {
         tokensInfo.push({
           name: entry.symbol,
@@ -46,7 +43,7 @@ const getTokenInfo_v1 = async () => {
 };
 
 const getTokenInfo_v2 = async () => {
-  // console.log(`getting v2 token info...`)
+  console.log(`getting v2 token info...`)
   let cluster = "mainnet-beta";
   let group = "BTC_ETH_SOL_SRM_USDC";
 
@@ -160,7 +157,7 @@ const getTokenInfo_v3 = async () => {
   }
 };
 
-const tokenInfoSwitch = async (version) => {
+const getSingleVersion = async (version) => {
   const actions = {
     1: function () {
       // console.log("getting tokenInfo version 1 ");
@@ -178,33 +175,98 @@ const tokenInfoSwitch = async (version) => {
   return await (actions[version]() || actions[3]());
 };
 
+const getAllVersions = async () => {
+  const v1 = await getTokenInfo_v1()
+  const v2 = await getTokenInfo_v2()
+  const v3 = await getTokenInfo_v3()
+
+  return {'1': v1,'2': v2,'3': v3}
+}
+
+const getToggles = () => {
+  return chrome.storage.local.get(['toggles'], (result) => {
+    let toggles = {}
+    if (typeof result.toggles !== 'undefined') {
+      toggles = result.toggles
+    }
+    return toggles
+  })
+}
+// ONSTARTUP: getAllVersions & send to storage
+// ONALARM: getAllVersions, send to storage, send to popup
+const refreshData = async () => {
+  const versionsInfo = await getAllVersions()
+  console.log(`updating versionsInfo in storage: ${JSON.stringify(versionsInfo)}`)
+  chrome.storage.local.set({versionsInfo: versionsInfo})
+  chrome.runtime.sendMessage({
+    msg: "versionsInfo updated",
+    data: {
+      versionsInfo: versionsInfo,
+    },
+  });
+}
+
+// ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
+const onPopup = (sendResponse) => {
+  chrome.storage.local.get(['versionsInfo', 'toggles', 'version'], (response) => {
+    sendResponse(response)
+  })
+}
+
+const refreshVersion = (sendResponse) => {
+  chrome.storage.local.get(['version'], async (result) => {
+    !result.version ? result.version = 3 : null
+    const versionInfo = await getSingleVersion(result.version)
+    chrome.storage.local.set({versionsInfo: {[result.version]: versionInfo}})
+    sendResponse(versionInfo);
+  })
+  
+}
+// ONVERSIONCHANGE: display version info from data object, send new version message, send new version # to storage, getSingleVersion, get toggles send to storage, send response, display fresh data
+const onVersionChange = async (version, sendResponse) => {
+  const versionInfo = await getSingleVersion(version)
+  const toggles = getToggles() || {}
+  if (Object.keys(toggles).length !== versionInfo.length) {
+    versionInfo.forEach((token) => {
+      if (toggles[token.name] === undefined) {
+        toggles[token.name] = true;
+      }
+    });
+  }
+  chrome.storage.local.set({versionInfo: {[version]: versionInfo}, toggles: toggles, version: version})
+  sendResponse({versionInfo: versionInfo, toggles: toggles})
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
-  console.log("scheduling request...");
-  scheduleRequest();
-  console.log("scheduling watchdog...");
-  scheduleWatchdog();
+  console.log("setting fetch alarm...");
+  setFetchAlarm();
+  console.log("setting watchdog alarm...");
+  setWatchdogAlarm();
   console.log("getting initial token info...");
-  getVersionStartRequest();
+  refreshData();
 });
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
 chrome.runtime.onStartup.addListener(() => {
   console.log("onStartup....");
   console.log("getting version and token info...");
-  getVersionStartRequest();
+  refreshData();
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(`background received message: ${request.msg}`);
+  console.log(`background received msg: ${request.msg} data: ${JSON.stringify(request.data)}`);
   switch (request.msg) {
-    case "get stored info":
-      getStoredInfo(sendResponse);
+    case "onPopup":
+      onPopup(sendResponse);
+      break;
+    case "refresh version":
+      refreshVersion(sendResponse);
       break;
     case "change version":
-      versionChange(request.data.version, sendResponse);
+      onVersionChange(request.data.version, sendResponse);
       break;
-    case "tokensInfo updated":
+    case "versionsInfo updated":
       return false;
       break;
     case undefined:
@@ -217,13 +279,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 //schedule a new fetch every 30 minutes
-function scheduleRequest() {
+function setFetchAlarm() {
   console.log("schedule refresh alarm to 20 minutes...");
   chrome.alarms.create("refresh", { periodInMinutes: 20 });
 }
 
 // schedule a watchdog check every 5 minutes
-function scheduleWatchdog() {
+function setWatchdogAlarm() {
   console.log("schedule watchdog alarm to 5 minutes...");
   chrome.alarms.create("watchdog", { periodInMinutes: 5 });
 }
@@ -241,107 +303,107 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       } else {
         //if it is no there, start a new request and reschedule refresh alarm
         console.log("Refresh alarm doesn't exist, starting a new one");
-        getVersionStartRequest();
-        scheduleRequest();
+        refreshData();
+        setFetchAlarm();
       }
     });
   } else if (alarm.name == "refresh") {
     //if refresh alarm triggered, start a new request
     console.log("Refresh alarm triggered");
-    getVersionStartRequest();
+    refreshData();
   }
 });
 
-function getVersionStartRequest() {
-  chrome.storage.local.get(["version"], (result) => {
-    if (result.version) {
-      console.log(
-        `got version from storage. starting request for tokenInfo version: ${result.version}`
-      );
-      startRequest(result.version);
-    } else {
-      // console.log(`No version # in storage. starting request for tokenInfo version: 3`)
-      chrome.storage.local.set({ version: 3 });
-      startRequest(3);
-    }
-  });
-}
+// function getVersionStartRequest() {
+//   chrome.storage.local.get(["version"], (result) => {
+//     if (result.version) {
+//       console.log(
+//         `got version from storage. starting request for tokenInfo version: ${result.version}`
+//       );
+//       startRequest(result.version);
+//     } else {
+//       // console.log(`No version # in storage. starting request for tokenInfo version: 3`)
+//       chrome.storage.local.set({ version: 3 });
+//       startRequest(3);
+//     }
+//   });
+// }
 
-async function versionChange(version, sendResponse) {
-  console.log("updating version...");
-  const tokensInfo = await tokenInfoSwitch(version);
-  console.log(
-    `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
-  );
-  chrome.storage.local.get(["toggles"], (result) => {
-    const toggles = result.toggles || {};
+// async function versionChange(version, sendResponse) {
+//   console.log("updating version...");
+//   const tokensInfo = await tokenInfoSwitch(version);
+//   console.log(
+//     `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
+//   );
+//   chrome.storage.local.get(["toggles"], (result) => {
+//     const toggles = result.toggles || {};
 
-    if (Object.keys(toggles).length !== tokensInfo.length) {
-      tokensInfo.forEach((token) => {
-        if (toggles[token.name] === undefined) {
-          toggles[token.name] = true;
-        }
-      });
-    }
-    const storageObject = {
-      version: version,
-      tokensInfo: tokensInfo,
-      toggles: toggles,
-    };
-    const requestObject = {
-      tokensInfo: tokensInfo,
-      toggles: toggles,
-    };
-    console.log(
-      `versionChange sending requestObject: ${JSON.stringify(requestObject)}`
-    );
-    chrome.storage.local.set(storageObject);
-    sendResponse(requestObject);
-  });
-}
+//     if (Object.keys(toggles).length !== tokensInfo.length) {
+//       tokensInfo.forEach((token) => {
+//         if (toggles[token.name] === undefined) {
+//           toggles[token.name] = true;
+//         }
+//       });
+//     }
+//     const storageObject = {
+//       version: version,
+//       tokensInfo: tokensInfo,
+//       toggles: toggles,
+//     };
+//     const requestObject = {
+//       tokensInfo: tokensInfo,
+//       toggles: toggles,
+//     };
+//     console.log(
+//       `versionChange sending requestObject: ${JSON.stringify(requestObject)}`
+//     );
+//     chrome.storage.local.set(storageObject);
+//     sendResponse(requestObject);
+//   });
+// }
 
-//fetch data and save to local storage
-async function startRequest(version) {
-  console.log("getting token info...");
-  const tokensInfo = await tokenInfoSwitch(version);
-  console.log(
-    `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
-  );
-  chrome.storage.local.set({ tokensInfo: tokensInfo }, function () {
-    // chrome.runtime.sendMessage({
-    //   msg: "tokensInfo updated",
-    //   data: {
-    //     content: tokensInfo,
-    //   },
-    // });
-  });
-}
+// //fetch data and save to local storage
+// async function startRequest(version) {
+//   console.log("getting token info...");
+//   const tokensInfo = await tokenInfoSwitch(version);
+//   console.log(
+//     `got version ${version} tokensInfo: ${JSON.stringify(tokensInfo)}`
+//   );
+//   chrome.storage.local.set({ tokensInfo: tokensInfo }, function () {
+//     chrome.runtime.sendMessage({
+//       msg: "tokensInfo updated",
+//       data: {
+//         content: tokensInfo,
+//       },
+//     });
+//   });
+// }
 
-function getStoredInfo(sendResponse) {
-  // get data from storage and fill in data if missing
-  chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
-    const version = result.version || 3;
-    const tokensInfo = result.tokensInfo || undefined;
-    const toggles = result.toggles || {};
+// function getStoredInfo(sendResponse) {
+//   // get data from storage and fill in data if missing
+//   chrome.storage.local.get(["tokensInfo", "toggles", "version"], (result) => {
+//     const version = result.version || 3;
+//     const tokensInfo = result.tokensInfo || undefined;
+//     const toggles = result.toggles || {};
 
-    if (!tokensInfo) {
-      throw new Error("tokensInfo could not be retrieved");
-    }
-    if (Object.keys(toggles).length !== tokensInfo.length) {
-      tokensInfo.forEach((token) => {
-        if (toggles[token.name] === undefined) {
-          toggles[token.name] = true;
-        }
-      });
-      chrome.storage.local.set({ toggles: toggles });
-    }
+//     if (!tokensInfo) {
+//       throw new Error("tokensInfo could not be retrieved");
+//     }
+//     if (Object.keys(toggles).length !== tokensInfo.length) {
+//       tokensInfo.forEach((token) => {
+//         if (toggles[token.name] === undefined) {
+//           toggles[token.name] = true;
+//         }
+//       });
+//       chrome.storage.local.set({ toggles: toggles });
+//     }
 
-    const storedInfo = {
-      version: version,
-      tokensInfo: tokensInfo,
-      toggles: toggles,
-    };
-    console.log(`background sending response: ${JSON.stringify(storedInfo)}`);
-    sendResponse(storedInfo);
-  });
-}
+//     const storedInfo = {
+//       version: version,
+//       tokensInfo: tokensInfo,
+//       toggles: toggles,
+//     };
+//     console.log(`background sending response: ${JSON.stringify(storedInfo)}`);
+//     sendResponse(storedInfo);
+//   });
+// }
