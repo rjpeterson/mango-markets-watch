@@ -23,9 +23,5 @@
   "background": {
     "scripts": ["dist/background.dist.js"],
     "persistent": false
-  },
-  "options_ui": {
-    "page": "dist/options.html",
-    "open_in_tab": false
   }
 }
