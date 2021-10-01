@@ -12,6 +12,8 @@ import {
 import { IDS, MangoClient } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
 
+const rpcToken = "https://mango.rpcpool.com/30f3e001cc012206a811fd45f95e"
+
 const compare = (a, b) => {
   if (a.name < b.name) {
     return -1;
@@ -26,6 +28,7 @@ const getTokenInfo_v1 = async () => {
   console.log(`getting v1 token info...`)
   let tokensInfo = [];
   await fetch("https://mango-stats.herokuapp.com/?mangoGroup=BTC_ETH_USDT")
+    .then((response) => {if (!response.ok) {throw new Error('Could not fetch v1 data')}})
     .then((response) => response.json())
     .then((response) => {
       const slicedResponse = response.slice(-3);
@@ -46,8 +49,13 @@ const getTokenInfo_v2 = async () => {
   console.log(`getting v2 token info...`)
   let cluster = "mainnet-beta";
   let group = "BTC_ETH_SOL_SRM_USDC";
+  let connection
 
-  const connection = new Connection(IDS.cluster_urls[cluster], "singleGossip");
+  try {
+    connection = new Connection(rpcToken, "singleGossip");
+  } catch (error) {
+    throw new Error('could not fecth v2 data')
+  }
 
   const cluster_group = IDS[cluster].mango_groups[group];
   // console.log(`cluster_group: ${JSON.stringify(cluster_group)}`)
@@ -108,8 +116,14 @@ const getTokenInfo_v3 = async () => {
   });
   const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
 
-  const clusterUrl = IDS_v3.cluster_urls[cluster];
-  const connection = new Connection(clusterUrl, "singleGossip");
+  // const clusterUrl = IDS_v3.cluster_urls[cluster];
+  let connection
+
+  try {
+    connection = new Connection(rpcToken, "singleGossip");
+  } catch (error) {
+    throw new Error('could not fecth v2 data')
+  }
   const client = new MangoClient_v3(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
   if (mangoGroup) {
@@ -161,24 +175,52 @@ const getSingleVersion = async (version) => {
   const actions = {
     1: function () {
       // console.log("getting tokenInfo version 1 ");
-      return getTokenInfo_v1();
+      try {
+        return getTokenInfo_v1();
+      } catch (error) {
+        return {name: 'error'}
+      }
     },
     2: function () {
       // console.log('getting tokenInfo version 2 ');
-      return getTokenInfo_v2();
+      try {
+        return getTokenInfo_v2();
+      } catch (error) {
+        return {name: 'error'}
+      }
     },
     3: function () {
       // console.log('getting tokenInfo version 3 ');
-      return getTokenInfo_v3();
+      try {
+        return getTokenInfo_v3();
+      } catch (error) {
+        return {name: 'error'}
+      }
     },
   };
   return await (actions[version]() || actions[3]());
 };
 
 const getAllVersions = async () => {
-  const v1 = await getTokenInfo_v1()
-  const v2 = await getTokenInfo_v2()
-  const v3 = await getTokenInfo_v3()
+  let v1
+  let v2
+  let v3
+  
+  try {
+    v1 = await getTokenInfo_v1()
+  } catch (error) {
+    return {name: 'error'}
+  }
+  try {
+    v1 = await getTokenInfo_v2()
+  } catch (error) {
+    return {name: 'error'}
+  }  
+  try {
+    v1 = await getTokenInfo_3()
+  } catch (error) {
+    return {name: 'error'}
+  }
 
   return {'1': v1,'2': v2,'3': v3}
 }
