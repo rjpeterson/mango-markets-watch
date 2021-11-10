@@ -11,8 +11,9 @@ import {
 } from "@blockworks-foundation/mango-client-v3";
 import { IDS, MangoClient } from "@blockworks-foundation/mango-client";
 import { Connection, PublicKey } from "@solana/web3.js";
+import token from "./token";
 
-const rpcToken = "https://mango.rpcpool.com/30f3e001cc012206a811fd45f95e"
+const rpcToken = `https://mango.rpcpool.com/${token}`;
 
 const compare = (a, b) => {
   if (a.name < b.name) {
