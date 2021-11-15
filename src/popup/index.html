@@ -1,11 +1,11 @@
-<html>
+<html style="height:21rem">
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" type="text/css" href="./popup.css" />
   </head>
   <body
     class="bg-bkg-1 flex flex-col justify-between"
-    style="height:auto; width:23rem"
+    style="width:22rem"
     x-data="{
       page: 'home',
       tokensInfo:{},
@@ -74,8 +74,8 @@
       <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
       <span x-text="headerText"></span>
     </header>
-    <div class="justify-between px-4 pb-3 pt-2 flex flex-col">
-      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14rem">
+    <div class="justify-between px-4 py-2 flex flex-col">
+      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.5rem">
           <!-- <div x-show="page == 'home'">
               <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
                 <input
@@ -95,7 +95,7 @@
                 />
                 <label for="funding">Funding</label><br />
               </div> -->
-              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 13.3rem;">
+              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
                   <thead class="bg-bkg-2">
                     <tr class="mb-2 text-xs text-center text-fgd-4">
@@ -135,18 +135,18 @@
                           <span x-text="token.baseSymbol"></span>
                         </td>
                         <td class="flex-auto pr-1 text-right text-green-dark">
-                          <span x-text="token.depositRate ? token.depositRate : '-.--'"></span>
+                          <span x-text="token.depositRate ? token.depositRate : '——'"></span>
                           <span>%</span>
                         </td>
                         <td class="flex-auto font-normal text-right text-fgd-4">
                           /
                         </td>
                         <td class="flex-auto pr-2 text-right text-red-dark">
-                          <span x-text="token.borrowRate ? token.borrowRate : '-.--'"></span>
+                          <span x-text="token.borrowRate ? token.borrowRate : '——'"></span>
                           <span>%</span>
                         </td>
                         <td class="flex-auto pr-2 text-right text-fgd-1">
-                          <span x-text="token.fundingRate ? token.fundingRate : '-.--'"></span>
+                          <span x-text="token.fundingRate ? token.fundingRate : '——'"></span>
                           <span>%</span>
                         </td>
                       </tr>
@@ -247,7 +247,7 @@
           </div>
       </div>
       <div
-        class="flex flex-row items-end justify-around pt-4 bg-bkg-1 text-fgd-4"
+        class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
       >
         <div class="flex text-center">
           <button @click="page = 'settings'; headerText = 'Token Settings'">
