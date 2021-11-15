@@ -8,38 +8,37 @@
     style="width:22rem"
     x-data="{
       page: 'home',
-      tokensInfo:{},
+      tokensInfo:[],
       toggles: {},
       headerText: 'Mango Markets Watch',
-  }"
+      }"
     x-init="
-    chrome.runtime.onMessage.addListener(
+      chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
             console.log(`received message ${request.msg}` )
             if (request.msg === 'tokensInfo updated') {
                 tokensInfo = request.data.tokensInfo
-    }})
+      }})
     
-    chrome.runtime.sendMessage({msg: 'onPopup'},
+      chrome.runtime.sendMessage({msg: 'onPopup'},
+        function(response) {
+          if (!response) {
+            throw new Error('could not get stored tokensInfo')
+          }
+          console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
+          tokensInfo = response.tokensInfo
+          toggles = response.toggles
+        });
+
+      chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
       function(response) {
         if (!response) {
-          throw new Error('could not get stored tokensInfo')
+          throw new Error('could not refresh tokensInfo')
         }
-        console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
-        tokensInfo = response.tokensInfo
-        toggles = response.toggles
+        console.log(`got response from background script for msg 'refresh tokensInfo': ${JSON.stringify(response)}`)
+        tokensInfo = response
+        console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
       });
-
-    chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
-    function(response) {
-      if (!response) {
-        throw new Error('could not refresh tokensInfo')
-      }
-      console.log(`got response from background script for msg 'refresh tokensInfo': ${JSON.stringify(response)}`)
-      tokensInfo = response
-      console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
-    });
-
     ">
       <!-- $watch('version', value => {
         if (!value || value == prevVersion) {return}
@@ -76,8 +75,8 @@
     </header>
     <div class="justify-between px-4 py-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.5rem">
-          <!-- <div x-show="page == 'home'">
-              <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
+          <div x-show="page == 'home'">
+              <!-- <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
                 <input
                   type="radio"
                   id="interest"
@@ -114,15 +113,15 @@
                   </thead>
                   <tbody>
                     <template x-for="token in tokensInfo" :key="token.baseSymbol">
-                      <!-- <tr x-show="toggles[token.name]"> -->
-                      <tr>
+                      <tr x-show="toggles[token.baseSymbol]">
                         <td
                           class="
                             flex
                             items-end
                             flex-auto
                             pl-2
-                            text-left text-fgd-1
+                            text-left
+                            text-fgd-1
                           "
                         >
                           <img
@@ -156,8 +155,8 @@
               </div>
             
           </div>
-          <!-- <div x-show="page == 'settings'">
-            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 13.5rem;">
+          <div x-show="page == 'settings'">
+            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14rem;">
               <table
                 class="
                   flex-col flex-grow
@@ -168,17 +167,17 @@
                   text-fgd-1
                 "
               >
-                <template x-for="token in Object.keys(tokensInfo)" :key="tokensInfo[token].name">
+                <template x-for="[tokenName, toggle] in Object.entries(toggles)" :key="tokenName">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
                       <img
-                        x-data="{icon: './icons/'+(tokensInfo[token].name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        x-data="{icon: './icons/'+(tokenName.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                         :src="icon"
                         width="18"
                         height="18"
                         class="mr-1"
                       />
-                      <span x-text="tokensInfo[token].name"></span>
+                      <span x-text="tokenName"></span>
                     </td>
                     <td class="flex items-center justify-center ml-10">
                       <div
@@ -191,10 +190,10 @@
                           ease-linear
                           rounded-full
                         "
-                        :class="[toggles[tokensInfo[token].name] === true ? 'bg-green-dark' : 'bg-fgd-4']"
+                        :class="[toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
                       >
                         <label
-                          :for="tokensInfo[token].name"
+                          :for="tokenName"
                           class="
                             absolute
                             left-0
@@ -209,13 +208,13 @@
                             border-2
                             rounded-full
                           "
-                          :class="[toggles[tokensInfo[token].name] === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
+                          :class="[toggle === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
                         >
                         </label>
                         <input
                           type="checkbox"
-                          :id="tokensInfo[token].name"
-                          :name="tokensInfo[token].name"
+                          :id="tokenName"
+                          :name="tokenName"
                           class="
                             w-full
                             h-full
@@ -225,8 +224,14 @@
                             focus:outline-none
                           "
                           @click="
-                            toggles[tokensInfo[token].name] = ! toggles[tokensInfo[token].name];
-                            chrome.storage.local.set({toggles: toggles})
+                            toggles[tokenName] = !toggle;
+                            console.log('updating toggles...')
+                            chrome.runtime.sendMessage({
+                              msg: 'change toggles',
+                              data: {
+                                toggles: toggles
+                              }
+                            })
                           "
                         />
                       </div>
@@ -236,7 +241,7 @@
               </table>
 
             </div>
-          </div> -->
+          </div>
           <div x-show="page == 'alert'">
             <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">
               Coming Soon
