@@ -334,11 +334,11 @@ const getTokenInfo_v3 = async () => {
 
 const getToggles = () => {
   return chrome.storage.local.get(['toggles'], (result) => {
-    let toggles = {}
     if (typeof result.toggles !== 'undefined') {
-      toggles = result.toggles
+      return result.toggles
+    } else {
+      return {}
     }
-    return toggles
   })
 }
 // ONSTARTUP: get token info & send to storage
@@ -346,8 +346,17 @@ const getToggles = () => {
 const refreshData = async () => {
   // const versionsInfo = await getAllVersions()
   const tokensInfo = await getTokenInfo_v3()
+  const toggles = getToggles() || {}
+  if (Object.keys(toggles).length !== tokensInfo.length) {
+    tokensInfo.forEach((token) => {
+      if (toggles[token.baseSymbol] === undefined) {
+        toggles[token.baseSymbol] = true;
+      }
+    });
+  }
+  console.log(`toggles: ${JSON.stringify(toggles)}`)
   console.log(`updating tokensInfo in storage: ${JSON.stringify(tokensInfo)}`)
-  chrome.storage.local.set({tokensInfo: tokensInfo})
+  chrome.storage.local.set({tokensInfo: tokensInfo, toggles: toggles})
   chrome.runtime.sendMessage({
     msg: "tokensInfo updated",
     data: {
@@ -416,6 +425,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     case "refresh tokensInfo":
       refreshTokensInfo(sendResponse);
       break;
+    case "change toggles":
+      chrome.storage.local.set({toggles: request.data.toggles})
+      console.log(`toggles updated to :${JSON.stringify(request.data.toggles)}`)
+      return false;
     // case "change version":
     //   onVersionChange(request.data.version, sendResponse);
     //   break;
