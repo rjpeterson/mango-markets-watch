@@ -1,9 +1,10 @@
 # Mango Markets Watch
-This is a browser extension for getting current mango.markets borrow/lend rates as well as setting user alerts for those rates.
+This is a browser extension for getting current mango.markets borrow/lend & funding rates as well as setting user alerts for those rates.
 
 ## Installation
 ### Setup local project
 * `git clone git@github.com:rjpeterson/mango-markets-watch.git`
+* Replace rpcToken variable in src/background/index.js with your own Solana rpc url
 * `yarn && yarn build`
 
 ### Install on Chrome
