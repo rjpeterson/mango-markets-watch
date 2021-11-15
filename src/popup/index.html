@@ -5,44 +5,43 @@
   </head>
   <body
     class="bg-bkg-1 flex flex-col justify-between"
-    style="height:auto; width:18rem"
+    style="height:auto; width:23rem"
     x-data="{
       page: 'home',
-      versionsInfo:{loading: [{name: 'loading...', depositRate: '0.00', borrowRate: '0.00'}]},
-      toggles: {'loading...': true},
+      tokensInfo:{},
+      toggles: {},
       headerText: 'Mango Markets Watch',
-      prevVersion: null,
-      version: 'loading',
   }"
     x-init="
     chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
             console.log(`received message ${request.msg}` )
-            if (request.msg === 'versionsInfo updated') {
-                versionsInfo = request.data.versionsInfo
+            if (request.msg === 'tokensInfo updated') {
+                tokensInfo = request.data.tokensInfo
     }})
     
     chrome.runtime.sendMessage({msg: 'onPopup'},
       function(response) {
         if (!response) {
-          throw new Error('could not get stored versions info')
+          throw new Error('could not get stored tokensInfo')
         }
         console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
-        versionsInfo = response.versionsInfo
+        tokensInfo = response.tokensInfo
         toggles = response.toggles
-        version = response.version
       });
 
-    chrome.runtime.sendMessage({msg: 'refresh version'}, 
+    chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
     function(response) {
       if (!response) {
-        throw new Error('could not refresh version info')
+        throw new Error('could not refresh tokensInfo')
       }
-      console.log(`got response from background script for msg 'refresh version': ${JSON.stringify(response)}`)
-      versionsInfo[version] = response
-      console.log(`new versionsInfo: ${JSON.stringify(versionsInfo)}`)
+      console.log(`got response from background script for msg 'refresh tokensInfo': ${JSON.stringify(response)}`)
+      tokensInfo = response
+      console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
+    });
 
-      $watch('version', value => {
+    ">
+      <!-- $watch('version', value => {
         if (!value || value == prevVersion) {return}
         prevVersion = value;
         chrome.runtime.sendMessage({
@@ -55,14 +54,12 @@
             throw new Error('could not update version')
           }
           console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-          versionsInfo[value] = response.versionInfo
+          tokensInfo[value] = response.versionInfo
 
         })
       })
-    });
+    }); -->
 
-"
-  >
     <header
       class="
         flex
@@ -79,32 +76,24 @@
     </header>
     <div class="justify-between px-4 pb-3 pt-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14rem">
-          <div x-show="page == 'home'">
-              <!-- <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
+          <!-- <div x-show="page == 'home'">
+              <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
                 <input
                   type="radio"
-                  id="v1"
-                  x-model="version"
-                  value="1"
-                  @click="version = 1"
+                  id="interest"
+                  x-model="dataType"
+                  value="interest"
+                  @click="dataType = interest"
                 />
-                <label for="v1">v1</label><br />
+                <label for="interest">Interest</label><br />
                 <input
                   type="radio"
-                  id="v2"
-                  x-model="version"
-                  value="2"
-                  @click="version = 2"
+                  id="funding"
+                  x-model="dataType"
+                  value="funding"
+                  @click="dataType = funding"
                 />
-                <label for="v2">v2</label><br />
-                <input
-                  type="radio"
-                  id="v3"
-                  x-model="version"
-                  value="3"
-                  @click="version = 3"
-                />
-                <label for="v3">v3</label>
+                <label for="funding">Funding</label><br />
               </div> -->
               <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 13.3rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
@@ -118,11 +107,15 @@
                       <th class="flex-auto pr-2 font-normal text-right">
                         Borrow
                       </th>
+                      <th class="flex-auto pr-2 font-normal text-right">
+                        Funding (APR)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <template x-for="token in versionsInfo[version]" :key="token.name">
-                      <tr x-show="toggles[token.name]">
+                    <template x-for="token in tokensInfo" :key="token.baseSymbol">
+                      <!-- <tr x-show="toggles[token.name]"> -->
+                      <tr>
                         <td
                           class="
                             flex
@@ -133,23 +126,27 @@
                           "
                         >
                           <img
-                            x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                            x-data="{icon: './icons/'+(token.baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                             :src="icon"
                             width="18"
                             height="18"
                             class="mr-1"
                           />
-                          <span x-text="token.name"></span>
+                          <span x-text="token.baseSymbol"></span>
                         </td>
                         <td class="flex-auto pr-1 text-right text-green-dark">
-                          <span x-text="token.depositRate"></span>
+                          <span x-text="token.depositRate ? token.depositRate : '-.--'"></span>
                           <span>%</span>
                         </td>
                         <td class="flex-auto font-normal text-right text-fgd-4">
                           /
                         </td>
                         <td class="flex-auto pr-2 text-right text-red-dark">
-                          <span x-text="token.borrowRate"></span>
+                          <span x-text="token.borrowRate ? token.borrowRate : '-.--'"></span>
+                          <span>%</span>
+                        </td>
+                        <td class="flex-auto pr-2 text-right text-fgd-1">
+                          <span x-text="token.fundingRate ? token.fundingRate : '-.--'"></span>
                           <span>%</span>
                         </td>
                       </tr>
@@ -159,7 +156,7 @@
               </div>
             
           </div>
-          <div x-show="page == 'settings'">
+          <!-- <div x-show="page == 'settings'">
             <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 13.5rem;">
               <table
                 class="
@@ -171,17 +168,17 @@
                   text-fgd-1
                 "
               >
-                <template x-for="token in versionsInfo[version]" :key="token.name">
+                <template x-for="token in Object.keys(tokensInfo)" :key="tokensInfo[token].name">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
                       <img
-                        x-data="{icon: './icons/'+(token.name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        x-data="{icon: './icons/'+(tokensInfo[token].name.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                         :src="icon"
                         width="18"
                         height="18"
                         class="mr-1"
                       />
-                      <span x-text="token.name"></span>
+                      <span x-text="tokensInfo[token].name"></span>
                     </td>
                     <td class="flex items-center justify-center ml-10">
                       <div
@@ -194,10 +191,10 @@
                           ease-linear
                           rounded-full
                         "
-                        :class="[toggles[token.name] === true ? 'bg-green-dark' : 'bg-fgd-4']"
+                        :class="[toggles[tokensInfo[token].name] === true ? 'bg-green-dark' : 'bg-fgd-4']"
                       >
                         <label
-                          :for="token.name"
+                          :for="tokensInfo[token].name"
                           class="
                             absolute
                             left-0
@@ -212,13 +209,13 @@
                             border-2
                             rounded-full
                           "
-                          :class="[toggles[token.name] === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
+                          :class="[toggles[tokensInfo[token].name] === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
                         >
                         </label>
                         <input
                           type="checkbox"
-                          :id="token.name"
-                          :name="token.name"
+                          :id="tokensInfo[token].name"
+                          :name="tokensInfo[token].name"
                           class="
                             w-full
                             h-full
@@ -228,7 +225,7 @@
                             focus:outline-none
                           "
                           @click="
-                            toggles[token.name] = ! toggles[token.name];
+                            toggles[tokensInfo[token].name] = ! toggles[tokensInfo[token].name];
                             chrome.storage.local.set({toggles: toggles})
                           "
                         />
@@ -239,7 +236,7 @@
               </table>
 
             </div>
-          </div>
+          </div> -->
           <div x-show="page == 'alert'">
             <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">
               Coming Soon
