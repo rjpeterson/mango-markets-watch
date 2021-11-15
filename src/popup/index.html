@@ -12,14 +12,7 @@
       toggles: {},
       headerText: 'Mango Markets Watch',
       }"
-    x-init="
-      chrome.runtime.onMessage.addListener(
-        function(request, sender, sendResponse) {
-            console.log(`received message ${request.msg}` )
-            if (request.msg === 'tokensInfo updated') {
-                tokensInfo = request.data.tokensInfo
-      }})
-    
+    x-init="   
       chrome.runtime.sendMessage({msg: 'onPopup'},
         function(response) {
           if (!response) {
@@ -29,6 +22,13 @@
           tokensInfo = response.tokensInfo
           toggles = response.toggles
         });
+
+      chrome.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            console.log(`received message ${request.msg}` )
+            if (request.msg === 'tokensInfo updated') {
+                tokensInfo = request.data.tokensInfo
+      }})
 
       chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
       function(response) {
@@ -40,24 +40,6 @@
         console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
       });
     ">
-      <!-- $watch('version', value => {
-        if (!value || value == prevVersion) {return}
-        prevVersion = value;
-        chrome.runtime.sendMessage({
-          msg: 'change version',
-          data: {
-            version: value
-          }
-        }, function(response) {
-          if (!response) {
-            throw new Error('could not update version')
-          }
-          console.log(`message received updating DOM with new info: ${JSON.stringify(response)}`)
-          tokensInfo[value] = response.versionInfo
-
-        })
-      })
-    }); -->
 
     <header
       class="
@@ -76,24 +58,6 @@
     <div class="justify-between px-4 py-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.5rem">
           <div x-show="page == 'home'">
-              <!-- <div class="flex flex-row justify-around items-center py-2 mx-3 text-fgd-1">
-                <input
-                  type="radio"
-                  id="interest"
-                  x-model="dataType"
-                  value="interest"
-                  @click="dataType = interest"
-                />
-                <label for="interest">Interest</label><br />
-                <input
-                  type="radio"
-                  id="funding"
-                  x-model="dataType"
-                  value="funding"
-                  @click="dataType = funding"
-                />
-                <label for="funding">Funding</label><br />
-              </div> -->
               <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
                   <thead class="bg-bkg-2">
