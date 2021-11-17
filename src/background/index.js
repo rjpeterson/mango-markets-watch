@@ -136,13 +136,16 @@ const getTokenInfo_v3 = async () => {
   return res
 };
 
-const getToggles = () => {
-  return chrome.storage.local.get(['toggles'], (result) => {
-    if (typeof result.toggles !== 'undefined') {
-      return result.toggles
-    } else {
-      return {}
-    }
+const checkToggles = (tokensInfo) => {
+    chrome.storage.local.get(['toggles'], (result) => {
+      if (Object.keys(result.toggles).length !== tokensInfo.length) {
+        tokensInfo.forEach((token) => {
+          if (result.toggles[token.baseSymbol] === undefined) {
+            result.toggles[token.baseSymbol] = true;
+          }
+        });
+      }
+      chrome.storage.local.set({toggles: result.toggles})
   })
 }
 
@@ -150,15 +153,9 @@ const getToggles = () => {
 // ONALARM: get token info, send to storage, send to popup
 const refreshData = async (sendResponse) => {
   const tokensInfo = await getTokenInfo_v3()
-  const toggles = getToggles() || {}
-  if (Object.keys(toggles).length !== tokensInfo.length) {
-    tokensInfo.forEach((token) => {
-      if (toggles[token.baseSymbol] === undefined) {
-        toggles[token.baseSymbol] = true;
-      }
-    });
-  }
-  chrome.storage.local.set({tokensInfo: tokensInfo, toggles: toggles})
+  chrome.storage.local.set({tokensInfo: tokensInfo})
+  checkToggles(tokensInfo)
+
   if (sendResponse) {
     sendResponse(tokensInfo);
   } else {

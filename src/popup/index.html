@@ -61,7 +61,7 @@
     <div class="justify-between px-4 py-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
           <div x-show="page == 'home'" style="height: 14.7rem">
-              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14rem;">
+              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14.1rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
                   <thead>
                     <tr class="mb-2 text-xs text-center text-fgd-4">
@@ -125,7 +125,7 @@
             
           </div>
           <div x-show="page == 'settings'" style="height: 14.7rem">
-            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14rem;">
+            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
               <table
                 class="
                   flex-col flex-grow
@@ -252,7 +252,7 @@
               },
             }"
           >
-            <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14rem;">
+            <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
               <table class="text-fgd-1 flex-col flex-grow mx-auto table-auto">
                 <thead>
                   <tr class="mb-2 text-xs text-center text-fgd-4">
@@ -303,7 +303,7 @@
                 </tbody>
               </table>
               <button @click="editAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
-                    <span>Add new alert</span>
+                    <span>Add New Alert</span>
               </button>
               <div x-show="editAlert" x-collapse @click.outside="editAlert = false" class="pt-2 w-full">
                 <div class="bg-bkg-1 text-fgd-1 mx-1 p-2 rounded-lg">
