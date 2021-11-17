@@ -173,31 +173,32 @@ const refreshData = async (sendResponse) => {
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
-  chrome.storage.local.get(['tokensInfo', 'toggles'], (response) => {
+  chrome.storage.local.get(['tokensInfo', 'toggles', 'alerts'], (response) => {
     sendResponse(response)
   })
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("onInstalled...");
-  console.log("setting fetch alarm...");
+  console.log("onInstalled...")
+  chrome.storage.local.set({tokensInfo: [], toggles: {}, alerts: {}})
+  console.log("setting fetch alarm...")
   setFetchAlarm();
-  console.log("setting watchdog alarm...");
-  setWatchdogAlarm();
-  console.log("calling refreshData....");
-  refreshData();
+  // console.log("setting watchdog alarm...");
+  // setWatchdogAlarm();
+  console.log("refreshing data...")
+  refreshData()
 });
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
 chrome.runtime.onStartup.addListener(() => {
   console.log("onStartup....");
   console.log("getting token info...");
-  console.log("calling refreshData....")
+  console.log("refreshing data...")
   refreshData();
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(`background received msg: ${request.msg} data: ${JSON.stringify(request.data)}`);
+  console.log(`background received msg: "${request.msg}" data: ${JSON.stringify(request.data)}`);
   switch (request.msg) {
     case "onPopup":
       onPopup(sendResponse);
@@ -212,6 +213,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     case "tokensInfo updated":
       return false;
       break;
+    case "update alerts":
+        chrome.storage.local.set({alerts: request.data.alerts})
+        sendResponse({msg: 'alerts updated successuflly'})
     case undefined:
       return false;
       break;

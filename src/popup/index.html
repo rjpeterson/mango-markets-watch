@@ -5,14 +5,15 @@
   </head>
   <body
     class="bg-bkg-1 flex flex-col justify-between"
-    style="width:22rem"
+    style="width:24rem"
     x-data="{
       page: 'home',
       tokensInfo:[],
       toggles: {},
+      alerts: {},
       headerText: 'Mango Markets Watch',
-      }"
-    x-init="   
+    }"
+    x-init="
       chrome.runtime.sendMessage({msg: 'onPopup'},
         function(response) {
           if (!response) {
@@ -21,6 +22,7 @@
           console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
           tokensInfo = response.tokensInfo
           toggles = response.toggles
+          alerts = response.alerts
         });
 
       chrome.runtime.onMessage.addListener(
@@ -39,7 +41,8 @@
         tokensInfo = response
         console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
       });
-    ">
+    "
+    >
 
     <header
       class="
@@ -56,13 +59,15 @@
       <span x-text="headerText"></span>
     </header>
     <div class="justify-between px-4 py-2 flex flex-col">
-      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.5rem">
-          <div x-show="page == 'home'">
+      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
+          <div x-show="page == 'home'" style="height: 14.7rem">
               <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
-                  <thead class="bg-bkg-2">
+                  <thead>
                     <tr class="mb-2 text-xs text-center text-fgd-4">
-                      <th class="flex-auto px-2 font-normal text-left">Token</th>
+                      <th class="flex-auto px-2 font-normal text-left">
+                        Token
+                      </th>
                       <th class="flex-auto px-2 font-normal text-right">
                         Deposit
                       </th>
@@ -99,18 +104,18 @@
                         </td>
                         <td class="flex-auto pr-1 text-right text-green-dark">
                           <span x-text="token.depositRate ? token.depositRate : '——'"></span>
-                          <span>%</span>
+                          <span class="text-xs">%</span>
                         </td>
                         <td class="flex-auto font-normal text-right text-fgd-4">
                           /
                         </td>
                         <td class="flex-auto pr-2 text-right text-red-dark">
                           <span x-text="token.borrowRate ? token.borrowRate : '——'"></span>
-                          <span>%</span>
+                          <span class="text-xs">%</span>
                         </td>
                         <td class="flex-auto pr-2 text-right text-fgd-1">
                           <span x-text="token.fundingRate ? token.fundingRate : '——'"></span>
-                          <span>%</span>
+                          <span class="text-xs">%</span>
                         </td>
                       </tr>
                     </template>
@@ -119,7 +124,7 @@
               </div>
             
           </div>
-          <div x-show="page == 'settings'">
+          <div x-show="page == 'settings'" style="height: 14.7rem">
             <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14rem;">
               <table
                 class="
@@ -206,9 +211,148 @@
 
             </div>
           </div>
-          <div x-show="page == 'alert'">
-            <div class="py-6 text-center rounded-lg text-fgd-2 bg-bkg-2">
-              Coming Soon
+          <div 
+            x-show="page == 'alert'" 
+            style="height: 14.7rem"
+            x-data="{
+              editAlert: false, 
+              id: 0, 
+              tokenName: 'ADA', 
+              type: 'deposit', 
+              side: 'above', 
+              percent: 0,
+
+              lastAlertKey() {
+                if (Object.keys(this.alerts).length > 0) {
+                  return Math.max( ...Object.keys(this.alerts))
+                } else {
+                  return 0
+                }
+              },
+
+              addAlert(tokenName, type, side, percent) {
+                const newId = this.lastAlertKey() + 1;
+                this.alerts[newId] = {
+                  tokenName: tokenName,
+                  type: type,
+                  side: side,
+                  percent: Math.round(percent)
+                }
+                chrome.runtime.sendMessage({
+                  msg: 'update alerts',
+                  data: {
+                    alerts: this.alerts
+                  }
+                }, function(response) {
+                  if(!response) {
+                    throw new Error('could not update alerts')
+                  }
+                  console.log(`alerts updated: ${JSON.stringify(response)}`)
+                })
+              },
+            }"
+          >
+            <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14rem;">
+              <table class="text-fgd-1 flex-col flex-grow mx-auto table-auto">
+                <thead>
+                  <tr class="mb-2 text-xs text-center text-fgd-4">
+                    <th class="flex-auto px-2 font-normal text-center">Token</th>
+                    <th class="flex-auto px-2 font-normal text-center">Type</th>
+                    <th class="flex-auto px-2 font-normal text-center">Side</th>
+                    <th class="flex-auto px-2 font-normal text-center">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="[id] in Object.entries(alerts)" :key="id">
+                    <tr>
+                      <td class="
+                        flex
+                        items-end
+                        flex-auto
+                        px-1
+                        text-center
+                        text-fgd-1
+                      ">
+                        <img
+                        x-data="{icon: './icons/'+(alerts[id].tokenName.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        :src="icon"
+                        width="18"
+                        height="18"
+                        class="mr-1"
+                        />
+                        <span x-text="alerts[id].tokenName"></span>
+                      </td>
+                      <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].type"></td>
+                      <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].side"></td>
+                      <td  class="flex-auto px-1 text-center text-fgd-1">
+                        <span x-text="alerts[id].percent"></span>
+                        <span>%</span>
+                      </td>
+                      <td class="flex-auto pl-4 pr-2">
+                        <button>
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                        </button>
+                      </td>
+                      <td class="flex-auto pr-2">
+                        <button @click="delete alerts[id]">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+              <button @click="editAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+                    <span>Add new alert</span>
+              </button>
+              <div x-show="editAlert" x-collapse @click.outside="editAlert = false" class="pt-2 w-full">
+                <div class="bg-bkg-1 text-fgd-1 mx-1 p-2 rounded-lg">
+                  <div class="text-center">
+                    <div class="pb-1">
+                      <span>Alert me when</span>
+                      <select class="text-black" x-model="tokenName">
+                        <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                          <option x-text="baseSymbol" :value="baseSymbol"></option>
+                        </template>
+                      </select>
+                      <select class="text-black" x-model="type">
+                        <option>deposit</option>
+                        <option>borrow</option>
+                        <option>funding</option>
+                      </select>
+                    </div>
+                    <div class="pb-2">
+                      <span>rate is</span>
+                      <select class="text-black" x-model="side">
+                        <option>above</option>
+                        <option>below</option>
+                      </select>
+                      <input 
+                        type="number" 
+                        min="-999"
+                        max="999"
+                        direction="rtl"
+                        class="text-black"
+                        x-model="percent">
+                        <span>percent</span>
+                    </div>
+                  </div>
+                  <div class="flex justify-center">
+                    <button 
+                      class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                      @click="
+                        editAlert = !editAlert;
+                        addAlert(tokenName, type, side, percent)
+                      ">
+                      Confirm
+                    </button>
+                    <button 
+                      class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                      @click="editAlert = !editAlert">
+                      Cancel
+                    </button>
+                  </div>
+              </div>
             </div>
             <!-- TODO alerts for when interest rates pass a threshold? -->
             <!-- or liquidation alerts? -->
