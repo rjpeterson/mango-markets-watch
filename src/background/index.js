@@ -66,7 +66,7 @@ const getAllFundingRates = async (clusterData, groupConfig, client) => {
     clusterData.perpMarkets.map(
       async (market) => {
         const funding = await getTokenFundingRate(groupConfig, market, client)
-        return {baseSymbol: market.baseSymbol, fundingRate: funding}
+        return {baseSymbol: market.baseSymbol, funding: funding}
 }))}
 
 const getInterestRates = async (mangoGroup, connection, groupConfig) => {
@@ -85,11 +85,11 @@ const getInterestRates = async (mangoGroup, connection, groupConfig) => {
       }
       return {
         baseSymbol: token.symbol,
-        depositRate: rootBank
+        deposit: rootBank
           .getDepositRate(mangoGroup)
           .mul(I80F48.fromNumber(100))
           .toFixed(2),
-        borrowRate: rootBank
+        borrow: rootBank
           .getBorrowRate(mangoGroup)
           .mul(I80F48.fromNumber(100))
           .toFixed(2),
@@ -144,8 +144,38 @@ const checkToggles = (tokensInfo) => {
             result.toggles[token.baseSymbol] = true;
           }
         });
+        chrome.storage.local.set({toggles: result.toggles})
       }
-      chrome.storage.local.set({toggles: result.toggles})
+  })
+}
+
+const checkAlerts = (tokensInfo) => {
+  console.log('calling checkAlerts...')
+  chrome.storage.local.get(['alerts'], (response) => {
+    let triggeredAlerts = 0
+    for (const entry in response.alerts) {
+      const alert = response.alerts[entry]
+      tokensInfo
+        .filter(token => token.baseSymbol == alert.baseSymbol)
+        .forEach(token => {
+          console.log(`comparing alert ${JSON.stringify(alert)} to token data ${JSON.stringify(token)}`)
+          if (!parseFloat(token[alert.type])) {console.log(`${alert.type} rate of ${token.baseSymbol} is not a number`); return}
+          if (alert.side == 'above') {
+            if (token[alert.type] > alert.percent) {
+              triggeredAlerts += 1; console.log(`token notification triggered`)
+            } else {
+              console.log('conditions not met')
+            }
+          } else {
+            if (token[alert.type] < alert.percent) {
+              triggeredAlerts += 1; console.log(`token notification triggered`)
+            } else {
+              console.log('conditions not met')
+            }
+          }
+        })
+    }
+    triggeredAlerts > 0 ? chrome.browserAction.setBadgeText({text: triggeredAlerts.toString()}) : null
   })
 }
 
@@ -154,6 +184,8 @@ const checkToggles = (tokensInfo) => {
 const refreshData = async (sendResponse) => {
   const tokensInfo = await getTokenInfo_v3()
   chrome.storage.local.set({tokensInfo: tokensInfo})
+  console.log('checking token info against alerts...')
+  checkAlerts(tokensInfo)
   checkToggles(tokensInfo)
 
   if (sendResponse) {
@@ -171,6 +203,8 @@ const refreshData = async (sendResponse) => {
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
   chrome.storage.local.get(['tokensInfo', 'toggles', 'alerts'], (response) => {
+    console.log('checking token info against alerts...')
+    checkAlerts(response.tokensInfo)
     sendResponse(response)
   })
 }

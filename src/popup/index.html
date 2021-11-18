@@ -81,6 +81,7 @@
                     </tr>
                   </thead>
                   <tbody>
+                    <!-- TODO alternate light and dark rows -->
                     <template x-for="token in tokensInfo" :key="token.baseSymbol">
                       <tr x-show="toggles[token.baseSymbol]">
                         <td
@@ -103,18 +104,18 @@
                           <span x-text="token.baseSymbol"></span>
                         </td>
                         <td class="flex-auto pr-1 text-right text-green-dark">
-                          <span x-text="token.depositRate ? token.depositRate : '——'"></span>
+                          <span x-text="token.deposit ? token.deposit : '——'"></span>
                           <span class="text-xs">%</span>
                         </td>
                         <td class="flex-auto font-normal text-right text-fgd-4">
                           /
                         </td>
                         <td class="flex-auto pr-2 text-right text-red-dark">
-                          <span x-text="token.borrowRate ? token.borrowRate : '——'"></span>
+                          <span x-text="token.borrow ? token.borrow : '——'"></span>
                           <span class="text-xs">%</span>
                         </td>
                         <td class="flex-auto pr-2 text-right text-fgd-1">
-                          <span x-text="token.fundingRate ? token.fundingRate : '——'"></span>
+                          <span x-text="token.funding ? token.funding : '——'"></span>
                           <span class="text-xs">%</span>
                         </td>
                       </tr>
@@ -136,17 +137,17 @@
                   text-fgd-1
                 "
               >
-                <template x-for="[tokenName, toggle] in Object.entries(toggles)" :key="tokenName">
+                <template x-for="[baseSymbol, toggle] in Object.entries(toggles)" :key="baseSymbol">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
                       <img
-                        x-data="{icon: './icons/'+(tokenName.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        x-data="{icon: './icons/'+(baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                         :src="icon"
                         width="18"
                         height="18"
                         class="mr-1"
                       />
-                      <span x-text="tokenName"></span>
+                      <span x-text="baseSymbol"></span>
                     </td>
                     <td class="flex items-center justify-center ml-10">
                       <div
@@ -162,7 +163,7 @@
                         :class="[toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
                       >
                         <label
-                          :for="tokenName"
+                          :for="baseSymbol"
                           class="
                             absolute
                             left-0
@@ -182,8 +183,8 @@
                         </label>
                         <input
                           type="checkbox"
-                          :id="tokenName"
-                          :name="tokenName"
+                          :id="baseSymbol"
+                          :name="baseSymbol"
                           class="
                             w-full
                             h-full
@@ -193,7 +194,7 @@
                             focus:outline-none
                           "
                           @click="
-                            toggles[tokenName] = !toggle;
+                            toggles[baseSymbol] = !toggle;
                             console.log('updating toggles...')
                             chrome.runtime.sendMessage({
                               msg: 'change toggles',
@@ -217,7 +218,7 @@
             x-data="{
               editAlert: false, 
               id: 0, 
-              tokenName: 'ADA', 
+              baseSymbol: 'ADA', 
               type: 'deposit', 
               side: 'above', 
               percent: 0,
@@ -230,13 +231,13 @@
                 }
               },
 
-              addAlert(tokenName, type, side, percent) {
+              addAlert(baseSymbol, type, side, percent) {
                 const newId = this.lastAlertKey() + 1;
                 this.alerts[newId] = {
-                  tokenName: tokenName,
+                  baseSymbol: baseSymbol,
                   type: type,
                   side: side,
-                  percent: Math.round(percent)
+                  percent: percent
                 }
                 chrome.runtime.sendMessage({
                   msg: 'update alerts',
@@ -250,6 +251,14 @@
                   console.log(`alerts updated: ${JSON.stringify(response)}`)
                 })
               },
+
+              parsePercent(value) {
+                if (value >= 10) {
+                  return parseFloat(value).toFixed(1)
+                } else {
+                  return parseFloat(value).toFixed(2)
+                }
+              }
             }"
           >
             <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
@@ -274,27 +283,29 @@
                         text-fgd-1
                       ">
                         <img
-                        x-data="{icon: './icons/'+(alerts[id].tokenName.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        x-data="{icon: './icons/'+(alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                         :src="icon"
                         width="18"
                         height="18"
                         class="mr-1"
                         />
-                        <span x-text="alerts[id].tokenName"></span>
+                        <span x-text="alerts[id].baseSymbol"></span>
                       </td>
                       <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].type"></td>
                       <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].side"></td>
                       <td  class="flex-auto px-1 text-center text-fgd-1">
-                        <span x-text="alerts[id].percent"></span>
+                        <span x-text="parsePercent(alerts[id].percent)"></span>
                         <span>%</span>
                       </td>
                       <td class="flex-auto pl-4 pr-2">
                         <button>
+                          <!-- TODO implement edit function -->
                           <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </td>
                       <td class="flex-auto pr-2">
                         <button @click="delete alerts[id]">
+                          <!-- TODO implement delete function -->
                           <img src="./icons/delete.svg" width="18" height="18">
                         </button>
                       </td>
@@ -310,7 +321,7 @@
                   <div class="text-center">
                     <div class="pb-1">
                       <span>Alert me when</span>
-                      <select class="text-black" x-model="tokenName">
+                      <select class="text-black" x-model="baseSymbol">
                         <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
                           <option x-text="baseSymbol" :value="baseSymbol"></option>
                         </template>
@@ -331,7 +342,6 @@
                         type="number" 
                         min="-999"
                         max="999"
-                        direction="rtl"
                         class="text-black"
                         x-model="percent">
                         <span>percent</span>
@@ -342,7 +352,7 @@
                       class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                       @click="
                         editAlert = !editAlert;
-                        addAlert(tokenName, type, side, percent)
+                        addAlert(baseSymbol, type, side, percent)
                       ">
                       Confirm
                     </button>

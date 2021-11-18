@@ -4,7 +4,8 @@
   "description": "Get and set alerts for current Mango Markets borrow/lend rates",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+    "notifications"
   ],
   "manifest_version": 2,
   "commands": {
