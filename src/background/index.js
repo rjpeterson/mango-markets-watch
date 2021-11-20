@@ -182,8 +182,8 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
   console.log("setting fetch alarm...");
   setFetchAlarm();
-  console.log("setting watchdog alarm...");
-  setWatchdogAlarm();
+  // console.log("setting watchdog alarm...");
+  // setWatchdogAlarm();
   console.log("calling refreshData....");
   refreshData();
 });
