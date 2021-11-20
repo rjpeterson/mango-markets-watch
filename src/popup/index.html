@@ -60,7 +60,19 @@
     </header>
     <div class="justify-between px-4 py-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
-          <div x-show="page == 'home'" style="height: 14.7rem">
+          <div 
+            x-data="{
+              rowColors(index) {
+                if (index % 2 == 0) {
+                  return 'bg-bkg-2'
+                } else {
+                  return 'bg-bkg-3'
+                }
+              }
+            }"
+            x-show="page == 'home'" 
+            style="height: 14.7rem"
+          >
               <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14.1rem;">
                 <table class="flex-col flex-grow mx-auto table-auto">
                   <thead>
@@ -81,9 +93,10 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- TODO alternate light and dark rows -->
-                    <template x-for="token in tokensInfo" :key="token.baseSymbol">
-                      <tr x-show="toggles[token.baseSymbol]">
+                    <!-- TODO alternate bg-bkg-3 and bg-bkg-2 rows -->
+                    <!-- This currently applies color before deciding which rows to show. NOT GOOD -->
+                    <template x-for="(token, index) in tokensInfo" :key="token.baseSymbol">
+                      <tr x-show="toggles[token.baseSymbol]" :class="rowColors(index)">
                         <td
                           class="
                             flex
