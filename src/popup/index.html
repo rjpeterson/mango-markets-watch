@@ -239,6 +239,7 @@
               type: 'deposit', 
               side: 'above', 
               percent: 0,
+              inputError: false,
 
               lastAlertKey() {
                 if (Object.keys(this.alerts).length > 0) {
@@ -246,6 +247,14 @@
                 } else {
                   return 0
                 }
+              },
+
+              checkInput(percent) {
+                if(!parseFloat(percent)) {
+                  this.inputError = true
+                 } else {
+                  this.inputError = false
+                 }
               },
 
               newAlert(baseSymbol, type, side, percent, id) {
@@ -320,13 +329,11 @@
                       </div>
                       <div class="w-6 font-normal text-center -mr-4">
                         <button @click="expanded = !expanded" :aria-expanded="expanded">
-                          <!-- TODO implement edit function -->
                           <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
                       <div class="w-6 font-normal text-center">
                         <button @click="delete alerts[id]">
-                          <!-- TODO implement delete function -->
                           <img src="./icons/delete.svg" width="18" height="18">
                         </button>
                       </div>
@@ -356,22 +363,26 @@
                                 <option :selected="alerts[id].side == 'below'">below</option>
                               </select>
                               <input 
-                                type="number" 
-                                min="-999"
-                                max="999"
+                                type="text"
+                                size="6"
+                                maxlength="6"
                                 class="text-black"
                                 x-model="percent"
                                 :value="alerts[id].percent"
+                                @change="checkInput($event.target.value)"
                               >
                                 <span>percent</span>
                             </div>
+                            <div x-show="inputError">Please input a number</div>
                           </div>
                           <div class="flex justify-center">
                             <button 
                               class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                               @click="
-                                newAlert(baseSymbol, type, side, percent, id)
-                                expanded = !expanded
+                                if(!inputError) {
+                                  newAlert(baseSymbol, type, side, percent, id)
+                                  expanded = !expanded
+                                }
                               ">
                               Confirm
                             </button>
@@ -387,60 +398,63 @@
                 </template>
               </div>
               <button @click="addAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
-                    <span>Add New Alert</span>
+                <span>Add New Alert</span>
               </button>
-              <div x-show="addAlert" x-collapse @click.outside="addAlert = false" class="pt-2 w-full">
-                <div class="bg-bkg-1 text-fgd-1 mx-1 p-2 rounded-lg">
-                  <div class="text-center">
-                    <div class="pb-1">
-                      <span>Alert me when</span>
-                      <select class="text-black" x-model="baseSymbol">
-                        <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                          <option x-text="baseSymbol" :value="baseSymbol"></option>
-                        </template>
-                      </select>
-                      <select class="text-black" x-model="type">
-                        <option>deposit</option>
-                        <option>borrow</option>
-                        <option>funding</option>
-                      </select>
+              <div x-show="addAlert" x-collapse class="mx-auto">
+                <div class="flex justify-center">
+                  <div class="bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                    <div class="text-center space-y-2">
+                        <span>Alert me when</span>
+                        <select class="text-black" x-model="baseSymbol">
+                          <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                            <option x-text="baseSymbol" :value="baseSymbol"></option>
+                          </template>
+                        </select>
+                        <select class="text-black" x-model="type">
+                          <option>deposit</option>
+                          <option>borrow</option>
+                          <option>funding</option>
+                        </select>
+                        <span>rate</span>
+                      </div>
+                      <div>
+                        <span>is</span>
+                        <select class="text-black" x-model="side">
+                          <option>above</option>
+                          <option>below</option>
+                        </select>
+                        <input 
+                          type="text"
+                          size="6"
+                          maxlength="6"
+                          class="text-black"
+                          x-model="percent"
+                          @change="checkInput($event.target.value)"
+                        >
+                          <span>percent</span>
+                      </div>
+                      <div x-show="inputError">Please input a number</div>
                     </div>
-                    <div class="pb-2">
-                      <span>rate is</span>
-                      <select class="text-black" x-model="side">
-                        <option>above</option>
-                        <option>below</option>
-                      </select>
-                      <input 
-                        type="number" 
-                        min="-999"
-                        max="999"
-                        class="text-black"
-                        x-model="percent">
-                        <span>percent</span>
+                    <div class="flex justify-center">
+                      <button 
+                        class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                        @click="
+                          if(!inputError) {
+                            newAlert(baseSymbol, type, side, percent);
+                            expanded = !expanded
+                          }
+                        ">
+                        Confirm
+                      </button>
+                      <button 
+                        class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                        @click="addAlert = !addAlert">
+                        Cancel
+                      </button>
                     </div>
-                  </div>
-                  <div class="flex justify-center">
-                    <button 
-                      class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
-                      @click="
-                        addAlert = !addAlert;
-                        newAlert(baseSymbol, type, side, percent)
-                      ">
-                      Confirm
-                    </button>
-                    <button 
-                      class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                      @click="addAlert = !addAlert">
-                      Cancel
-                    </button>
-                  </div>
+                </div>
               </div>
             </div>
-            <!-- TODO alerts for when interest rates pass a threshold? -->
-            <!-- or liquidation alerts? -->
-            <!-- `Alert me when {token} {deposit/borrow} interest is {above/below} {percentage} on Mango {v1/v2/v3}` (Save Alert) -->
-          </div>
       </div>
       <div
         class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
