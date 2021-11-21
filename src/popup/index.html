@@ -60,6 +60,8 @@
     </header>
     <div class="justify-between px-4 py-2 flex flex-col">
       <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
+
+
           <div 
             x-data="{
               rowColors(index) {
@@ -73,71 +75,72 @@
             x-show="page == 'home'" 
             style="height: 14.7rem"
           >
-              <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14.1rem;">
-                <table class="flex-col flex-grow mx-auto table-auto">
-                  <thead>
-                    <tr class="mb-2 text-xs text-center text-fgd-4">
-                      <th class="flex-auto px-2 font-normal text-left">
-                        Token
-                      </th>
-                      <th class="flex-auto px-2 font-normal text-right">
-                        Deposit
-                      </th>
-                      <th class="flex-auto font-normal text-right">/</th>
-                      <th class="flex-auto pr-2 font-normal text-right">
-                        Borrow
-                      </th>
-                      <th class="flex-auto pr-2 font-normal text-right">
-                        Funding (APR)
-                      </th>
+            <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14.1rem;">
+              <table class="flex-col flex-grow mx-auto table-auto">
+                <thead>
+                  <tr class="mb-2 text-xs text-center text-fgd-4">
+                    <th class="flex-auto px-2 font-normal text-left">
+                      Token
+                    </th>
+                    <th class="flex-auto px-2 font-normal text-right">
+                      Deposit
+                    </th>
+                    <th class="flex-auto font-normal text-right">/</th>
+                    <th class="flex-auto pr-2 font-normal text-right">
+                      Borrow
+                    </th>
+                    <th class="flex-auto pr-2 font-normal text-right">
+                      Funding (APR)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- TODO alternate bg-bkg-3 and bg-bkg-2 rows -->
+                  <!-- This currently applies color before deciding which rows to show. NOT GOOD -->
+                  <template x-for="(token, index) in tokensInfo" :key="token.baseSymbol">
+                    <tr x-show="toggles[token.baseSymbol]" :class="rowColors(index)">
+                      <td
+                        class="
+                          flex
+                          items-end
+                          flex-auto
+                          pl-2
+                          text-left
+                          text-fgd-1
+                        "
+                      >
+                        <img
+                          x-data="{icon: './icons/'+(token.baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                          :src="icon"
+                          width="18"
+                          height="18"
+                          class="mr-1"
+                        />
+                        <span x-text="token.baseSymbol"></span>
+                      </td>
+                      <td class="flex-auto pr-1 text-right text-green-dark">
+                        <span x-text="token.deposit ? token.deposit : '——'"></span>
+                        <span class="text-xs">%</span>
+                      </td>
+                      <td class="flex-auto font-normal text-right text-fgd-4">
+                        /
+                      </td>
+                      <td class="flex-auto pr-2 text-right text-red-dark">
+                        <span x-text="token.borrow ? token.borrow : '——'"></span>
+                        <span class="text-xs">%</span>
+                      </td>
+                      <td class="flex-auto pr-2 text-right text-fgd-1">
+                        <span x-text="token.funding ? token.funding : '——'"></span>
+                        <span class="text-xs">%</span>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <!-- TODO alternate bg-bkg-3 and bg-bkg-2 rows -->
-                    <!-- This currently applies color before deciding which rows to show. NOT GOOD -->
-                    <template x-for="(token, index) in tokensInfo" :key="token.baseSymbol">
-                      <tr x-show="toggles[token.baseSymbol]" :class="rowColors(index)">
-                        <td
-                          class="
-                            flex
-                            items-end
-                            flex-auto
-                            pl-2
-                            text-left
-                            text-fgd-1
-                          "
-                        >
-                          <img
-                            x-data="{icon: './icons/'+(token.baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
-                            :src="icon"
-                            width="18"
-                            height="18"
-                            class="mr-1"
-                          />
-                          <span x-text="token.baseSymbol"></span>
-                        </td>
-                        <td class="flex-auto pr-1 text-right text-green-dark">
-                          <span x-text="token.deposit ? token.deposit : '——'"></span>
-                          <span class="text-xs">%</span>
-                        </td>
-                        <td class="flex-auto font-normal text-right text-fgd-4">
-                          /
-                        </td>
-                        <td class="flex-auto pr-2 text-right text-red-dark">
-                          <span x-text="token.borrow ? token.borrow : '——'"></span>
-                          <span class="text-xs">%</span>
-                        </td>
-                        <td class="flex-auto pr-2 text-right text-fgd-1">
-                          <span x-text="token.funding ? token.funding : '——'"></span>
-                          <span class="text-xs">%</span>
-                        </td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </div>
-            
+                  </template>
+                </tbody>
+              </table>
+            </div>
           </div>
+
+
           <div x-show="page == 'settings'" style="height: 14.7rem">
             <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
               <table
@@ -222,14 +225,15 @@
                   </tr>
                 </template>
               </table>
-
             </div>
           </div>
+
+
           <div 
             x-show="page == 'alert'" 
             style="height: 14.7rem"
             x-data="{
-              editAlert: false, 
+              addAlert: false, 
               id: 0, 
               baseSymbol: 'ADA', 
               type: 'deposit', 
@@ -244,9 +248,9 @@
                 }
               },
 
-              addAlert(baseSymbol, type, side, percent) {
-                const newId = this.lastAlertKey() + 1;
-                this.alerts[newId] = {
+              newAlert(baseSymbol, type, side, percent, id) {
+                if (!id) {id = this.lastAlertKey() + 1}
+                this.alerts[id] = {
                   baseSymbol: baseSymbol,
                   type: type,
                   side: side,
@@ -275,61 +279,117 @@
             }"
           >
             <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-              <table class="text-fgd-1 flex-col flex-grow mx-auto table-auto">
-                <thead>
-                  <tr class="mb-2 text-xs text-center text-fgd-4">
-                    <th class="flex-auto px-2 font-normal text-center">Token</th>
-                    <th class="flex-auto px-2 font-normal text-center">Type</th>
-                    <th class="flex-auto px-2 font-normal text-center">Side</th>
-                    <th class="flex-auto px-2 font-normal text-center">%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="[id] in Object.entries(alerts)" :key="id">
-                    <tr>
-                      <td class="
-                        flex
-                        items-end
-                        flex-auto
-                        px-1
-                        text-center
-                        text-fgd-1
-                      ">
+              <div 
+                class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4"
+                x-data="{ active: null }">
+                <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
+                  <div class="w-16 font-normal text-center">Token</div>
+                  <div class="w-12 font-normal text-center">Type</div>
+                  <div class="w-12 font-normal text-center">Side</div>
+                  <div class="w-12 font-normal text-center">%</div>
+                  <div class="w-6 font-normal text-center"></div>
+                  <div class="w-6 font-normal text-center"></div>
+                </div>
+                <template x-for="[ id ] in Object.entries(alerts)" :key="id">
+                  <div 
+                    class="w-full flex flex-col space-y-2"
+                    x-data="{
+                    get expanded() {
+                      return this.active === this.id
+                    },
+                    set expanded(value) {
+                      this.active = value ? this.id : null
+                    }
+                    }"
+                  >
+                    <div class="w-full flex justify-center space-x-2">
+                      <div class="w-16 flex font-normal text-center">
                         <img
-                        x-data="{icon: './icons/'+(alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
-                        :src="icon"
+                        :src="'./icons/'+(alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                         width="18"
                         height="18"
                         class="mr-1"
                         />
                         <span x-text="alerts[id].baseSymbol"></span>
-                      </td>
-                      <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].type"></td>
-                      <td  class="flex-auto px-1 text-center text-fgd-1" x-text="alerts[id].side"></td>
-                      <td  class="flex-auto px-1 text-center text-fgd-1">
+                      </div>
+                      <div class="w-12 font-normal text-center" x-text="alerts[id].type"></div>
+                      <div class="w-12 font-normal text-center" x-text="alerts[id].side"></div>
+                      <div class="w-12 font-normal text-center">
                         <span x-text="parsePercent(alerts[id].percent)"></span>
                         <span>%</span>
-                      </td>
-                      <td class="flex-auto pl-4 pr-2">
-                        <button>
+                      </div>
+                      <div class="w-6 font-normal text-center -mr-4">
+                        <button @click="expanded = !expanded" :aria-expanded="expanded">
                           <!-- TODO implement edit function -->
                           <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
-                      </td>
-                      <td class="flex-auto pr-2">
+                      </div>
+                      <div class="w-6 font-normal text-center">
                         <button @click="delete alerts[id]">
                           <!-- TODO implement delete function -->
                           <img src="./icons/delete.svg" width="18" height="18">
                         </button>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-              <button @click="editAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+                      </div>
+                    </div>
+                    <div x-show="expanded" x-collapse class="mx-auto">
+                      <div class="flex justify-center">
+                        <div class="bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                          <div class="text-center space-y-2">
+                            <div>
+                              <span>Alert me when</span>
+                              <select class="text-black" x-model="baseSymbol">
+                                <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                                  <option x-text="baseSymbol" :value="baseSymbol" :selected="alerts[id].baseSymbol == baseSymbol"></option>
+                                </template>
+                              </select>
+                              <select class="text-black" x-model="type">
+                                <option :selected="alerts[id].type == 'deposit'">deposit</option>
+                                <option :selected="alerts[id].type == 'borrow'">borrow</option>
+                                <option :selected="alerts[id].type == 'funding'">funding</option>
+                              </select>
+                              <span>rate</span>
+                            </div>
+                            <div>
+                              <span>is</span>
+                              <select class="text-black" x-model="side">
+                                <option :selected="alerts[id].side == 'above'">above</option>
+                                <option :selected="alerts[id].side == 'below'">below</option>
+                              </select>
+                              <input 
+                                type="number" 
+                                min="-999"
+                                max="999"
+                                class="text-black"
+                                x-model="percent"
+                                :value="alerts[id].percent"
+                              >
+                                <span>percent</span>
+                            </div>
+                          </div>
+                          <div class="flex justify-center">
+                            <button 
+                              class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                              @click="
+                                newAlert(baseSymbol, type, side, percent, id)
+                                expanded = !expanded
+                              ">
+                              Confirm
+                            </button>
+                            <button 
+                              class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                              @click="expanded = !expanded">
+                              Cancel
+                            </button>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+              <button @click="addAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
                     <span>Add New Alert</span>
               </button>
-              <div x-show="editAlert" x-collapse @click.outside="editAlert = false" class="pt-2 w-full">
+              <div x-show="addAlert" x-collapse @click.outside="addAlert = false" class="pt-2 w-full">
                 <div class="bg-bkg-1 text-fgd-1 mx-1 p-2 rounded-lg">
                   <div class="text-center">
                     <div class="pb-1">
@@ -364,14 +424,14 @@
                     <button 
                       class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                       @click="
-                        editAlert = !editAlert;
-                        addAlert(baseSymbol, type, side, percent)
+                        addAlert = !addAlert;
+                        newAlert(baseSymbol, type, side, percent)
                       ">
                       Confirm
                     </button>
                     <button 
                       class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                      @click="editAlert = !editAlert">
+                      @click="addAlert = !addAlert">
                       Cancel
                     </button>
                   </div>
