@@ -64,12 +64,24 @@
 
           <div 
             x-data="{
+              colorToggle: false,
               rowColors(index) {
                 if (index % 2 == 0) {
                   return 'bg-bkg-2'
                 } else {
                   return 'bg-bkg-3'
                 }
+              },
+
+              filterToggles() {
+                console.log(`filtering toggles obj: ${JSON.stringify(toggles)}`)
+                const filtered = Object.entries(toggles).filter(([key,val]) => val )
+                console.log(`filtered toggles: ${JSON.stringify(filtered)}`);
+                return filtered
+              },
+
+              findToken(baseSymbol) {
+                return tokensInfo.find(token => token.baseSymbol == baseSymbol)
               }
             }"
             x-show="page == 'home'" 
@@ -97,8 +109,8 @@
                 <tbody>
                   <!-- TODO alternate bg-bkg-3 and bg-bkg-2 rows -->
                   <!-- This currently applies color before deciding which rows to show. NOT GOOD -->
-                  <template x-for="(token, index) in tokensInfo" :key="token.baseSymbol">
-                    <tr x-show="toggles[token.baseSymbol]" :class="rowColors(index)">
+                  <template x-for="(token, index) in filterToggles()" :key="token[0]">
+                    <tr :class="rowColors(index)">
                       <td
                         class="
                           flex
@@ -110,27 +122,27 @@
                         "
                       >
                         <img
-                          x-data="{icon: './icons/'+(token.baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                          x-data="{icon: './icons/'+(token[0].toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                           :src="icon"
                           width="18"
                           height="18"
                           class="mr-1"
                         />
-                        <span x-text="token.baseSymbol"></span>
+                        <span x-text="token[0]"></span>
                       </td>
                       <td class="flex-auto pr-1 text-right text-green-dark">
-                        <span x-text="token.deposit ? token.deposit : '——'"></span>
+                        <span x-text="findToken(token[0]).deposit ? findToken(token[0]).deposit : '——'"></span>
                         <span class="text-xs">%</span>
                       </td>
                       <td class="flex-auto font-normal text-right text-fgd-4">
                         /
                       </td>
                       <td class="flex-auto pr-2 text-right text-red-dark">
-                        <span x-text="token.borrow ? token.borrow : '——'"></span>
+                        <span x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"></span>
                         <span class="text-xs">%</span>
                       </td>
                       <td class="flex-auto pr-2 text-right text-fgd-1">
-                        <span x-text="token.funding ? token.funding : '——'"></span>
+                        <span x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"></span>
                         <span class="text-xs">%</span>
                       </td>
                     </tr>
@@ -233,12 +245,7 @@
             x-show="page == 'alert'" 
             style="height: 14.7rem"
             x-data="{
-              addAlert: false, 
-              id: 0, 
-              baseSymbol: 'ADA', 
-              type: 'deposit', 
-              side: 'above', 
-              percent: 0,
+              addAlert: false,
               inputError: false,
 
               lastAlertKey() {
@@ -257,7 +264,7 @@
                  }
               },
 
-              newAlert(baseSymbol, type, side, percent, id) {
+              createAlert(baseSymbol, type, side, percent, id) {
                 if (!id) {id = this.lastAlertKey() + 1}
                 this.alerts[id] = {
                   baseSymbol: baseSymbol,
@@ -287,10 +294,16 @@
               }
             }"
           >
-            <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
+            <div 
+              class="scroller min-w-full overflow-y-auto py-2" 
+              style="max-height: 14.1rem;"
+              x-data="{ 
+                active: null
+              }"
+            >
               <div 
                 class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4"
-                x-data="{ active: null }">
+              >
                 <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
                   <div class="w-16 font-normal text-center">Token</div>
                   <div class="w-12 font-normal text-center">Type</div>
@@ -303,12 +316,12 @@
                   <div 
                     class="w-full flex flex-col space-y-2"
                     x-data="{
-                    get expanded() {
-                      return this.active === this.id
-                    },
-                    set expanded(value) {
-                      this.active = value ? this.id : null
-                    }
+                      get expanded() {
+                        return this.active === this.id
+                      },
+                      set expanded(value) {
+                        this.active = value ? this.id : null
+                      }
                     }"
                   >
                     <div class="w-full flex justify-center space-x-2">
@@ -328,7 +341,7 @@
                         <span>%</span>
                       </div>
                       <div class="w-6 font-normal text-center -mr-4">
-                        <button @click="expanded = !expanded" :aria-expanded="expanded">
+                        <button @click="expanded = !expanded; addAlert = false" :aria-expanded="expanded">
                           <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
@@ -338,37 +351,44 @@
                         </button>
                       </div>
                     </div>
-                    <div x-show="expanded" x-collapse class="mx-auto">
-                      <div class="flex justify-center">
-                        <div class="bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                    <div 
+                      x-show="expanded" 
+                      x-collapse
+                      x-data="{
+                        editBaseSymbol: alerts[id].baseSymbol,
+                        editType: alerts[id].type,
+                        editSide: alerts[id].side,
+                        editPercent: alerts[id].percent
+                      }">
+                      <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                           <div class="text-center space-y-2">
                             <div>
                               <span>Alert me when</span>
-                              <select class="text-black" x-model="baseSymbol">
+                              <select class="text-black" x-model="editBaseSymbol">
                                 <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                                  <option x-text="baseSymbol" :value="baseSymbol" :selected="alerts[id].baseSymbol == baseSymbol"></option>
+                                  <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
                                 </template>
                               </select>
-                              <select class="text-black" x-model="type">
-                                <option :selected="alerts[id].type == 'deposit'">deposit</option>
-                                <option :selected="alerts[id].type == 'borrow'">borrow</option>
-                                <option :selected="alerts[id].type == 'funding'">funding</option>
+                              <select class="text-black" x-model="editType">
+                                <option :selected="editType === 'borrow'">borrow</option>
+                                <option :selected="editType === 'deposit'">deposit</option>
+                                <option :selected="editType === 'funding'">funding</option>
                               </select>
                               <span>rate</span>
                             </div>
                             <div>
                               <span>is</span>
-                              <select class="text-black" x-model="side">
-                                <option :selected="alerts[id].side == 'above'">above</option>
-                                <option :selected="alerts[id].side == 'below'">below</option>
+                              <select class="text-black" x-model="editSide">
+                                <option :selected="editSide === 'above'">above</option>
+                                <option :selected="editSide === 'below'">below</option>
                               </select>
                               <input 
                                 type="text"
                                 size="6"
                                 maxlength="6"
                                 class="text-black"
-                                x-model="percent"
-                                :value="alerts[id].percent"
+                                x-model="editPercent"
+                                :value="editPercent"
                                 @change="checkInput($event.target.value)"
                               >
                                 <span>percent</span>
@@ -380,7 +400,7 @@
                               class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                               @click="
                                 if(!inputError) {
-                                  newAlert(baseSymbol, type, side, percent, id)
+                                  createAlert(editBaseSymbol, editType, editSide, editPercent, id)
                                   expanded = !expanded
                                 }
                               ">
@@ -392,90 +412,108 @@
                               Cancel
                             </button>
                           </div>
-                      </div>
                     </div>
                   </div>
                 </template>
               </div>
-              <button @click="addAlert = true" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+              <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
                 <span>Add New Alert</span>
               </button>
-              <div x-show="addAlert" x-collapse class="mx-auto">
+              <div 
+                x-data="{
+                  newAlert: {
+                    baseSymbol: 'BTC',
+                    type: 'borrow',
+                    side: 'above',
+                    percent: 0
+                  }
+                }"
+                x-show="addAlert" 
+                x-collapse 
+                @click.outside="addAlert = false" 
+                class="pt-2">
+                <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                  <div class="text-center space-y-2">
+                    <div>
+                      <span>Alert me when</span>
+                      <select class="text-black" x-model="newAlert.baseSymbol">
+                        <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                          <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
+                        </template>
+                      </select>
+                      <select class="text-black" x-model="newAlert.type">
+                        <option>borrow</option>
+                        <option>deposit</option>
+                        <option>funding</option>
+                      </select>
+                      <span>rate</span>
+                    </div>
+                  <div>
+                    <span>is</span>
+                    <select class="text-black" x-model="newAlert.side">
+                      <option>above</option>
+                      <option>below</option>
+                    </select>
+                    <input 
+                      type="text"
+                      size="6"
+                      maxlength="6"
+                      class="text-black"
+                      x-model.number="newAlert.percent"
+                      @change="checkInput($event.target.value)"
+                      :value="0"
+                    >
+                    <span>percent</span>
+                  </div>
+                  <div x-show="inputError">Please input a number</div>
+                </div>
                 <div class="flex justify-center">
-                  <div class="bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
-                    <div class="text-center space-y-2">
-                        <span>Alert me when</span>
-                        <select class="text-black" x-model="baseSymbol">
-                          <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                            <option x-text="baseSymbol" :value="baseSymbol"></option>
-                          </template>
-                        </select>
-                        <select class="text-black" x-model="type">
-                          <option>deposit</option>
-                          <option>borrow</option>
-                          <option>funding</option>
-                        </select>
-                        <span>rate</span>
-                      </div>
-                      <div>
-                        <span>is</span>
-                        <select class="text-black" x-model="side">
-                          <option>above</option>
-                          <option>below</option>
-                        </select>
-                        <input 
-                          type="text"
-                          size="6"
-                          maxlength="6"
-                          class="text-black"
-                          x-model="percent"
-                          @change="checkInput($event.target.value)"
-                        >
-                          <span>percent</span>
-                      </div>
-                      <div x-show="inputError">Please input a number</div>
-                    </div>
-                    <div class="flex justify-center">
-                      <button 
-                        class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
-                        @click="
-                          if(!inputError) {
-                            newAlert(baseSymbol, type, side, percent);
-                            expanded = !expanded
-                          }
-                        ">
-                        Confirm
-                      </button>
-                      <button 
-                        class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                        @click="addAlert = !addAlert">
-                        Cancel
-                      </button>
-                    </div>
+                  <button 
+                    class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                    @click="
+                      if(!inputError) {
+                        createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
+                        addAlert = !addAlert;
+                        newAlert = {
+                          baseSymbol: 'BTC',
+                          type: 'borrow',
+                          side: 'above',
+                          percent: 0
+                        }
+                      }
+                    ">
+                    Confirm
+                  </button>
+                  <button 
+                    class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                    @click="addAlert = !addAlert">
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div
+          class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
+        >
+          <div class="flex text-center">
+            <button @click="page = 'settings'; headerText = 'Token Settings'">
+              <img src="./icons/settings.svg" width="24" height="24" />
+            </button>
+          </div>
+          <div class="flex text-center">
+            <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
+              <img src="./icons/home.svg" width="24" height="24" />
+            </button>
+          </div>
+          <div class="flex text-center">
+            <button @click="page = 'alert'; headerText='Alerts'">
+              <img src="./icons/alert.svg" width="24" height="24" />
+            </button>
+          </div>
+        </div>
       </div>
-      <div
-        class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
-      >
-        <div class="flex text-center">
-          <button @click="page = 'settings'; headerText = 'Token Settings'">
-            <img src="./icons/settings.svg" width="24" height="24" />
-          </button>
-        </div>
-        <div class="flex text-center">
-          <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
-            <img src="./icons/home.svg" width="24" height="24" />
-          </button>
-        </div>
-        <div class="flex text-center">
-          <button @click="page = 'alert'; headerText='Alerts'">
-            <img src="./icons/alert.svg" width="24" height="24" />
-          </button>
-        </div>
-      </div>
-    </div>
     <script type="text/javascript" src="./popup.dist.js"></script>
   </body>
 </html>
