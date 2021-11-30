@@ -168,9 +168,37 @@ const checkToggles = (tokensInfo) => {
   });
 };
 
+const onTriggered = (alertId, alert, alertTypes) => {
+  if (alertTypes.os) {
+    chrome.notifications.create(alertId, {
+      type: 'basic',
+      iconUrl: 'dist/icons/mngo.svg',
+      title: `Mango Markets Watch`,
+      message: `${alert.baseSymbol} ${alert.type} rate is ${alert.side} ${alert.percent}%`,
+      priority: 2
+    })
+  }
+  chrome.runtime.sendMessage({
+    msg: 'alert triggered',
+    data: {
+      alertId: alertId
+    }
+  })
+}
+
+const onUntriggered = (alertId) => {
+  chrome.notifications.clear(alertId)
+  chrome.runtime.sendMessage({
+    msg: 'alert untriggered',
+    data: {
+      alertId: alertId
+    }
+  })
+}
+
 const checkAlerts = (tokensInfo) => {
   console.log("calling checkAlerts...");
-  chrome.storage.local.get(["alerts"], (response) => {
+  chrome.storage.local.get(["alerts", "alertTypes"], (response) => {
     let triggeredAlerts = 0;
     for (const entry in response.alerts) {
       const alert = response.alerts[entry];
@@ -192,20 +220,28 @@ const checkAlerts = (tokensInfo) => {
             if (token[alert.type] > alert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
+              
+              onTriggered(entry, alert, response.alertTypes)
+              
             } else {
+              onUntriggered(entry)
               console.log("conditions not met");
             }
           } else {
             if (token[alert.type] < alert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
+              
+              onTriggered(entry, alert, response.alertTypes)
+              
             } else {
+              onUntriggered(entry)
               console.log("conditions not met");
             }
           }
         });
     }
-    triggeredAlerts > 0
+    triggeredAlerts > 0 && response.alertTypes.browser == true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
       : null;
   });
@@ -234,7 +270,7 @@ const refreshData = async (sendResponse) => {
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
-  chrome.storage.local.get(["tokensInfo", "toggles", "alerts"], (response) => {
+  chrome.storage.local.get(["tokensInfo", "toggles", "alerts", "alertTypes"], (response) => {
     console.log("checking token info against alerts...");
     checkAlerts(response.tokensInfo);
     sendResponse(response);
@@ -243,7 +279,7 @@ const onPopup = (sendResponse) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
-  chrome.storage.local.set({ tokensInfo: [], toggles: {}, alerts: {} });
+  chrome.storage.local.set({ tokensInfo: [], toggles: {}, alerts: {}, alertTypes: {}});
   console.log("setting fetch alarm...");
   setFetchAlarm();
   // console.log("setting watchdog alarm...");
@@ -281,13 +317,20 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       return false;
     case "tokensInfo updated":
       return false;
-      break;
     case "update alerts":
       chrome.storage.local.set({ alerts: request.data.alerts });
       sendResponse({ msg: "alerts updated successuflly" });
+      break;
+    case "change alert type":
+      chrome.storage.local.set({ 
+        alertTypes: {
+          browser: request.data.browser, 
+          os: request.data.os
+        }
+      });
+      return false;
     case undefined:
       return false;
-      break;
     default:
       throw new Error(`unfamiliar message received: ${request.msg}`);
   }
@@ -299,12 +342,6 @@ function setFetchAlarm() {
   console.log("schedule refresh alarm to 5 minutes...");
   chrome.alarms.create("refresh", { periodInMinutes: 5 });
 }
-
-// schedule a watchdog check every 3 minutes
-// function setWatchdogAlarm() {
-//   console.log("schedule watchdog alarm to 3 minutes...");
-//   chrome.alarms.create("watchdog", { periodInMinutes: 3 });
-// }
 
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
