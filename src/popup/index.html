@@ -302,9 +302,6 @@
                 triggered: [],
 
                 changeAlertType() {
-                  if (!browserNotifs) {
-                    chrome.browserAction.setBadgeText({ text: null })
-                  }
                   chrome.runtime.sendMessage({
                     msg: 'change alert type',
                     data: {
@@ -374,6 +371,17 @@
                       set expanded(value) {
                         this.active = value ? this.id : null
                       },
+
+                      deleteAlarm(id) {
+                        delete alerts[id];
+                        chrome.notifications.clear(id);
+                        chrome.runtime.sendMessage({
+                          msg: 'update alerts',
+                          data: {
+                            alerts: alerts
+                          }
+                        })
+                      }
                     }"
                   >
                     <div class="w-full flex justify-center space-x-2">
@@ -408,7 +416,7 @@
                         </button>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center">
-                        <button @click="delete alerts[id]">
+                        <button @click="deleteAlarm(id)">
                           <img src="./icons/delete.svg" width="18" height="18">
                         </button>
                       </div>
