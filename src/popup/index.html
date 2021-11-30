@@ -302,6 +302,9 @@
                 triggered: [],
 
                 changeAlertType() {
+                  if (!browserNotifs) {
+                    chrome.browserAction.setBadgeText({ text: null })
+                  }
                   chrome.runtime.sendMessage({
                     msg: 'change alert type',
                     data: {
