@@ -241,7 +241,7 @@ const checkAlerts = (tokensInfo) => {
     }
     triggeredAlerts > 0 && response.alertTypes.browser == true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
-      : null;
+      : chrome.browserAction.setBadgeText({ text: null });
   });
 };
 
@@ -325,15 +325,29 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       return false;
     case "update alerts":
       chrome.storage.local.set({ alerts: request.data.alerts });
+      getTokenInfo_v3().then((result) => {checkAlerts(result)});
       sendResponse({ msg: "alerts updated successuflly" });
       break;
     case "change alert type":
+      !request.data.browser ? chrome.browserAction.setBadgeText({ text: null }) : null;
+      if(!request.data.os) {
+        chrome.notifications.getAll((notifications) => {
+          if (notifications) {
+            for (let item in notifications) {
+              chrome.notifications.clear(item)
+            }
+          }
+        })
+      }
       chrome.storage.local.set({
         alertTypes: {
           browser: request.data.browser,
           os: request.data.os,
         },
       });
+      chrome.storage.local.get(['tokensInfo'], (result) => {
+        checkAlerts(result.tokensInfo)
+      })
       return false;
     case undefined:
       return false;
