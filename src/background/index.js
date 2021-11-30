@@ -284,7 +284,7 @@ chrome.runtime.onInstalled.addListener(() => {
     tokensInfo: [],
     toggles: {},
     alerts: {},
-    alertTypes: {},
+    alertTypes: {browser: true, os: true},
   });
   console.log("setting fetch alarm...");
   setFetchAlarm();
