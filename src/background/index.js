@@ -171,30 +171,30 @@ const checkToggles = (tokensInfo) => {
 const onTriggered = (alertId, alert, alertTypes) => {
   if (alertTypes.os) {
     chrome.notifications.create(alertId, {
-      type: 'basic',
-      iconUrl: 'dist/icons/mngo.svg',
+      type: "basic",
+      iconUrl: "dist/icons/mngo.svg",
       title: `Mango Markets Watch`,
       message: `${alert.baseSymbol} ${alert.type} rate is ${alert.side} ${alert.percent}%`,
-      priority: 2
-    })
+      priority: 2,
+    });
   }
   chrome.runtime.sendMessage({
-    msg: 'alert triggered',
+    msg: "alert triggered",
     data: {
-      alertId: alertId
-    }
-  })
-}
+      alertId: alertId,
+    },
+  });
+};
 
 const onUntriggered = (alertId) => {
-  chrome.notifications.clear(alertId)
+  chrome.notifications.clear(alertId);
   chrome.runtime.sendMessage({
-    msg: 'alert untriggered',
+    msg: "alert untriggered",
     data: {
-      alertId: alertId
-    }
-  })
-}
+      alertId: alertId,
+    },
+  });
+};
 
 const checkAlerts = (tokensInfo) => {
   console.log("calling checkAlerts...");
@@ -220,22 +220,20 @@ const checkAlerts = (tokensInfo) => {
             if (token[alert.type] > alert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
-              
-              onTriggered(entry, alert, response.alertTypes)
-              
+
+              onTriggered(entry, alert, response.alertTypes);
             } else {
-              onUntriggered(entry)
+              onUntriggered(entry);
               console.log("conditions not met");
             }
           } else {
             if (token[alert.type] < alert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
-              
-              onTriggered(entry, alert, response.alertTypes)
-              
+
+              onTriggered(entry, alert, response.alertTypes);
             } else {
-              onUntriggered(entry)
+              onUntriggered(entry);
               console.log("conditions not met");
             }
           }
@@ -270,16 +268,24 @@ const refreshData = async (sendResponse) => {
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
-  chrome.storage.local.get(["tokensInfo", "toggles", "alerts", "alertTypes"], (response) => {
-    console.log("checking token info against alerts...");
-    checkAlerts(response.tokensInfo);
-    sendResponse(response);
-  });
+  chrome.storage.local.get(
+    ["tokensInfo", "toggles", "alerts", "alertTypes"],
+    (response) => {
+      console.log("checking token info against alerts...");
+      checkAlerts(response.tokensInfo);
+      sendResponse(response);
+    }
+  );
 };
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
-  chrome.storage.local.set({ tokensInfo: [], toggles: {}, alerts: {}, alertTypes: {}});
+  chrome.storage.local.set({
+    tokensInfo: [],
+    toggles: {},
+    alerts: {},
+    alertTypes: {},
+  });
   console.log("setting fetch alarm...");
   setFetchAlarm();
   // console.log("setting watchdog alarm...");
@@ -322,11 +328,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse({ msg: "alerts updated successuflly" });
       break;
     case "change alert type":
-      chrome.storage.local.set({ 
+      chrome.storage.local.set({
         alertTypes: {
-          browser: request.data.browser, 
-          os: request.data.os
-        }
+          browser: request.data.browser,
+          os: request.data.os,
+        },
       });
       return false;
     case undefined:
