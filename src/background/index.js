@@ -280,12 +280,15 @@ const onPopup = (sendResponse) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("onInstalled...");
-  chrome.storage.local.set({
-    tokensInfo: [],
-    toggles: {},
-    alerts: {},
-    alertTypes: {browser: true, os: true},
-  });
+  chrome.storage.local.get({
+    "tokensInfo": [], 
+    "toggles": {},
+    "alerts": {},
+    "alertTypes": {browser: true, os: true}
+  }, (result) => {
+    console.log(`got values from storage: ${JSON.stringify(result)}`)
+    chrome.storage.local.set(result)
+  })
   console.log("setting fetch alarm...");
   setFetchAlarm();
   // console.log("setting watchdog alarm...");
