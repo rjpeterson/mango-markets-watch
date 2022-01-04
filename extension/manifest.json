@@ -1,6 +1,6 @@
 {
   "name": "Mango Markets Watch",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Get and set alerts for current Mango Markets borrow, lend, and funding rates",
   "permissions": [
     "storage",
