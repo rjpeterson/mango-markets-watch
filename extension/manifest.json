@@ -1,28 +1,28 @@
 {
-  "name": "Mango Markets Watch",
-  "version": "0.1.5",
-  "description": "Get and set alerts for current Mango Markets borrow, lend, and funding rates",
-  "permissions": [
-    "storage",
-    "alarms",
-    "notifications"
-  ],
-  "manifest_version": 2,
-  "commands": {
-    "_execute_browser_action": {
-      "suggested_key": {
-        "default": "Shift+Alt+M"
-      }
+    "name": "Mango Markets Watch",
+    "version": "0.1.5",
+    "description": "Get and set alerts for current Mango Markets borrow, lend, and funding rates",
+    "permissions": [
+        "storage",
+        "alarms",
+        "notifications"
+    ],
+    "manifest_version": 2,
+    "commands": {
+        "_execute_browser_action": {
+            "suggested_key": {
+                "default": "Shift+Alt+M"
+            }
+        }
+    },
+    "browser_action": {
+        "default_popup": "./dist/popup.html",
+        "default_title": "Mango Markets Watch",
+        "default_icon": "./dist/icons/logo.png"
+    },
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+    "background": {
+        "scripts": ["dist/background.dist.js"],
+        "persistent": false
     }
-  },
-  "browser_action": {
-    "default_popup": "./dist/popup.html",
-    "default_title": "Mango Markets Watch",
-    "default_icon":"./dist/icons/logo.png"
-  },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  "background": {
-    "scripts": ["dist/background.dist.js"],
-    "persistent": false
-  }
 }
