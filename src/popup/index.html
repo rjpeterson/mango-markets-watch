@@ -1,12 +1,11 @@
 <html style="height:21rem">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" type="text/css" href="./popup.css" />
-  </head>
-  <body
-    class="bg-bkg-1 flex flex-col justify-between"
-    style="width:24rem"
-    x-data="{
+</head>
+
+<body class="bg-bkg-1 flex flex-col justify-between" style="width:24rem" x-data="{
       page: 'home',
       tokensInfo:[],
       toggles: {},
@@ -14,8 +13,7 @@
       headerText: 'Mango Markets Watch',
       browserNotifs: true,
       OSNotifs: true
-    }"
-    x-init="
+    }" x-init="
       chrome.runtime.sendMessage({msg: 'onPopup'},
         function(response) {
           if (!response) {
@@ -45,11 +43,9 @@
         tokensInfo = response
         console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
       });
-    "
-    >
+    ">
 
-    <header
-      class="
+    <header class="
         flex
         justify-center
         pt-4
@@ -57,17 +53,15 @@
         text-base
         font-medium
         text-orange-DEFAULT
-      "
-    >
-      <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
-      <span x-text="headerText"></span>
+      ">
+        <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
+        <span x-text="headerText"></span>
     </header>
     <div class="justify-between px-4 py-2 flex flex-col">
-      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
+        <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
 
 
-          <div 
-            x-data="{
+            <div x-data="{
               colorToggle: false,
               rowColors(index) {
                 if (index % 2 != 0) {
@@ -84,31 +78,28 @@
               findToken(baseSymbol) {
                 return tokensInfo.find(token => token.baseSymbol == baseSymbol)
               }
-            }"
-            x-show="page == 'home'" 
-            style="height: 14.7rem"
-          >
-            <div class="flex scroller min-w-full overflow-y-auto"  style="max-height: 14.1rem;">
-              <table class="flex-col flex-grow mx-auto table-auto">
-                <thead>
-                  <tr class="mb-2 text-xs text-center text-fgd-4">
-                    <th class="flex-auto px-2 font-normal text-left">
-                      Token
-                    </th>
-                    <th class="flex-auto px-2 font-normal text-right">
-                      Deposit
-                    </th>
-                    <th class="flex-auto font-normal text-right">/</th>
-                    <th class="flex-auto pr-2 font-normal text-right">
-                      Borrow
-                    </th>
-                    <th class="flex-auto pr-2 font-normal text-right">
-                      Funding (APR)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="(token, index) in filterToggles()" :key="token[0]">
+            }" x-show="page == 'home'" style="height: 14.7rem">
+                <div class="flex scroller min-w-full overflow-y-auto" style="max-height: 14.1rem;">
+                    <table class="flex-col flex-grow mx-auto table-auto">
+                        <thead>
+                            <tr class="mb-2 text-xs text-center text-fgd-4">
+                                <th class="flex-auto px-2 font-normal text-left">
+                                    Token
+                                </th>
+                                <th class="flex-auto px-2 font-normal text-right">
+                                    Deposit
+                                </th>
+                                <th class="flex-auto font-normal text-right">/</th>
+                                <th class="flex-auto pr-2 font-normal text-right">
+                                    Borrow
+                                </th>
+                                <th class="flex-auto pr-2 font-normal text-right">
+                                    Funding (APR)
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(token, index) in filterToggles()" :key="token[0]">
                     <tr :class="rowColors(index)">
                       <td
                         class="
@@ -146,25 +137,23 @@
                       </td>
                     </tr>
                   </template>
-                </tbody>
-              </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
 
 
-          <div x-show="page == 'settings'" style="height: 14.7rem">
-            <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-              <table
-                class="
+            <div x-show="page == 'settings'" style="height: 14.7rem">
+                <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
+                    <table class="
                   flex-col flex-grow
                   mx-auto
                   pt-2
                   text-sm
                   table-auto
                   text-fgd-1
-                "
-              >
-                <template x-for="[baseSymbol, toggle] in Object.entries(toggles)" :key="baseSymbol">
+                ">
+                        <template x-for="[baseSymbol, toggle] in Object.entries(toggles)" :key="baseSymbol">
                   <tr class="flex flex-row pb-1">
                     <td class="flex items-end flex-auto px-2 text-left">
                       <img
@@ -235,15 +224,12 @@
                     </td>
                   </tr>
                 </template>
-              </table>
+                    </table>
+                </div>
             </div>
-          </div>
 
 
-          <div 
-            x-show="page == 'alert'" 
-            style="height: 14.7rem"
-            x-data="{
+            <div x-show="page == 'alert'" style="height: 14.7rem" x-data="{
               addAlert: false,
               inputError: false,
 
@@ -292,12 +278,8 @@
                   return parseFloat(value).toFixed(2)
                 }
               }
-            }"
-          >
-            <div 
-              class="scroller min-w-full overflow-y-auto py-2" 
-              style="max-height: 14.1rem;"
-              x-data="{ 
+            }">
+                <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;" x-data="{ 
                 active: null,
                 triggered: [],
 
@@ -310,8 +292,7 @@
                     }
                   })
                 }
-              }"
-              x-init="
+              }" x-init="
                 chrome.runtime.onMessage.addListener(
                   function(request, sender, sendResponse) {
                       if (request.msg === 'alert triggered') {
@@ -321,47 +302,28 @@
                       }
                   }
                 )
-              "
-            >
-            <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
-              <div>
-                <input 
-                  type="checkbox" 
-                  id="browser-notif" 
-                  name="browser-notif" 
-                  value="true" 
-                  x-model="browserNotifs" 
-                  checked
-                  @change="changeAlertType()"
-                >
-                <label for="browser-notif">Icon Badge</label>
-              </div>
-              <div>
-                <input 
-                  type="checkbox" 
-                  id="os-notif" 
-                  name="os-notif" 
-                  value="true" 
-                  x-model="OSNotifs" 
-                  checked
-                  @change="changeAlertType()"
-                >
-                <label for="os-notif">OS Tray</label>
-              </div>
-            </div>
-              <div 
-                class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2"
-              >
-                <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
-                  <div class="w-1/12 font-normal flex justify-center">Status</div>
-                  <div class="w-3/12 font-normal flex justify-center">Token</div>
-                  <div class="w-2/12 font-normal flex justify-center">Type</div>
-                  <div class="w-2/12 font-normal flex justify-center">Side</div>
-                  <div class="w-2/12 font-normal flex justify-center">%</div>
-                  <div class="w-1/12 font-normal flex justify-center"></div>
-                  <div class="w-1/12 font-normal flex justify-center"></div>
-                </div>
-                <template x-for="[ id ] in Object.entries(alerts)" :key="id">
+              ">
+                    <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
+                        <div>
+                            <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeAlertType()">
+                            <label for="browser-notif">Icon Badge</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeAlertType()">
+                            <label for="os-notif">OS Tray</label>
+                        </div>
+                    </div>
+                    <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
+                        <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
+                            <div class="w-1/12 font-normal flex justify-center">Status</div>
+                            <div class="w-3/12 font-normal flex justify-center">Token</div>
+                            <div class="w-2/12 font-normal flex justify-center">Type</div>
+                            <div class="w-2/12 font-normal flex justify-center">Side</div>
+                            <div class="w-2/12 font-normal flex justify-center">%</div>
+                            <div class="w-1/12 font-normal flex justify-center"></div>
+                            <div class="w-1/12 font-normal flex justify-center"></div>
+                        </div>
+                        <template x-for="[ id ] in Object.entries(alerts)" :key="id">
                   <div 
                     class="w-full flex flex-col space-y-2"
                     x-data="{
@@ -431,159 +393,134 @@
                         editPercent: alerts[id].percent
                       }">
                       <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
-                          <div class="text-center space-y-2">
-                            <div>
-                              <span>Alert me when</span>
-                              <select class="text-black" x-model="editBaseSymbol">
-                                <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                                  <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
-                                </template>
-                              </select>
-                              <select class="text-black" x-model="editType">
-                                <option :selected="editType === 'borrow'">borrow</option>
-                                <option :selected="editType === 'deposit'">deposit</option>
-                                <option :selected="editType === 'funding'">funding</option>
-                              </select>
-                              <span>rate</span>
-                            </div>
-                            <div>
-                              <span>is</span>
-                              <select class="text-black" x-model="editSide">
-                                <option :selected="editSide === 'above'">above</option>
-                                <option :selected="editSide === 'below'">below</option>
-                              </select>
-                              <input 
-                                type="text"
-                                size="6"
-                                maxlength="6"
-                                class="text-black"
-                                x-model="editPercent"
-                                :value="editPercent"
-                                @change="checkInput($event.target.value)"
-                              >
-                                <span>percent</span>
-                            </div>
-                            <div x-show="inputError">Please input a number</div>
-                          </div>
-                          <div class="flex justify-center">
-                            <button 
-                              class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
-                              @click="
-                                checkInput(editPercent, () => {
-                                  createAlert(editBaseSymbol, editType, editSide, editPercent, id)
-                                  expanded = !expanded
-                                })
-                              ">
-                              Confirm
-                            </button>
-                            <button 
-                              class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                              @click="expanded = !expanded">
-                              Cancel
-                            </button>
-                          </div>
+                        <div class="text-center space-y-2">
+                          <div>
+                            <span>Alert me when</span>
+                            <select class="text-black" x-model="editBaseSymbol">
+                              <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                                <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
+                              </template>
+                        </select>
+                        <select class="text-black" x-model="editType">
+                              <option :selected="editType === 'borrow'">borrow</option>
+                              <option :selected="editType === 'deposit'">deposit</option>
+                              <option :selected="editType === 'funding'">funding</option>
+                            </select>
+                        <span>rate</span>
                     </div>
-                  </div>
-                </template>
-              </div>
-              <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
-                <span>Add New Alert</span>
-              </button>
-              <div 
-                x-data="{
-                  newAlert: {
-                    baseSymbol: 'BTC',
-                    type: 'borrow',
-                    side: 'above',
-                    percent: 0
-                  }
-                }"
-                x-show="addAlert" 
-                x-collapse 
-                @click.outside="addAlert = false" 
-                class="pt-2">
-                <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
-                  <div class="text-center space-y-2">
                     <div>
-                      <span>Alert me when</span>
-                      <select class="text-black" x-model="newAlert.baseSymbol">
-                        <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                          <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
-                        </template>
-                      </select>
-                      <select class="text-black" x-model="newAlert.type">
-                        <option>borrow</option>
-                        <option>deposit</option>
-                        <option>funding</option>
-                      </select>
-                      <span>rate</span>
+                        <span>is</span>
+                        <select class="text-black" x-model="editSide">
+                              <option :selected="editSide === 'above'">above</option>
+                              <option :selected="editSide === 'below'">below</option>
+                            </select>
+                        <input type="text" size="6" maxlength="6" class="text-black" x-model="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
+                        <span>percent</span>
                     </div>
-                  <div>
-                    <span>is</span>
-                    <select class="text-black" x-model="newAlert.side">
-                      <option>above</option>
-                      <option>below</option>
-                    </select>
-                    <input 
-                      type="text"
-                      size="6"
-                      maxlength="6"
-                      class="text-black"
-                      x-model.number="newAlert.percent"
-                      @change="checkInput($event.target.value)"
-                      :value="0"
-                    >
-                    <span>percent</span>
-                  </div>
-                  <div x-show="inputError">Please input a number</div>
+                    <div x-show="inputError">Please input a number</div>
                 </div>
                 <div class="flex justify-center">
-                  <button 
-                    class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
-                    @click="
-                      checkInput(newAlert.percent, () => {
-                        createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
-                        addAlert = !addAlert;
-                        newAlert = {
-                          baseSymbol: 'BTC',
-                          type: 'borrow',
-                          side: 'above',
-                          percent: 0
-                        }
-                      })
-                    ">
-                    Confirm
-                  </button>
-                  <button 
-                    class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                    @click="addAlert = !addAlert">
-                    Cancel
-                  </button>
+                    <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
+                              checkInput(editPercent, () => {
+                                createAlert(editBaseSymbol, editType, editSide, editPercent, id)
+                                expanded = !expanded
+                              })
+                            ">
+                            Confirm
+                          </button>
+                    <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="expanded = !expanded">
+                            Cancel
+                          </button>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-        <div
-          class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
-        >
-          <div class="flex text-center">
+        </template>
+    </div>
+    <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+                  <span>Add New Alert</span>
+                </button>
+    <div x-data="{
+                    newAlert: {
+                      baseSymbol: 'BTC',
+                      type: 'borrow',
+                      side: 'above',
+                      percent: 0
+                    }
+                  }" x-show="addAlert" x-collapse @click.outside="addAlert = false" class="pt-2">
+        <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+            <div class="text-center space-y-2">
+                <div>
+                    <span>Alert me when</span>
+                    <select class="text-black" x-model="newAlert.baseSymbol">
+                          <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                            <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
+                          </template>
+                        </select>
+                    <select class="text-black" x-model="newAlert.type">
+                          <option>borrow</option>
+                          <option>deposit</option>
+                          <option>funding</option>
+                        </select>
+                    <span>rate</span>
+                </div>
+                <div>
+                    <span>is</span>
+                    <select class="text-black" x-model="newAlert.side">
+                          <option>above</option>
+                          <option>below</option>
+                        </select>
+                    <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="checkInput($event.target.value)" :value="0">
+                    <span>percent</span>
+                </div>
+                <div x-show="inputError">Please input a number</div>
+            </div>
+            <div class="flex justify-center">
+                <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
+                          checkInput(newAlert.percent, () => {
+                            createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
+                            addAlert = !addAlert;
+                            newAlert = {
+                              baseSymbol: 'BTC',
+                              type: 'borrow',
+                              side: 'above',
+                              percent: 0
+                            }
+                          })
+                        ">
+                        Confirm
+                      </button>
+                <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="addAlert = !addAlert">
+                        Cancel
+                      </button>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
+        <div class="flex text-center">
             <button @click="page = 'settings'; headerText = 'Token Settings'">
-              <img src="./icons/settings.svg" width="24" height="24" />
-            </button>
-          </div>
-          <div class="flex text-center">
-            <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
-              <img src="./icons/home.svg" width="24" height="24" />
-            </button>
-          </div>
-          <div class="flex text-center">
-            <button @click="page = 'alert'; headerText='Alerts'">
-              <img src="./icons/alert.svg" width="24" height="24" />
-            </button>
-          </div>
+                  <img src="./icons/settings.svg" width="24" height="24" />
+                </button>
         </div>
-      </div>
+        <div class="flex text-center">
+            <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
+                  <img src="./icons/home.svg" width="24" height="24" />
+                </button>
+        </div>
+        <div class="flex text-center">
+            <button @click="page = 'alert'; headerText='Alerts'">
+                  <img src="./icons/alert.svg" width="24" height="24" />
+                </button>
+        </div>
+        <div class="flex text-center">
+            <button @click="page = 'account'; headerText='Accounts'">
+                  <img src="./icons/key.svg" width="24" height="24" />
+                </button>
+        </div>
+    </div>
+    </div>
     <script type="text/javascript" src="./popup.dist.js"></script>
-  </body>
+</body>
+
 </html>
