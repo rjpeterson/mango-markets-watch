@@ -11,6 +11,21 @@ import Big from "big.js";
 
 const rpcToken = `https://mango.rpcpool.com/${token}`;
 
+const getAccountData = async (accounts) => {
+  const accountsData = {}
+  const {mangoGroup, client, mangoCache} = await establishConnection();
+  for (const key of Object.keys(accounts)) {
+    console.log(`looking up account ${key}...`)
+    const accountPK = new PublicKey(key)
+    const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
+    const healthRatio = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toString()
+    const equity = mangoAccount.computeValue(mangoGroup, mangoCache).toString()
+    accountsData[key] = {healthRatio: healthRatio, equity: equity}
+    console.log(`fetched healthRatio: ${healthRatio}, equity: ${equity}`)
+  }
+  return accountsData
+}
+
 const fetchPerpStats = async (groupConfig, marketName) => {
   const urlParams = new URLSearchParams({ mangoGroup: groupConfig.name });
   urlParams.append("market", marketName);
@@ -105,8 +120,7 @@ const getInterestRates = async (mangoGroup, connection, groupConfig) => {
   }
 };
 
-const getTokenInfo_v3 = async () => {
-  console.log(`getting v3 token info...`);
+const establishConnection = async () => {
   const cluster = "mainnet";
   const group = "mainnet.1";
 
@@ -130,6 +144,14 @@ const getTokenInfo_v3 = async () => {
   }
   const client = new MangoClient_v3(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
+  const mangoCache = await mangoGroup.loadCache(connection);
+
+  return {mangoGroup, client, connection, groupConfig, clusterData, mangoCache}
+}
+
+const getTokenInfo_v3 = async () => {
+  console.log(`getting v3 token info...`);
+  const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
 
   const interestRates = await getInterestRates(
     mangoGroup,
@@ -269,7 +291,7 @@ const refreshData = async (sendResponse) => {
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
   chrome.storage.local.get(
-    ["tokensInfo", "toggles", "alerts", "alertTypes"],
+    ["tokensInfo", "toggles", "alerts", "alertTypes", "accounts"],
     (response) => {
       console.log("checking token info against alerts...");
       checkAlerts(response.tokensInfo);
@@ -352,6 +374,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         checkAlerts(result.tokensInfo)
       })
       return false;
+    case "update accounts":
+      getAccountData(request.data.accounts).then((result) => {
+        console.log(`callback result :${JSON.stringify(result)}`)
+        chrome.storage.local.set({accounts: result})
+        sendResponse({
+          msg: "accounts updated successfully",
+          data: {
+            accounts: result
+          }
+        })
+      })
+      break;
     case undefined:
       return false;
     default:
