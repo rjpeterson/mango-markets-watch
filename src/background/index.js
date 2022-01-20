@@ -20,10 +20,24 @@ const getAccountData = async (accounts) => {
     const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
     const healthRatio = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toString()
     const equity = mangoAccount.computeValue(mangoGroup, mangoCache).toString()
-    accountsData[key] = {healthRatio: healthRatio, equity: equity}
-    console.log(`fetched healthRatio: ${healthRatio}, equity: ${equity}`)
+    const name = mangoAccount.name ? mangoAccount.name : null
+    accountsData[key] = {healthRatio: healthRatio, equity: equity, name: name}
+    console.log(`fetched healthRatio: ${healthRatio}, equity: ${equity}, name: ${name}`)
   }
   return accountsData
+}
+
+const refreshAccounts = async () => {
+  chrome.storage.local.get(['accounts'], async (result) => {
+    const accountData = await getAccountData(result.accounts);
+    chrome.storage.local.set({accounts: accountData})
+    chrome.runtime.sendMessage({
+      msg: 'accounts data updated',
+      data: {
+        accounts: accountData
+      }
+    })
+  })
 }
 
 const fetchPerpStats = async (groupConfig, marketName) => {
@@ -232,7 +246,7 @@ const checkAlerts = (tokensInfo) => {
               alert
             )} to token data ${JSON.stringify(token)}`
           );
-          if (!parseFloat(token[alert.type])) {
+          if (token[alert.type] != '0.00' && !parseFloat(token[alert.type])) {
             console.log(
               `${alert.type} rate of ${token.baseSymbol} is not a number`
             );
@@ -399,8 +413,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 //schedule a new fetch every 5 minutes
 function setFetchAlarm() {
-  console.log("schedule refresh alarm to 5 minutes...");
-  chrome.alarms.create("refresh", { periodInMinutes: 5 });
+  console.log("schedule refresh alarm to 1 minute...");
+  chrome.alarms.create("refresh", { periodInMinutes: 1 });
 }
 
 // alarm listener
@@ -425,5 +439,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     //if refresh alarm triggered, start a new request
     console.log("Refresh alarm triggered");
     refreshData();
+    refreshAccounts();
   }
 });
