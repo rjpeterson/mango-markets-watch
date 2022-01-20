@@ -11,9 +11,11 @@
     x-data="{
       page: 'home',
       tokensInfo:[],
-      toggles: {},
-      alerts: {},
-      accounts: {},
+      userData: {
+        toggles: {},
+        alerts: {},
+        accounts: {}
+      },
       headerText: 'Mango Markets Watch',
       browserNotifs: true,
       OSNotifs: true
@@ -30,9 +32,9 @@
           JSON.stringify(response)
         }`)
         tokensInfo = response.tokensInfo
-        toggles = response.toggles
-        alerts = response.alerts
-        accounts = response.accounts
+        userData.toggles = response.toggles
+        userData.alerts = response.alerts
+        userData.accounts = response.accounts
         browserNotifs = response.alertTypes.browser
         OSNotifs = response.alertTypes.os
       });
@@ -42,7 +44,7 @@
           if (request.msg === 'tokensInfo updated') {
             tokensInfo = request.data.tokensInfo
           } else if (request.msg === 'accounts data updated') {
-            accounts = request.data.accounts
+            userData.accounts = request.data.accounts
           }
         }
       )
@@ -92,7 +94,7 @@
               }
             },
             filterToggles() {
-              return Object.entries(toggles).filter(([key,val]) => val )
+              return Object.entries(userData.toggles).filter(([key,val]) => val )
             },
             findToken(baseSymbol) {
               return tokensInfo.find(token => token.baseSymbol == baseSymbol)
@@ -177,7 +179,7 @@
             ">
 
               <!-- TOGGLE ROWS START -->
-              <template x-for="[baseSymbol, toggle] in Object.entries(toggles)" :key="baseSymbol">
+              <template x-for="[baseSymbol, toggle] in Object.entries(userData.toggles)" :key="baseSymbol">
                 <tr class="flex flex-row pb-1">
                   <td class="flex items-end flex-auto px-2 text-left">
                     <img
@@ -234,12 +236,12 @@
                           focus:outline-none
                         "
                         @click="
-                          toggles[baseSymbol] = !toggle;
+                          userData.toggles[baseSymbol] = !toggle;
                           console.log('updating toggles...')
                           chrome.runtime.sendMessage({
                             msg: 'change toggles',
                             data: {
-                              toggles: toggles
+                              toggles: userData.toggles
                             }
                           })
                         "
@@ -260,8 +262,8 @@
             addAlert: false,
             inputError: false,
             lastAlertKey() {
-              if (Object.keys(this.alerts).length > 0) {
-                return Math.max(...Object.keys(this.alerts))
+              if (Object.keys(this.userData.alerts).length > 0) {
+                return Math.max(...Object.keys(this.userData.alerts))
               } else {
                 return 0
               }
@@ -280,7 +282,7 @@
               if (!id) {
                 id = this.lastAlertKey() + 1
               }
-              this.alerts[id] = {
+              this.userData.alerts[id] = {
                 baseSymbol: baseSymbol,
                 type: type,
                 side: side,
@@ -289,7 +291,7 @@
               chrome.runtime.sendMessage({
                 msg: 'update alerts',
                 data: {
-                  alerts: this.alerts
+                  alerts: this.userData.alerts
                 }
               }, function(response) {
                 if (!response) {
@@ -361,7 +363,7 @@
 
               <!-- ALERT ROWS START -->
               <div class="w-full">
-                <template x-for="[ id ] in Object.entries(alerts)" :key="id">
+                <template x-for="[ id ] in Object.entries(userData.alerts)" :key="id">
                   <div 
                     class="w-full text-sm flex flex-col space-y-2"
                     x-data="{
@@ -372,12 +374,12 @@
                         this.active = value ? this.id : null
                       },
                       deleteAlarm(id) {
-                        delete alerts[id];
+                        delete userData.alerts[id];
                         chrome.notifications.clear(id);
                         chrome.runtime.sendMessage({
                           msg: 'update alerts',
                           data: {
-                            alerts: alerts
+                            alerts: userData.alerts
                           }
                         })
                       }
@@ -397,17 +399,17 @@
                       </div>
                       <div class="w-3/12 flex font-normal flex justify-center">
                         <img
-                          :src="'./icons/'+(alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
+                          :src="'./icons/'+(userData.alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
                           height="18"
                           class="mr-1"
                           />
-                        <span x-text="alerts[id].baseSymbol"></span>
+                        <span x-text="userData.alerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="alerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="alerts[id].side"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].type"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].side"></div>
                       <div class="w-2/12 font-normal flex justify-end">
-                        <span x-text="parsePercent(alerts[id].percent)"></span>
+                        <span x-text="parsePercent(userData.alerts[id].percent)"></span>
                         <span>%</span>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center -mr-4">
@@ -427,17 +429,17 @@
                       x-show="expanded" 
                       x-collapse
                       x-data="{
-                      editBaseSymbol: alerts[id].baseSymbol,
-                      editType: alerts[id].type,
-                      editSide: alerts[id].side,
-                      editPercent: alerts[id].percent
+                      editBaseSymbol: userData.alerts[id].baseSymbol,
+                      editType: userData.alerts[id].type,
+                      editSide: userData.alerts[id].side,
+                      editPercent: userData.alerts[id].percent
                     }">
                       <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                         <div class="text-center space-y-2">
                           <div>
                             <span>Alert me when</span>
                             <select class="text-black" x-model="editBaseSymbol">
-                              <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                              <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
                                   <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
                               </template>
                             </select>
@@ -504,7 +506,7 @@
                     <div>
                       <span>Alert me when</span>
                       <select class="text-black" x-model="newAlert.baseSymbol">
-                        <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
+                        <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
                             <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
                         </template>
                       </select>
@@ -565,26 +567,27 @@
           x-data="{
             addingAccount: false,
             addNewAccount(address) {
-              accounts[address] = {healthRatio: 0, equity: 0};
+              if (!userData.accounts) {userData.accounts = {}}
+              userData.accounts[address] = {healthRatio:  0, equity: 0, name: null};
               chrome.runtime.sendMessage({
                 msg: 'update accounts',
                 data: {
-                  accounts: accounts
+                  accounts: userData.accounts
                 }
               }, function(response) {
                 if (!response) {
                   throw new Error('could not update accounts')
                 }
-                accounts = response.data.accounts
+                userData.accounts = response.data.accounts
                 console.log(`accounts updated: ${JSON.stringify(response)}`)
               })
             },
             deleteAccount(address) {
-              delete accounts[address];
+              delete userData.accounts[address];
               chrome.runtime.sendMessage({
                 msg: 'update accounts',
                 data: {
-                  accounts: accounts
+                  accounts: userData.accounts
                 }
               })
             },
@@ -598,17 +601,24 @@
               } else {
                 return 'text-red-dark'
               }
+            },
+            parseHealth(health) {
+              if (health > 100) {
+                return '>100'
+              } else {
+                return Math.round(health)
+              }
             }
           }"
         >
           <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-6">
-              <div class="w-full flex text-xs text-fgd-4 space-x-4 justify-around">
-                <div class="w-48 flex justify-around space-x-6">
-                  <div class="w-16 font-normal flex justify-center items-end">Address</div>
+            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
+              <div class="w-full flex text-xs text-fgd-4 ">
+                <div class="w-60 flex">
+                  <div class="w-20 font-normal flex justify-center items-end">Address</div>
                   <div class="w-20 font-normal flex justify-center items-end">Balance</div>
-                  <div class="w-12 font-normal flex justify-end items-end">
-                    <div class="w-3/4">Maint. Health</div>
+                  <div class="w-20 font-normal flex justify-end items-end">
+                    <div class="w-3/4">Health Ratio</div>
                   </div>
                 </div>
                 <div class="w-4"></div>
@@ -617,10 +627,10 @@
 
               <!-- ACCOUNT ROWS START --> 
               <template 
-                x-for="address in Object.keys(accounts)" 
+                x-for="address in Object.keys(userData.accounts)" 
                 :key="address">
                 <div 
-                  class="w-full text-sm flex flex-row justify-around"
+                  class="w-full text-sm flex flex-row "
                   x-data="{
                     get expanded() {
                       return this.active === this.address
@@ -632,21 +642,23 @@
                 >
 
                 <!-- ACCOUNT DATA START -->
-                  <div class="w-48 flex flex-row justify-around space-x-6" x-show="!expanded">
+                  <div class="w-60 flex flex-row justify-around" x-show="!expanded">
                     <div 
-                      class="w-16 font-normal flex justify-center" 
-                      x-text="accounts[address].name ? accounts[address].name : address.substring(0, 5)"
+                      class="w-20 font-normal flex justify-center" 
+                      x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
                     ></div>
                     <div 
                       class="w-20 font-normal flex justify-center"
                     >
                       <span>$</span>
-                      <span x-text="parseFloat(accounts[address].equity).toLocaleString('en-US', {maximumFractionDigits:2})"></span>
+                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {maximumFractionDigits:2})"></span>
                     </div>
                     <div 
-                      class="w-12 font-normal flex justify-center"
+                      class="w-20 font-normal flex justify-center"
+                      :class="healthColor(userData.accounts[address].healthRatio)"
                     >
-                      <span :class="healthColor(accounts[address].healthRatio)" x-text="Math.round(accounts[address].healthRatio)"></span>
+                      <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
+                      <span>%</span>
                     </div>
                   </div>
                   <!-- ACCOUNT DATA END -->
@@ -671,12 +683,12 @@
                     </button>
                   </div>
                   <!-- EDIT ACCOUNT FORM END -->
-                  <div class="w-4 font-normal flex justify-center -mr-4">
+                  <div class="w-4 font-normal flex justify-center ml-4">
                     <button @click="expanded = !expanded; addingAccount = false" :aria-expanded="expanded">
                     <img src="./icons/pencil.svg" width="18" height="18">
                     </button>
                   </div>
-                  <div class="w-4 font-normal flex justify-center">
+                  <div class="w-4 font-normal flex justify-center ml-4">
                     <button @click="deleteAccount(address)">
                     <img src="./icons/delete.svg" width="18" height="18">
                     </button>
@@ -687,7 +699,10 @@
 
               <!-- ADD ACCOUNT START -->
               <div class="flex flex-col mx-auto space-y-2">
-                <button @click="addingAccount = !addingAccount" class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+                <button 
+                  @click="addingAccount = !addingAccount;" 
+                  class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                >
                   <span>Add New Account</span>
                 </button>
                 <div 
@@ -697,9 +712,14 @@
                   class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 space-x-2 items-center"
                   x-show="addingAccount"
                 >
-                  <input placeholder="Enter a Mango Account" type="text" class="text-black" x-model="newAccount">
+                  <input 
+                    placeholder="Enter a Mango Account" 
+                    type="text" 
+                    class="text-black" 
+                    x-model="newAccount"
+                  >
                   <button 
-                    @click="addNewAccount(newAccount); addingAccount = false"
+                    @click="addNewAccount(newAccount); addingAccount = false;"
                     class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                   >
                     Add
