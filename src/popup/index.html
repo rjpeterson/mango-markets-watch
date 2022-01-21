@@ -659,7 +659,7 @@
                       class="w-20 font-normal flex justify-center"
                     >
                       <span>$</span>
-                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {maximumFractionDigits:2})"></span>
+                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
                     <div 
                       class="w-20 font-normal flex justify-center"
