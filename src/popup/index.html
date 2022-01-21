@@ -1,15 +1,21 @@
 <html style="height:21rem">
 
-<head>
+  <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" type="text/css" href="./popup.css" />
-</head>
+  </head>
 
-<body class="bg-bkg-1 flex flex-col justify-between" style="width:24rem" x-data="{
+  <body 
+    class="bg-bkg-1 flex flex-col justify-between" 
+    style="width:24rem" 
+    x-data="{
       page: 'home',
       tokensInfo:[],
-      toggles: {},
-      alerts: {},
+      userData: {
+        toggles: {},
+        alerts: {},
+        accounts: {}
+      },
       headerText: 'Mango Markets Watch',
       browserNotifs: true,
       OSNotifs: true
@@ -29,19 +35,20 @@
         tokensInfo = response.tokensInfo
         userData.toggles = response.toggles
         userData.alerts = response.alerts
+        userData.accounts = response.accounts
         browserNotifs = response.alertTypes.browser
         OSNotifs = response.alertTypes.os
       });
-
       chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
           console.log(`received message ${request.msg}` )
           if (request.msg === 'tokensInfo updated') {
             tokensInfo = request.data.tokensInfo
+          } else if (request.msg === 'accounts data updated') {
+            userData.accounts = request.data.accounts
           }
         }
       )
-
       chrome.runtime.sendMessage({
         msg: 'refresh tokensInfo'
       }, 
@@ -49,9 +56,13 @@
         if (!response) {
           throw new Error('could not refresh tokensInfo')
         }
-        console.log(`got response from background script for msg 'refresh tokensInfo': ${JSON.stringify(response)}`)
+        console.log(`got response from background script for msg 'refresh tokensInfo': ${
+          JSON.stringify(response)
+        }`)
         tokensInfo = response
-        console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
+        console.log(`new tokensInfo: ${
+          JSON.stringify(tokensInfo)
+        }`)
       });
 
       $watch('page', value => chrome.runtime.sendMessage({
@@ -70,279 +81,299 @@
         text-base
         font-medium
         text-orange-DEFAULT
-      ">
+        ">
         <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
         <span x-text="headerText"></span>
     </header>
+
     <div class="justify-between px-4 py-2 flex flex-col">
-        <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
+      <div class="p-1 rounded-lg bg-bkg-2" style="height: 14.7rem">
+      <!-- INFO CONTAINER START -->
 
-
-            <div x-data="{
-              colorToggle: false,
-              rowColors(index) {
-                if (index % 2 != 0) {
-                  return 'bg-bkg-2'
-                } else {
-                  return 'bg-bkg-3'
-                }
-              },
-
-              filterToggles() {
-                return Object.entries(toggles).filter(([key,val]) => val )
-              },
-
-              findToken(baseSymbol) {
-                return tokensInfo.find(token => token.baseSymbol == baseSymbol)
+        <!-- HOME PAGE START -->
+        <div x-show="page == 'home'" style="height: 14.7rem"
+          x-data="{
+            colorToggle: false,
+            rowColors(index) {
+              if (index % 2 != 0) {
+                return 'bg-bkg-2'
+              } else {
+                return 'bg-bkg-3'
               }
-            }" x-show="page == 'home'" style="height: 14.7rem">
-                <div class="flex scroller min-w-full overflow-y-auto" style="max-height: 14.1rem;">
-                    <table class="flex-col flex-grow mx-auto table-auto">
-                        <thead>
-                            <tr class="mb-2 text-xs text-center text-fgd-4">
-                                <th class="flex-auto px-2 font-normal text-left">
-                                    Token
-                                </th>
-                                <th class="flex-auto px-2 font-normal text-right">
-                                    Deposit
-                                </th>
-                                <th class="flex-auto font-normal text-right">/</th>
-                                <th class="flex-auto pr-2 font-normal text-right">
-                                    Borrow
-                                </th>
-                                <th class="flex-auto pr-2 font-normal text-right">
-                                    Funding (APR)
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(token, index) in filterToggles()" :key="token[0]">
-                    <tr :class="rowColors(index)">
-                      <td
-                        class="
-                          flex
-                          items-end
-                          flex-auto
-                          pl-2
-                          text-left
-                          text-fgd-1
-                        "
-                      >
-                        <img
-                          x-data="{icon: './icons/'+(token[0].toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
-                          :src="icon"
-                          width="18"
-                          height="18"
-                          class="mr-1"
-                        />
-                        <span x-text="token[0]"></span>
-                      </td>
-                      <td class="flex-auto pr-1 text-right text-green-dark">
-                        <span x-text="findToken(token[0]).deposit ? findToken(token[0]).deposit : '——'"></span>
-                        <span class="text-xs">%</span>
-                      </td>
-                      <td class="flex-auto font-normal text-right text-fgd-4">
-                        /
-                      </td>
-                      <td class="flex-auto pr-2 text-right text-red-dark">
-                        <span x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"></span>
-                        <span class="text-xs">%</span>
-                      </td>
-                      <td class="flex-auto pr-2 text-right text-fgd-1">
-                        <span x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"></span>
-                        <span class="text-xs">%</span>
-                      </td>
-                    </tr>
-                  </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-
-            <div x-show="page == 'settings'" style="height: 14.7rem">
-                <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-                    <table class="
-                  flex-col flex-grow
-                  mx-auto
-                  pt-2
-                  text-sm
-                  table-auto
-                  text-fgd-1
-                ">
-                        <template x-for="[baseSymbol, toggle] in Object.entries(toggles)" :key="baseSymbol">
-                  <tr class="flex flex-row pb-1">
-                    <td class="flex items-end flex-auto px-2 text-left">
+            },
+            filterToggles() {
+              return Object.entries(userData.toggles).filter(([key,val]) => val )
+            },
+            findToken(baseSymbol) {
+              return tokensInfo.find(token => token.baseSymbol == baseSymbol)
+            }
+          }"
+        >
+          <div class="flex scroller min-w-full overflow-y-auto" style="max-height: 14.1rem;">
+            <table class="flex-col flex-grow mx-auto table-auto">
+              <thead>
+                <tr class="mb-2 text-xs text-center text-fgd-4">
+                  <th class="flex-auto px-2 font-normal text-left">
+                    Token
+                  </th>
+                  <th class="flex-auto px-2 font-normal text-right">
+                    Deposit
+                  </th>
+                  <th class="flex-auto font-normal text-right">/</th>
+                  <th class="flex-auto pr-2 font-normal text-right">
+                    Borrow
+                  </th>
+                  <th class="flex-auto pr-2 font-normal text-right">
+                    Funding (APR)
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="text-sm">
+                <!-- TOKEN INFO ROWS START -->
+                <template x-for="(token, index) in filterToggles()" :key="token[0]">
+                  <tr :class="rowColors(index)">
+                    <td
+                      class="
+                      flex
+                      items-end
+                      flex-auto
+                      pl-2
+                      text-left
+                      text-fgd-1
+                      "
+                    >
                       <img
-                        x-data="{icon: './icons/'+(baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                        x-data="{icon: './icons/'+(token[0].toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                         :src="icon"
                         width="18"
                         height="18"
                         class="mr-1"
                       />
-                      <span x-text="baseSymbol"></span>
+                      <span x-text="token[0]"></span>
                     </td>
-                    <td class="flex items-center justify-center ml-10">
-                      <div
-                        class="
-                          relative
-                          w-10
-                          h-5
-                          transition
-                          duration-200
-                          ease-linear
-                          rounded-full
-                        "
-                        :class="[toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
-                      >
-                        <label
-                          :for="baseSymbol"
-                          class="
-                            absolute
-                            left-0
-                            w-5
-                            h-5
-                            mb-2
-                            transition
-                            duration-100
-                            ease-linear
-                            transform
-                            bg-white
-                            border-2
-                            rounded-full
-                          "
-                          :class="[toggle === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
-                        >
-                        </label>
-                        <input
-                          type="checkbox"
-                          :id="baseSymbol"
-                          :name="baseSymbol"
-                          class="
-                            w-full
-                            h-full
-                            appearance-none
-                            cursor-pointer
-                            active:outline-none
-                            focus:outline-none
-                          "
-                          @click="
-                            toggles[baseSymbol] = !toggle;
-                            console.log('updating toggles...')
-                            chrome.runtime.sendMessage({
-                              msg: 'change toggles',
-                              data: {
-                                toggles: toggles
-                              }
-                            })
-                          "
-                        />
-                      </div>
+                    <td class="flex-auto pr-1 text-right text-green-dark">
+                      <span x-text="findToken(token[0]).deposit ? findToken(token[0]).deposit : '——'"></span>
+                      <span class="text-xs">%</span>
+                    </td>
+                    <td class="flex-auto font-normal text-right text-fgd-4">
+                      /
+                    </td>
+                    <td class="flex-auto pr-2 text-right text-red-dark">
+                      <span x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"></span>
+                      <span class="text-xs">%</span>
+                    </td>
+                    <td class="flex-auto pr-2 text-right text-fgd-1">
+                      <span x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"></span>
+                      <span class="text-xs">%</span>
                     </td>
                   </tr>
                 </template>
-                    </table>
-                </div>
-            </div>
+                <!-- TOKEN INFO ROWS END -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- HOME PAGE END -->
 
+        <!-- SETTINGS PAGE START -->
+        <div x-show="page == 'settings'" style="height: 14.7rem">
+          <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
+            <table class="
+              flex-col flex-grow
+              mx-auto
+              pt-2
+              table-auto
+              text-fgd-1
+            ">
 
-            <div x-show="page == 'alert'" style="height: 14.7rem" x-data="{
-              addAlert: false,
-              inputError: false,
+              <!-- TOGGLE ROWS START -->
+              <template x-for="[baseSymbol, toggle] in Object.entries(userData.toggles)" :key="baseSymbol">
+                <tr class="flex flex-row pb-1">
+                  <td class="flex items-end flex-auto px-2 text-left">
+                    <img
+                      x-data="{icon: './icons/'+(baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
+                      :src="icon"
+                      width="18"
+                      height="18"
+                      class="mr-1"
+                    />
+                    <span x-text="baseSymbol"></span>
+                  </td>
+                  <td class="flex items-center justify-center ml-10">
+                    <div
+                      class="
+                      relative
+                      w-10
+                      h-5
+                      transition
+                      duration-200
+                      ease-linear
+                      rounded-full
+                      "
+                      :class="[toggle === true ? 'bg-green-dark' : 'bg-fgd-4']"
+                    >
+                      <label
+                        :for="baseSymbol"
+                        class="
+                        absolute
+                        left-0
+                        w-5
+                        h-5
+                        mb-2
+                        transition
+                        duration-100
+                        ease-linear
+                        transform
+                        bg-white
+                        border-2
+                        rounded-full
+                        "
+                        :class="[toggle === true ? 'translate-x-full border-green-dark' : 'translate-x-0 border-fgd-4']"
+                      >
+                      </label>
+                      <input
+                        type="checkbox"
+                        :id="baseSymbol"
+                        :name="baseSymbol"
+                        class="
+                          w-full
+                          h-full
+                          appearance-none
+                          cursor-pointer
+                          active:outline-none
+                          focus:outline-none
+                        "
+                        @click="
+                          userData.toggles[baseSymbol] = !toggle;
+                          console.log('updating toggles...')
+                          chrome.runtime.sendMessage({
+                            msg: 'change toggles',
+                            data: {
+                              toggles: userData.toggles
+                            }
+                          })
+                        "
+                        />
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <!-- TOGGLE ROWS END -->
 
-              lastAlertKey() {
-                if (Object.keys(this.alerts).length > 0) {
-                  return Math.max( ...Object.keys(this.alerts))
-                } else {
-                  return 0
-                }
-              },
+            </table>
+          </div>
+        </div>
 
-              checkInput(percent, callback) {
-                if(!parseFloat(percent) && parseFloat(percent != 0)) {
-                  this.inputError = true
-                 } else {
-                  this.inputError = false
-                  if(callback) {callback()}
-                 }
-              },
-
-              createAlert(baseSymbol, type, side, percent, id) {
-                if (!id) {id = this.lastAlertKey() + 1}
-                this.alerts[id] = {
-                  baseSymbol: baseSymbol,
-                  type: type,
-                  side: side,
-                  percent: percent
-                }
-                chrome.runtime.sendMessage({
-                  msg: 'update alerts',
-                  data: {
-                    alerts: this.alerts
-                  }
-                }, function(response) {
-                  if(!response) {
-                    throw new Error('could not update alerts')
-                  }
-                  console.log(`alerts updated: ${JSON.stringify(response)}`)
-                })
-              },
-
-              parsePercent(value) {
-                if (value >= 10) {
-                  return parseFloat(value).toFixed(1)
-                } else {
-                  return parseFloat(value).toFixed(2)
+        <!-- ALERT PAGE START -->
+        <div x-show="page == 'alert'" style="height: 14.7rem" 
+          x-data="{
+            addAlert: false,
+            inputError: false,
+            lastAlertKey() {
+              if (Object.keys(this.userData.alerts).length > 0) {
+                return Math.max(...Object.keys(this.userData.alerts))
+              } else {
+                return 0
+              }
+            },
+            checkInput(percent, callback) {
+              if (!parseFloat(percent) && parseFloat(percent != 0)) {
+                this.inputError = true
+              } else {
+                this.inputError = false
+                if (callback) {
+                  callback()
                 }
               }
-            }">
-                <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;" x-data="{ 
-                active: null,
-                triggered: [],
-
-                changeAlertType() {
-                  chrome.runtime.sendMessage({
-                    msg: 'change alert type',
-                    data: {
-                      browser: browserNotifs,
-                      os: OSNotifs
-                    }
-                  })
+            },
+            createAlert(baseSymbol, type, side, percent, id) {
+              if (!id) {
+                id = this.lastAlertKey() + 1
+              }
+              this.userData.alerts[id] = {
+                baseSymbol: baseSymbol,
+                type: type,
+                side: side,
+                percent: percent
+              }
+              chrome.runtime.sendMessage({
+                msg: 'update alerts',
+                data: {
+                  alerts: this.userData.alerts
                 }
-              }" x-init="
-                chrome.runtime.onMessage.addListener(
-                  function(request, sender, sendResponse) {
-                      if (request.msg === 'alert triggered') {
-                          triggered.push(request.data.alertId)
-                      } else if (request.msg === 'alert untriggered') {
-                        triggered = triggered.filter(val => val != request.data.alertId)
-                      }
+              }, function(response) {
+                if (!response) {
+                  throw new Error('could not update alerts')
+                }
+                console.log(`alerts updated: ${JSON.stringify(response)}`)
+              })
+            },
+            parsePercent(value) {
+              if (value >= 10) {
+                return parseFloat(value).toFixed(1)
+              } else {
+                return parseFloat(value).toFixed(2)
+              }
+            }
+          }"
+        >
+          <div 
+            class="scroller min-w-full overflow-y-auto py-2" 
+            style="max-height: 14.1rem;" 
+            x-data="{
+              active: null,
+              triggered: [],
+              changeAlertType() {
+                chrome.runtime.sendMessage({
+                  msg: 'change alert type',
+                  data: {
+                    browser: browserNotifs,
+                    os: OSNotifs
                   }
-                )
-              ">
-                    <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
-                        <div>
-                            <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeAlertType()">
-                            <label for="browser-notif">Icon Badge</label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeAlertType()">
-                            <label for="os-notif">OS Tray</label>
-                        </div>
-                    </div>
-                    <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
-                        <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
-                            <div class="w-1/12 font-normal flex justify-center">Status</div>
-                            <div class="w-3/12 font-normal flex justify-center">Token</div>
-                            <div class="w-2/12 font-normal flex justify-center">Type</div>
-                            <div class="w-2/12 font-normal flex justify-center">Side</div>
-                            <div class="w-2/12 font-normal flex justify-center">%</div>
-                            <div class="w-1/12 font-normal flex justify-center"></div>
-                            <div class="w-1/12 font-normal flex justify-center"></div>
-                        </div>
-                        <template x-for="[ id ] in Object.entries(alerts)" :key="id">
+                })
+              }
+            }" 
+            x-init="
+              chrome.runtime.onMessage.addListener(
+                function(request, sender, sendResponse) {
+                  if (request.msg === 'alert triggered') {
+                    triggered.push(request.data.alertId)
+                  } else if (request.msg === 'alert untriggered') {
+                    triggered = triggered.filter(val => val != request.data.alertId)
+                  }
+                }
+              )
+            "
+          >
+            <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
+                <div>
+                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeAlertType()">
+                  <label for="browser-notif">Icon Badge</label>
+                </div>
+                <div>
+                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeAlertType()">
+                  <label for="os-notif">OS Tray</label>
+                </div>
+            </div>
+            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
+
+              <!-- ALERTS HEADERS START -->
+              <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
+                <div class="w-1/12 font-normal flex justify-center">Status</div>
+                <div class="w-3/12 font-normal flex justify-center">Token</div>
+                <div class="w-2/12 font-normal flex justify-center">Type</div>
+                <div class="w-2/12 font-normal flex justify-center">Side</div>
+                <div class="w-2/12 font-normal flex justify-center">%</div>
+                <div class="w-1/12 font-normal flex justify-center"></div>
+                <div class="w-1/12 font-normal flex justify-center"></div>
+              </div>
+              <!-- ALERTS HEADERS START -->
+
+              <!-- ALERT ROWS START -->
+              <div class="w-full">
+                <template x-for="[ id ] in Object.entries(userData.alerts)" :key="id">
                   <div 
-                    class="w-full flex flex-col space-y-2"
+                    class="w-full text-sm flex flex-col space-y-2"
                     x-data="{
                       get expanded() {
                         return this.active === this.id
@@ -350,19 +381,19 @@
                       set expanded(value) {
                         this.active = value ? this.id : null
                       },
-
                       deleteAlarm(id) {
-                        delete alerts[id];
+                        delete userData.alerts[id];
                         chrome.notifications.clear(id);
                         chrome.runtime.sendMessage({
                           msg: 'update alerts',
                           data: {
-                            alerts: alerts
+                            alerts: userData.alerts
                           }
                         })
                       }
                     }"
                   >
+
                     <div class="w-full flex justify-center space-x-2">
                       <div class="w-1/12 flex font-normal flex justify-center">
                         <svg 
@@ -370,174 +401,378 @@
                           class="h-5 w-5 fill-current text-green-dark" 
                           viewBox="0 0 20 20"
                           x-show="triggered.includes(id)"
-                        >
+                          >
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
                       <div class="w-3/12 flex font-normal flex justify-center">
                         <img
-                        :src="'./icons/'+(alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
-                        width="18"
-                        height="18"
-                        class="mr-1"
-                        />
-                        <span x-text="alerts[id].baseSymbol"></span>
+                          :src="'./icons/'+(userData.alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
+                          width="18"
+                          height="18"
+                          class="mr-1"
+                          />
+                        <span x-text="userData.alerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="alerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="alerts[id].side"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].type"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].side"></div>
                       <div class="w-2/12 font-normal flex justify-end">
-                        <span x-text="parsePercent(alerts[id].percent)"></span>
+                        <span x-text="parsePercent(userData.alerts[id].percent)"></span>
                         <span>%</span>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center -mr-4">
                         <button @click="expanded = !expanded; addAlert = false" :aria-expanded="expanded">
-                          <img src="./icons/pencil.svg" width="18" height="18">
+                        <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center">
                         <button @click="deleteAlarm(id)">
-                          <img src="./icons/delete.svg" width="18" height="18">
+                        <img src="./icons/delete.svg" width="18" height="18">
                         </button>
                       </div>
                     </div>
+
+                    <!-- EDIT ALERT FORM START -->
                     <div 
                       x-show="expanded" 
                       x-collapse
                       x-data="{
-                        editBaseSymbol: alerts[id].baseSymbol,
-                        editType: alerts[id].type,
-                        editSide: alerts[id].side,
-                        editPercent: alerts[id].percent
-                      }">
+                      editBaseSymbol: userData.alerts[id].baseSymbol,
+                      editType: userData.alerts[id].type,
+                      editSide: userData.alerts[id].side,
+                      editPercent: userData.alerts[id].percent
+                    }">
                       <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                         <div class="text-center space-y-2">
                           <div>
                             <span>Alert me when</span>
                             <select class="text-black" x-model="editBaseSymbol">
-                              <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                                <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
+                              <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
+                                  <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
                               </template>
-                        </select>
-                        <select class="text-black" x-model="editType">
+                            </select>
+                            <select class="text-black" x-model="editType">
                               <option :selected="editType === 'borrow'">borrow</option>
                               <option :selected="editType === 'deposit'">deposit</option>
                               <option :selected="editType === 'funding'">funding</option>
                             </select>
-                        <span>rate</span>
-                    </div>
-                    <div>
-                        <span>is</span>
-                        <select class="text-black" x-model="editSide">
+                            <span>rate</span>
+                          </div>
+                          <div>
+                            <span>is</span>
+                            <select class="text-black" x-model="editSide">
                               <option :selected="editSide === 'above'">above</option>
                               <option :selected="editSide === 'below'">below</option>
                             </select>
-                        <input type="text" size="6" maxlength="6" class="text-black" x-model="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
-                        <span>percent</span>
+                            <input type="text" size="6" maxlength="6" class="text-black" x-model="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
+                            <span>percent</span>
+                          </div>
+                          <div x-show="inputError">Please input a number</div>
+                        </div>
+                        <div class="flex justify-center">
+                          <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
+                              checkInput(editPercent, () => {
+                              createAlert(editBaseSymbol, editType, editSide, editPercent, id)
+                              expanded = !expanded
+                              })
+                              ">
+                          Confirm
+                          </button>
+                          <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="expanded = !expanded">
+                          Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- EDIT ALERT FORM END -->
+                  </div>
+                </template>
+              </div>
+              <!-- ALERT ROWS END -->
+
+              <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+                <span>Add New Alert</span>
+              </button>
+
+              <!-- NEW ALERT FORM START -->
+              <div 
+                x-data="{
+                  newAlert: {
+                    baseSymbol: 'BTC',
+                    type: 'borrow',
+                    side: 'above',
+                    percent: 0
+                  }
+                }" 
+                x-show="addAlert" 
+                x-collapse 
+                @click.outside="addAlert = false" 
+                class="mx-auto"
+              >
+                <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                  <div class="text-center space-y-2">
+                    <div>
+                      <span>Alert me when</span>
+                      <select class="text-black" x-model="newAlert.baseSymbol">
+                        <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
+                            <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
+                        </template>
+                      </select>
+                      <select class="text-black" x-model="newAlert.type">
+                        <option>borrow</option>
+                        <option>deposit</option>
+                        <option>funding</option>
+                      </select>
+                      <span>rate</span>
+                    </div>
+                    <div>
+                      <span>is</span>
+                      <select class="text-black" x-model="newAlert.side">
+                        <option>above</option>
+                        <option>below</option>
+                      </select>
+                      <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="checkInput($event.target.value)" :value="0">
+                      <span>percent</span>
                     </div>
                     <div x-show="inputError">Please input a number</div>
+                  </div>
+                  <div class="flex justify-center">
+                    <button 
+                      class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                      @click="
+                        checkInput(newAlert.percent, () => {
+                          createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
+                          addAlert = !addAlert;
+                          newAlert = {
+                            baseSymbol: 'BTC',
+                            type: 'borrow',
+                            side: 'above',
+                            percent: 0
+                          }
+                        })
+                      "
+                    >
+                      Confirm
+                    </button>
+                    <button 
+                      class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                      @click="addAlert = !addAlert"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <div class="flex justify-center">
-                    <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
-                              checkInput(editPercent, () => {
-                                createAlert(editBaseSymbol, editType, editSide, editPercent, id)
-                                expanded = !expanded
-                              })
-                            ">
-                            Confirm
-                          </button>
-                    <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="expanded = !expanded">
-                            Cancel
-                          </button>
-                </div>
-            </div>
-        </div>
-        </template>
-    </div>
-    <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
-                  <span>Add New Alert</span>
-                </button>
-    <div x-data="{
-                    newAlert: {
-                      baseSymbol: 'BTC',
-                      type: 'borrow',
-                      side: 'above',
-                      percent: 0
-                    }
-                  }" x-show="addAlert" x-collapse @click.outside="addAlert = false" class="pt-2">
-        <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
-            <div class="text-center space-y-2">
-                <div>
-                    <span>Alert me when</span>
-                    <select class="text-black" x-model="newAlert.baseSymbol">
-                          <template x-for="[baseSymbol] in Object.entries(toggles)" :key="baseSymbol">
-                            <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
-                          </template>
-                        </select>
-                    <select class="text-black" x-model="newAlert.type">
-                          <option>borrow</option>
-                          <option>deposit</option>
-                          <option>funding</option>
-                        </select>
-                    <span>rate</span>
-                </div>
-                <div>
-                    <span>is</span>
-                    <select class="text-black" x-model="newAlert.side">
-                          <option>above</option>
-                          <option>below</option>
-                        </select>
-                    <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="checkInput($event.target.value)" :value="0">
-                    <span>percent</span>
-                </div>
-                <div x-show="inputError">Please input a number</div>
-            </div>
-            <div class="flex justify-center">
-                <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
-                          checkInput(newAlert.percent, () => {
-                            createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
-                            addAlert = !addAlert;
-                            newAlert = {
-                              baseSymbol: 'BTC',
-                              type: 'borrow',
-                              side: 'above',
-                              percent: 0
-                            }
-                          })
-                        ">
-                        Confirm
-                      </button>
-                <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="addAlert = !addAlert">
-                        Cancel
-                      </button>
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
-    <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
-        <div class="flex text-center">
-            <button @click="page = 'settings'; headerText = 'Token Settings'">
-                  <img src="./icons/settings.svg" width="24" height="24" />
-                </button>
-        </div>
-        <div class="flex text-center">
-            <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
-                  <img src="./icons/home.svg" width="24" height="24" />
-                </button>
-        </div>
-        <div class="flex text-center">
-            <button @click="page = 'alert'; headerText='Alerts'">
-                  <img src="./icons/alert.svg" width="24" height="24" />
-                </button>
-        </div>
-        <div class="flex text-center">
-            <button @click="page = 'account'; headerText='Accounts'">
-                  <img src="./icons/key.svg" width="24" height="24" />
-                </button>
-        </div>
-    </div>
-    </div>
-    <script type="text/javascript" src="./popup.dist.js"></script>
-</body>
+              </div>
+              <!-- NEW ALERT FORM END -->
 
+            </div>
+          </div>
+        </div>
+        <!-- ALERT PAGE END -->
+
+        <!-- ACCOUNT PAGE START -->
+        <div x-show="page == 'account'" style="height: 14.7rem" 
+          x-data="{
+            addingAccount: false,
+            addNewAccount(address) {
+              if (!userData.accounts) {userData.accounts = {}}
+              userData.accounts[address] = {healthRatio:  0, equity: 0, name: null};
+              chrome.runtime.sendMessage({
+                msg: 'update accounts',
+                data: {
+                  accounts: userData.accounts
+                }
+              }, function(response) {
+                if (!response) {
+                  throw new Error('could not update accounts')
+                }
+                userData.accounts = response.data.accounts
+                console.log(`accounts updated: ${JSON.stringify(response)}`)
+              })
+            },
+            deleteAccount(address) {
+              delete userData.accounts[address];
+              chrome.runtime.sendMessage({
+                msg: 'update accounts',
+                data: {
+                  accounts: userData.accounts
+                }
+              })
+            },
+            healthColor(health) {
+              if (health > 20) {
+                return 'text-green-dark'
+              } else if (health > 10) {
+                return 'text-yellow-dark'
+              } else if (health > 0) {
+                return 'text-orange-DEFAULT'
+              } else {
+                return 'text-red-dark'
+              }
+            },
+            parseHealth(health) {
+              if (health > 100) {
+                return '>100'
+              } else {
+                return Math.round(health)
+              }
+            }
+          }"
+        >
+          <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
+            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
+              <div class="w-full flex text-xs text-fgd-4 ">
+                <div class="w-60 flex">
+                  <div class="w-20 font-normal flex justify-center items-end">Address</div>
+                  <div class="w-20 font-normal flex justify-center items-end">Balance</div>
+                  <div class="w-20 font-normal flex justify-end items-end">
+                    <div class="w-3/4">Health Ratio</div>
+                  </div>
+                </div>
+                <div class="w-4"></div>
+                <div class="w-4"></div>
+              </div>
+
+              <!-- ACCOUNT ROWS START --> 
+              <template 
+                x-for="address in Object.keys(userData.accounts)" 
+                :key="address">
+                <div 
+                  class="w-full text-sm flex flex-row "
+                  x-data="{
+                    get expanded() {
+                      return this.active === this.address
+                    },
+                    set expanded(value) {
+                      this.active = value ? this.address : null
+                    }
+                  }"  
+                >
+
+                <!-- ACCOUNT DATA START -->
+                  <div class="w-60 flex flex-row justify-around" x-show="!expanded">
+                    <div 
+                      class="w-20 font-normal flex justify-center" 
+                      x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
+                    ></div>
+                    <div 
+                      class="w-20 font-normal flex justify-center"
+                    >
+                      <span>$</span>
+                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                    </div>
+                    <div 
+                      class="w-20 font-normal flex justify-center"
+                      :class="healthColor(userData.accounts[address].healthRatio)"
+                    >
+                      <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
+                      <span>%</span>
+                    </div>
+                  </div>
+                  <!-- ACCOUNT DATA END -->
+
+                  <!-- EDIT ACCOUNT FORM START -->
+                  <div 
+                    class="w-48 flex flex-row justify-around items-center"  
+                    x-show="expanded"
+                    x-data="{editedAddress: address}"
+                    @click.outside="expanded = false"
+                  >
+                    <input 
+                      type="text" 
+                      class="text-black text-xs h-4 w-3/4" 
+                      x-model="editedAddress"
+                    >
+                    <button 
+                      @click="deleteAccount(address); addNewAccount(editedAddress); expanded = false"
+                      class="ml-2 -mr-2 flex h-6 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                  <!-- EDIT ACCOUNT FORM END -->
+                  <div class="w-4 font-normal flex justify-center ml-4">
+                    <button @click="expanded = !expanded; addingAccount = false" :aria-expanded="expanded">
+                    <img src="./icons/pencil.svg" width="18" height="18">
+                    </button>
+                  </div>
+                  <div class="w-4 font-normal flex justify-center ml-4">
+                    <button @click="deleteAccount(address)">
+                    <img src="./icons/delete.svg" width="18" height="18">
+                    </button>
+                  </div>
+                </div>
+              </template>
+              <!-- ACCOUNT ROWS END -->
+
+              <!-- ADD ACCOUNT START -->
+              <div class="flex flex-col mx-auto space-y-2">
+                <button 
+                  @click="addingAccount = !addingAccount;" 
+                  class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                >
+                  <span>Add New Account</span>
+                </button>
+                <div 
+                  x-data="{
+                    newAccount: ''
+                  }" 
+                  class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 space-x-2 items-center"
+                  x-show="addingAccount"
+                >
+                  <input 
+                    placeholder="Enter a Mango Account" 
+                    type="text" 
+                    class="text-black" 
+                    x-model="newAccount"
+                  >
+                  <button 
+                    @click="addNewAccount(newAccount); addingAccount = false;"
+                    class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              <!-- ADD ACCOUNT END -->
+
+            </div>
+          </div>
+        </div>
+          <!-- ACCOUNT PAGE END -->
+    
+      <!-- INFO CONTAINER END -->
+
+      <!-- NAV BUTTONS START-->
+        <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
+          <div class="flex text-center">
+              <button @click="page = 'settings'; headerText = 'Token Settings'">
+              <img src="./icons/settings.svg" width="24" height="24" />
+              </button>
+          </div>
+          <div class="flex text-center">
+              <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
+              <img src="./icons/home.svg" width="24" height="24" />
+              </button>
+          </div>
+          <div class="flex text-center">
+              <button @click="page = 'alert'; headerText='Alerts'">
+              <img src="./icons/alert.svg" width="24" height="24" />
+              </button>
+          </div>
+          <div class="flex text-center">
+              <button @click="page = 'account'; headerText='Accounts'">
+              <img src="./icons/key.svg" width="24" height="24" />
+              </button>
+          </div>
+        </div>
+      <!-- NAV BUTTONS END -->
+  
+      </div>
+    </div>
+
+    <script type="text/javascript" src="./popup.dist.js"></script>
+
+  </body>
+  
 </html>
