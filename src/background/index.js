@@ -204,70 +204,71 @@ const checkToggles = (tokensInfo) => {
   });
 };
 
-const onTriggered = (alertId, alert, alertTypes) => {
-  if (alertTypes.os) {
-    chrome.notifications.create(alertId, {
+const onTriggered = (tokenAlertId, tokenAlert, tokenAlertTypes) => {
+  if (tokenAlertTypes.os) {
+    chrome.notifications.create(tokenAlertId, {
       type: "basic",
       iconUrl: "dist/icons/mngo.svg",
       title: `Mango Markets Watch`,
-      message: `${alert.baseSymbol} ${alert.type} rate is ${alert.side} ${alert.percent}%`,
+      message: `${tokenAlert.baseSymbol} ${tokenAlert.type} rate is ${tokenAlert.side} ${tokenAlert.percent}%`,
       priority: 2,
     });
   }
   chrome.runtime.sendMessage({
-    msg: "alert triggered",
+    msg: "tokenAlert triggered",
     data: {
-      alertId: alertId,
+      tokenAlertId: tokenAlertId,
     },
   });
 };
 
-const onUntriggered = (alertId) => {
-  chrome.notifications.clear(alertId);
+const onUntriggered = (tokenAlertId) => {
+  chrome.notifications.clear(tokenAlertId);
   chrome.runtime.sendMessage({
-    msg: "alert untriggered",
+    msg: "tokenAlert untriggered",
     data: {
-      alertId: alertId,
+      tokenAlertId: tokenAlertId,
     },
   });
 };
 
-const checkAlerts = (tokensInfo) => {
-  console.log("calling checkAlerts...");
-  chrome.storage.local.get(["alerts", "alertTypes"], (response) => {
+const checkTokenAlerts = (tokensInfo) => {
+  console.log("calling checkTokenAlerts...");
+  chrome.storage.local.get(["tokenAlerts", "tokenAlertTypes"], (response) => {
+    console.log(`got tokenAlerts: ${JSON.stringify(response.tokenAlerts)}, tokenAlertTypes: ${JSON.stringify(response.tokenAlertTypes)}`)
     let triggeredAlerts = 0;
-    for (const entry in response.alerts) {
-      const alert = response.alerts[entry];
+    for (const entry in response.tokenAlerts) {
+      const tokenAlert = response.tokenAlerts[entry];
       tokensInfo
-        .filter((token) => token.baseSymbol == alert.baseSymbol)
+        .filter((token) => token.baseSymbol == tokenAlert.baseSymbol)
         .forEach((token) => {
           console.log(
-            `comparing alert ${JSON.stringify(
-              alert
+            `comparing tokenAlert ${JSON.stringify(
+              tokenAlert
             )} to token data ${JSON.stringify(token)}`
           );
-          if (token[alert.type] != '0.00' && !parseFloat(token[alert.type])) {
+          if (token[tokenAlert.type] != '0.00' && !parseFloat(token[tokenAlert.type])) {
             console.log(
-              `${alert.type} rate of ${token.baseSymbol} is not a number`
+              `${tokenAlert.type} rate of ${token.baseSymbol} is not a number`
             );
             return;
           }
-          if (alert.side == "above") {
-            if (token[alert.type] > alert.percent) {
+          if (tokenAlert.side == "above") {
+            if (token[tokenAlert.type] > tokenAlert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
 
-              onTriggered(entry, alert, response.alertTypes);
+              onTriggered(entry, tokenAlert, response.tokenAlertTypes);
             } else {
               onUntriggered(entry);
               console.log("conditions not met");
             }
           } else {
-            if (token[alert.type] < alert.percent) {
+            if (token[tokenAlert.type] < tokenAlert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
 
-              onTriggered(entry, alert, response.alertTypes);
+              onTriggered(entry, tokenAlert, response.tokenAlertTypes);
             } else {
               onUntriggered(entry);
               console.log("conditions not met");
@@ -275,7 +276,7 @@ const checkAlerts = (tokensInfo) => {
           }
         });
     }
-    triggeredAlerts > 0 && response.alertTypes.browser == true
+    triggeredAlerts > 0 && response.tokenAlertTypes.browser == true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
       : chrome.browserAction.setBadgeText({ text: null });
   });
@@ -286,8 +287,8 @@ const checkAlerts = (tokensInfo) => {
 const refreshData = async (sendResponse) => {
   const tokensInfo = await getTokenInfo_v3();
   chrome.storage.local.set({ tokensInfo: tokensInfo });
-  console.log("checking token info against alerts...");
-  checkAlerts(tokensInfo);
+  console.log("checking token info against tokenAlerts...");
+  checkTokenAlerts(tokensInfo);
   checkToggles(tokensInfo);
 
   if (sendResponse) {
@@ -305,10 +306,10 @@ const refreshData = async (sendResponse) => {
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
   chrome.storage.local.get(
-    ["tokensInfo", "toggles", "alerts", "alertTypes", "accounts", "page"],
+    ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page"],
     (response) => {
       console.log("checking token info against alerts...");
-      checkAlerts(response.tokensInfo);
+      checkTokenAlerts(response.tokensInfo);
       sendResponse(response);
     }
   );
@@ -319,8 +320,8 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get({
     "tokensInfo": [], 
     "toggles": {},
-    "alerts": {},
-    "alertTypes": {browser: true, os: true}
+    "tokenAlerts": {},
+    "tokenAlertTypes": {browser: true, os: true}
   }, (result) => {
     console.log(`got values from storage: ${JSON.stringify(result)}`)
     chrome.storage.local.set(result)
@@ -365,12 +366,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       return false;
     case "tokensInfo updated":
       return false;
-    case "update alerts":
-      chrome.storage.local.set({ alerts: request.data.alerts });
-      getTokenInfo_v3().then((result) => {checkAlerts(result)});
-      sendResponse({ msg: "alerts updated successuflly" });
+    case "update tokenAlerts":
+      chrome.storage.local.set({ tokenAlerts: request.data.tokenAlerts });
+      getTokenInfo_v3().then((result) => {checkTokenAlerts(result)});
+      sendResponse({ msg: "tokenAlerts updated successuflly" });
       break;
-    case "change alert type":
+    case "change tokenAlert type":
       !request.data.browser ? chrome.browserAction.setBadgeText({ text: null }) : null;
       if(!request.data.os) {
         chrome.notifications.getAll((notifications) => {
@@ -382,13 +383,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         })
       }
       chrome.storage.local.set({
-        alertTypes: {
+        tokenAlertTypes: {
           browser: request.data.browser,
           os: request.data.os,
         },
       });
       chrome.storage.local.get(['tokensInfo'], (result) => {
-        checkAlerts(result.tokensInfo)
+        checkTokenAlerts(result.tokensInfo)
       })
       return false;
     case "update accounts":
@@ -403,6 +404,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         })
       })
       break;
+    case "add account alert": 
+      chrome.storage.local.set({accountAlerts: request.data.address})
+      // getAccountData().then((result) => {checkAccountAlerts(result)});
+      sendResponse({ msg: "accountAlerts updated successuflly" });
+      break;
     case undefined:
       return false;
     default:
@@ -413,8 +419,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 //schedule a new fetch every 5 minutes
 function setFetchAlarm() {
-  console.log("schedule refresh alarm to 1 minute...");
-  chrome.alarms.create("refresh", { periodInMinutes: 1 });
+  console.log("schedule refresh alarm to 5 minutes...");
+  chrome.alarms.create("refresh", { periodInMinutes: 5 });
 }
 
 // alarm listener
