@@ -13,28 +13,38 @@
       headerText: 'Mango Markets Watch',
       browserNotifs: true,
       OSNotifs: true
-    }" x-init="
-      chrome.runtime.sendMessage({msg: 'onPopup'},
-        function(response) {
-          if (!response) {
-            throw new Error('could not get stored tokensInfo')
-          }
-          console.log(`got response from background script for msg 'onPopup': ${JSON.stringify(response)}`)
-          tokensInfo = response.tokensInfo
-          toggles = response.toggles
-          alerts = response.alerts
-          browserNotifs = response.alertTypes.browser
-          OSNotifs = response.alertTypes.os
-        });
+    }" 
+    x-init="
+      chrome.runtime.sendMessage({
+        msg: 'onPopup'
+      },
+      function(response) {
+        if (!response) {
+          throw new Error('could not get stored tokensInfo')
+        }
+        console.log(`got response from background script for msg 'onPopup': ${
+          JSON.stringify(response)
+        }`)
+        page = response.page ? response.page : 'home'
+        tokensInfo = response.tokensInfo
+        userData.toggles = response.toggles
+        userData.alerts = response.alerts
+        browserNotifs = response.alertTypes.browser
+        OSNotifs = response.alertTypes.os
+      });
 
       chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
-            console.log(`received message ${request.msg}` )
-            if (request.msg === 'tokensInfo updated') {
-                tokensInfo = request.data.tokensInfo
-      }})
+          console.log(`received message ${request.msg}` )
+          if (request.msg === 'tokensInfo updated') {
+            tokensInfo = request.data.tokensInfo
+          }
+        }
+      )
 
-      chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
+      chrome.runtime.sendMessage({
+        msg: 'refresh tokensInfo'
+      }, 
       function(response) {
         if (!response) {
           throw new Error('could not refresh tokensInfo')
@@ -43,6 +53,13 @@
         tokensInfo = response
         console.log(`new tokensInfo: ${JSON.stringify(tokensInfo)}`)
       });
+
+      $watch('page', value => chrome.runtime.sendMessage({
+        msg: 'change page',
+        data: {
+          page: value
+        }
+      }))
     ">
 
     <header class="
