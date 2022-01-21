@@ -638,69 +638,95 @@
                 x-for="address in Object.keys(userData.accounts)" 
                 :key="address">
                 <div 
-                  class="w-full text-sm flex flex-row "
+                  class="w-full text-sm flex flex-col "
                   x-data="{
-                    get expanded() {
+                    get expandedEdit() {
                       return this.active === this.address
                     },
-                    set expanded(value) {
+                    set expandedEdit(value) {
+                      this.active = value ? this.address : null
+                    },
+                    get expandedAlert() {
+                      return this.active === this.address
+                    },
+                    set expandedAlert(value) {
                       this.active = value ? this.address : null
                     }
                   }"  
                 >
+                  <div class="w-full text-sm flex flex-row ">
+                  <!-- ACCOUNT DATA START -->
+                    <div class="w-60 flex flex-row justify-around" x-show="!expandedEdit">
+                      <div 
+                        class="w-20 font-normal flex justify-center" 
+                        x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
+                      ></div>
+                      <div 
+                        class="w-20 font-normal flex justify-center"
+                      >
+                        <span>$</span>
+                        <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                      </div>
+                      <div 
+                        class="w-20 font-normal flex justify-center"
+                        :class="healthColor(userData.accounts[address].healthRatio)"
+                      >
+                        <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <!-- ACCOUNT DATA END -->
 
-                <!-- ACCOUNT DATA START -->
-                  <div class="w-60 flex flex-row justify-around" x-show="!expanded">
+                    <!-- EDIT ACCOUNT FORM START -->
                     <div 
-                      class="w-20 font-normal flex justify-center" 
-                      x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
-                    ></div>
-                    <div 
-                      class="w-20 font-normal flex justify-center"
+                      class="w-48 flex flex-row justify-around items-center"  
+                      x-show="expandedEdit"
+                      x-data="{editedAddress: address}"
+                      @click.outside="expandedEdit = false"
                     >
-                      <span>$</span>
-                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                      <input 
+                        type="text" 
+                        class="text-black text-xs h-4 w-3/4" 
+                        x-model="editedAddress"
+                      >
+                      <button 
+                        @click="deleteAccount(address); addNewAccount(editedAddress); expandedEdit = false"
+                        class="ml-2 -mr-2 flex h-6 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                      >
+                        Confirm
+                      </button>
                     </div>
-                    <div 
-                      class="w-20 font-normal flex justify-center"
-                      :class="healthColor(userData.accounts[address].healthRatio)"
-                    >
-                      <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
-                      <span>%</span>
+                    <!-- EDIT ACCOUNT FORM END -->
+
+                    <!-- ACCOUNT BUTTONS START -->
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="expandedEdit = !expandedEdit; addingAccount = false" :aria-expanded="expandedEdit">
+                      <img src="./icons/pencil.svg" width="18" height="18">
+                      </button>
                     </div>
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="expandedAlert = !expandedAlert; addingAccount = false" :aria-expanded="expandedAlert">
+                      <img src="./icons/alert.svg" width="18" height="18">
+                      </button>
+                    </div>
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="deleteAccount(address)">
+                      <img src="./icons/delete.svg" width="18" height="18">
+                      </button>
+                    </div>
+                    <!-- ACCOUNT BUTTONS END -->
                   </div>
-                  <!-- ACCOUNT DATA END -->
 
-                  <!-- EDIT ACCOUNT FORM START -->
-                  <div 
-                    class="w-48 flex flex-row justify-around items-center"  
-                    x-show="expanded"
-                    x-data="{editedAddress: address}"
-                    @click.outside="expanded = false"
+                  <!-- ACCOUNT ALERTS COLLAPSABLE START -->
+                  <div
+                    x-show="expandedAlert"
+                    @click.outside="expandedAlert = false"
+                    class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
                   >
-                    <input 
-                      type="text" 
-                      class="text-black text-xs h-4 w-3/4" 
-                      x-model="editedAddress"
-                    >
-                    <button 
-                      @click="deleteAccount(address); addNewAccount(editedAddress); expanded = false"
-                      class="ml-2 -mr-2 flex h-6 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
-                    >
-                      Confirm
-                    </button>
+                    Add your alert here
                   </div>
-                  <!-- EDIT ACCOUNT FORM END -->
-                  <div class="w-4 font-normal flex justify-center ml-4">
-                    <button @click="expanded = !expanded; addingAccount = false" :aria-expanded="expanded">
-                    <img src="./icons/pencil.svg" width="18" height="18">
-                    </button>
-                  </div>
-                  <div class="w-4 font-normal flex justify-center ml-4">
-                    <button @click="deleteAccount(address)">
-                    <img src="./icons/delete.svg" width="18" height="18">
-                    </button>
-                  </div>
+                  <!-- ACCOUNT ALERTS COLLAPSABLE END -->
+
                 </div>
               </template>
               <!-- ACCOUNT ROWS END -->
@@ -746,23 +772,23 @@
       <!-- NAV BUTTONS START-->
         <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
           <div class="flex text-center">
-              <button @click="page = 'settings'; headerText = 'Token Settings'">
-              <img src="./icons/settings.svg" width="24" height="24" />
-              </button>
-          </div>
-          <div class="flex text-center">
               <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
               <img src="./icons/home.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'alert'; headerText='Alerts'">
+              <button @click="page = 'alert'; headerText='Token Alerts'">
               <img src="./icons/alert.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'account'; headerText='Accounts'">
+              <button @click="page = 'account'; headerText='Mango Accounts'">
               <img src="./icons/key.svg" width="24" height="24" />
+              </button>
+          </div>
+          <div class="flex text-center">
+              <button @click="page = 'settings'; headerText = 'Token Settings'">
+              <img src="./icons/settings.svg" width="24" height="24" />
               </button>
           </div>
         </div>
