@@ -31,6 +31,7 @@
         console.log(`got response from background script for msg 'onPopup': ${
           JSON.stringify(response)
         }`)
+        page = response.page ? response.page : 'home'
         tokensInfo = response.tokensInfo
         userData.toggles = response.toggles
         userData.alerts = response.alerts
@@ -38,6 +39,7 @@
         browserNotifs = response.alertTypes.browser
         OSNotifs = response.alertTypes.os
       });
+
       chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
           console.log(`received message ${request.msg}` )
@@ -48,6 +50,7 @@
           }
         }
       )
+
       chrome.runtime.sendMessage({
         msg: 'refresh tokensInfo'
       }, 
@@ -63,6 +66,13 @@
           JSON.stringify(tokensInfo)
         }`)
       });
+
+      $watch('page', value => chrome.runtime.sendMessage({
+        msg: 'change page',
+        data: {
+          page: value
+        }
+      }))
     ">
 
     <header class="

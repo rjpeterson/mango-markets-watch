@@ -305,7 +305,7 @@ const refreshData = async (sendResponse) => {
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse) => {
   chrome.storage.local.get(
-    ["tokensInfo", "toggles", "alerts", "alertTypes", "accounts"],
+    ["tokensInfo", "toggles", "alerts", "alertTypes", "accounts", "page"],
     (response) => {
       console.log("checking token info against alerts...");
       checkAlerts(response.tokensInfo);
@@ -348,6 +348,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     )}`
   );
   switch (request.msg) {
+    case "change page":
+      chrome.storage.local.set({ page: request.data.page})
+      return false;
     case "onPopup":
       onPopup(sendResponse);
       break;
