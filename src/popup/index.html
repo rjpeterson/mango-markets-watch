@@ -645,22 +645,22 @@
                   class="w-full text-sm flex flex-col space-y-2"
                   x-data="{
                     get expandedEdit() {
-                      return this.active === this.address
+                      return this.editActive === this.address
                     },
                     set expandedEdit(value) {
-                      this.active = value ? this.address : null
+                      this.editActive = value ? this.address : null
                     },
                     get expandedAlert() {
-                      return this.active === this.address
+                      return this.alertActive === this.address
                     },
                     set expandedAlert(value) {
-                      this.active = value ? this.address : null
+                      this.alertActive = value ? this.address : null
                     }
                   }"  
                 >
-                  <div class="w-full text-sm flex flex-row ">
+                  <div class="w-full text-sm flex flex-row h-6">
                   <!-- ACCOUNT DATA START -->
-                    <div class="w-60 flex flex-row justify-around" x-show="!expandedEdit">
+                    <div class="w-60 flex flex-row" x-show="!expandedEdit">
                       <div 
                         class="w-20 font-normal flex justify-center" 
                         x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
@@ -683,7 +683,7 @@
 
                     <!-- EDIT ACCOUNT FORM START -->
                     <div 
-                      class="w-48 flex flex-row justify-around items-center"  
+                      class="w-60 flex flex-row mx-auto items-center"  
                       x-show="expandedEdit"
                       x-data="{editedAddress: address}"
                       @click.outside="expandedEdit = false"
@@ -695,7 +695,7 @@
                       >
                       <button 
                         @click="deleteAccount(address); addNewAccount(editedAddress); expandedEdit = false"
-                        class="ml-2 -mr-2 flex h-6 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                        class="ml-2 -mr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
                       >
                         Confirm
                       </button>
@@ -764,10 +764,10 @@
                           msg: 'add account alert',
                           data: {
                             address:{
-                              priceType: priceType,
-                              metric: metric,
-                              triggerValue: triggerValue,
-                              deltaValue: deltaValue
+                              priceType: this.priceType,
+                              metric: this.metric,
+                              triggerValue: this.triggerValue,
+                              deltaValue: this.deltaValue
                             }
                           }
                         }, function(response) {
