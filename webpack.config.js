@@ -20,7 +20,7 @@ let config = {
 
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
-      background: './background/index.js',
+      background: './background/index.ts',
       popup: './popup/index.js',
       // ...contentScripts,
       // ...extensionPages
@@ -37,6 +37,9 @@ let ExtensionConfig = Object.assign({}, config, {
     output: {
       path: __dirname + '/extension/dist/',
       filename: '[name].dist.js',
+    },
+    resolve: {
+      extensions: ['.ts', '.js', '.json']
     },
     plugins: [
       new ExtensionReloader({

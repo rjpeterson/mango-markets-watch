@@ -13,7 +13,7 @@
       tokensInfo:[],
       userData: {
         toggles: {},
-        alerts: {},
+        tokenAlerts: {},
         accounts: {}
       },
       headerText: 'Mango Markets Watch',
@@ -34,11 +34,12 @@
         page = response.page ? response.page : 'home'
         tokensInfo = response.tokensInfo
         userData.toggles = response.toggles
-        userData.alerts = response.alerts
+        userData.tokenAlerts = response.tokenAlerts
         userData.accounts = response.accounts
-        browserNotifs = response.alertTypes.browser
-        OSNotifs = response.alertTypes.os
+        browserNotifs = response.tokenAlertTypes.browser
+        OSNotifs = response.tokenAlertTypes.os
       });
+
       chrome.runtime.onMessage.addListener(
         function(request, sender, sendResponse) {
           console.log(`received message ${request.msg}` )
@@ -49,6 +50,7 @@
           }
         }
       )
+
       chrome.runtime.sendMessage({
         msg: 'refresh tokensInfo'
       }, 
@@ -71,6 +73,7 @@
           page: value
         }
       }))
+      
     ">
 
     <header class="
@@ -264,20 +267,20 @@
           </div>
         </div>
 
-        <!-- ALERT PAGE START -->
+        <!-- TOKEN ALERTS PAGE START -->
         <div x-show="page == 'alert'" style="height: 14.7rem" 
           x-data="{
-            addAlert: false,
+            addTokenAlert: false,
             inputError: false,
             lastAlertKey() {
-              if (Object.keys(this.userData.alerts).length > 0) {
-                return Math.max(...Object.keys(this.userData.alerts))
+              if (Object.keys(this.userData.tokenAlerts).length > 0) {
+                return Math.max(...Object.keys(this.userData.tokenAlerts))
               } else {
                 return 0
               }
             },
             checkInput(percent, callback) {
-              if (!parseFloat(percent) && parseFloat(percent != 0)) {
+              if (!parseFloat(percent) && percent != 0) {
                 this.inputError = true
               } else {
                 this.inputError = false
@@ -286,26 +289,26 @@
                 }
               }
             },
-            createAlert(baseSymbol, type, side, percent, id) {
+            createTokenAlert(baseSymbol, type, side, percent, id) {
               if (!id) {
                 id = this.lastAlertKey() + 1
               }
-              this.userData.alerts[id] = {
+              this.userData.tokenAlerts[id] = {
                 baseSymbol: baseSymbol,
                 type: type,
                 side: side,
                 percent: percent
               }
               chrome.runtime.sendMessage({
-                msg: 'update alerts',
+                msg: 'update tokenAlerts',
                 data: {
-                  alerts: this.userData.alerts
+                  tokenAlerts: this.userData.tokenAlerts
                 }
               }, function(response) {
                 if (!response) {
-                  throw new Error('could not update alerts')
+                  throw new Error('could not update tokenAlerts')
                 }
-                console.log(`alerts updated: ${JSON.stringify(response)}`)
+                console.log(`tokenAlerts updated: ${JSON.stringify(response)}`)
               })
             },
             parsePercent(value) {
@@ -323,7 +326,7 @@
             x-data="{
               active: null,
               triggered: [],
-              changeAlertType() {
+              changeTokenAlertType() {
                 chrome.runtime.sendMessage({
                   msg: 'change alert type',
                   data: {
@@ -336,10 +339,10 @@
             x-init="
               chrome.runtime.onMessage.addListener(
                 function(request, sender, sendResponse) {
-                  if (request.msg === 'alert triggered') {
-                    triggered.push(request.data.alertId)
-                  } else if (request.msg === 'alert untriggered') {
-                    triggered = triggered.filter(val => val != request.data.alertId)
+                  if (request.msg === 'tokenAlert triggered') {
+                    triggered.push(request.data.tokenAlertId)
+                  } else if (request.msg === 'tokenAlert untriggered') {
+                    triggered = triggered.filter(val => val != request.data.tokenAlertId)
                   }
                 }
               )
@@ -347,17 +350,17 @@
           >
             <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
                 <div>
-                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeAlertType()">
+                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeTokenAlertType()">
                   <label for="browser-notif">Icon Badge</label>
                 </div>
                 <div>
-                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeAlertType()">
+                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeTokenAlertType()">
                   <label for="os-notif">OS Tray</label>
                 </div>
             </div>
             <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
 
-              <!-- ALERTS HEADERS START -->
+              <!-- TOKEN ALERTS HEADERS START -->
               <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
                 <div class="w-1/12 font-normal flex justify-center">Status</div>
                 <div class="w-3/12 font-normal flex justify-center">Token</div>
@@ -367,11 +370,11 @@
                 <div class="w-1/12 font-normal flex justify-center"></div>
                 <div class="w-1/12 font-normal flex justify-center"></div>
               </div>
-              <!-- ALERTS HEADERS START -->
+              <!-- TOKEN ALERTS HEADERS START -->
 
-              <!-- ALERT ROWS START -->
+              <!-- TOKEN ALERT ROWS START -->
               <div class="w-full">
-                <template x-for="[ id ] in Object.entries(userData.alerts)" :key="id">
+                <template x-for="[ id ] in Object.entries(userData.tokenAlerts)" :key="id">
                   <div 
                     class="w-full text-sm flex flex-col space-y-2"
                     x-data="{
@@ -381,13 +384,13 @@
                       set expanded(value) {
                         this.active = value ? this.id : null
                       },
-                      deleteAlarm(id) {
-                        delete userData.alerts[id];
+                      deleteTokenAlert(id) {
+                        delete userData.tokenAlerts[id];
                         chrome.notifications.clear(id);
                         chrome.runtime.sendMessage({
-                          msg: 'update alerts',
+                          msg: 'update tokenAlerts',
                           data: {
-                            alerts: userData.alerts
+                            tokenAlerts: userData.tokenAlerts
                           }
                         })
                       }
@@ -407,41 +410,42 @@
                       </div>
                       <div class="w-3/12 flex font-normal flex justify-center">
                         <img
-                          :src="'./icons/'+(userData.alerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
+                          :src="'./icons/'+(userData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
                           height="18"
                           class="mr-1"
                           />
-                        <span x-text="userData.alerts[id].baseSymbol"></span>
+                        <span x-text="userData.tokenAlerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.alerts[id].side"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.tokenAlerts[id].type"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.tokenAlerts[id].side"></div>
                       <div class="w-2/12 font-normal flex justify-end">
-                        <span x-text="parsePercent(userData.alerts[id].percent)"></span>
+                        <span x-text="parsePercent(userData.tokenAlerts[id].percent)"></span>
                         <span>%</span>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center -mr-4">
-                        <button @click="expanded = !expanded; addAlert = false" :aria-expanded="expanded">
+                        <button @click="expanded = !expanded; addTokenAlert = false" :aria-expanded="expanded">
                         <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center">
-                        <button @click="deleteAlarm(id)">
+                        <button @click="deleteTokenAlert(id)">
                         <img src="./icons/delete.svg" width="18" height="18">
                         </button>
                       </div>
                     </div>
 
-                    <!-- EDIT ALERT FORM START -->
+                    <!-- EDIT TOKEN ALERT FORM START -->
                     <div 
                       x-show="expanded" 
                       x-collapse
                       x-data="{
-                      editBaseSymbol: userData.alerts[id].baseSymbol,
-                      editType: userData.alerts[id].type,
-                      editSide: userData.alerts[id].side,
-                      editPercent: userData.alerts[id].percent
-                    }">
+                        editBaseSymbol: userData.tokenAlerts[id].baseSymbol,
+                        editType: userData.tokenAlerts[id].type,
+                        editSide: userData.tokenAlerts[id].side,
+                        editPercent: userData.tokenAlerts[id].percent
+                      }"
+                    >
                       <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                         <div class="text-center space-y-2">
                           <div>
@@ -472,7 +476,7 @@
                         <div class="flex justify-center">
                           <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
                               checkInput(editPercent, () => {
-                              createAlert(editBaseSymbol, editType, editSide, editPercent, id)
+                              createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
                               expanded = !expanded
                               })
                               ">
@@ -484,17 +488,17 @@
                         </div>
                       </div>
                     </div>
-                    <!-- EDIT ALERT FORM END -->
+                    <!-- EDIT TOKEN ALERT FORM END -->
                   </div>
                 </template>
               </div>
-              <!-- ALERT ROWS END -->
+              <!-- TOKEN ALERT ROWS END -->
 
-              <button @click="addAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+              <button @click="addTokenAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
                 <span>Add New Alert</span>
               </button>
 
-              <!-- NEW ALERT FORM START -->
+              <!-- NEW TOKEN ALERT FORM START -->
               <div 
                 x-data="{
                   newAlert: {
@@ -504,9 +508,9 @@
                     percent: 0
                   }
                 }" 
-                x-show="addAlert" 
+                x-show="addTokenAlert" 
                 x-collapse 
-                @click.outside="addAlert = false" 
+                @click.outside="addTokenAlert = false" 
                 class="mx-auto"
               >
                 <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
@@ -541,8 +545,8 @@
                       class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                       @click="
                         checkInput(newAlert.percent, () => {
-                          createAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
-                          addAlert = !addAlert;
+                          createTokenAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
+                          addTokenAlert = !addTokenAlert;
                           newAlert = {
                             baseSymbol: 'BTC',
                             type: 'borrow',
@@ -556,19 +560,19 @@
                     </button>
                     <button 
                       class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                      @click="addAlert = !addAlert"
+                      @click="addTokenAlert = !addTokenAlert"
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               </div>
-              <!-- NEW ALERT FORM END -->
+              <!-- NEW TOKEN ALERT FORM END -->
 
             </div>
           </div>
         </div>
-        <!-- ALERT PAGE END -->
+        <!-- TOKEN ALERT PAGE END -->
 
         <!-- ACCOUNT PAGE START -->
         <div x-show="page == 'account'" style="height: 14.7rem" 
@@ -638,69 +642,216 @@
                 x-for="address in Object.keys(userData.accounts)" 
                 :key="address">
                 <div 
-                  class="w-full text-sm flex flex-row "
+                  class="w-full text-sm flex flex-col space-y-2"
                   x-data="{
-                    get expanded() {
-                      return this.active === this.address
+                    get expandedEdit() {
+                      return this.editActive === this.address
                     },
-                    set expanded(value) {
-                      this.active = value ? this.address : null
+                    set expandedEdit(value) {
+                      this.editActive = value ? this.address : null
+                    },
+                    get expandedAlert() {
+                      return this.alertActive === this.address
+                    },
+                    set expandedAlert(value) {
+                      this.alertActive = value ? this.address : null
                     }
                   }"  
                 >
+                  <div class="w-full text-sm flex flex-row h-6">
+                  <!-- ACCOUNT DATA START -->
+                    <div class="w-60 flex flex-row" x-show="!expandedEdit">
+                      <div 
+                        class="w-20 font-normal flex justify-center" 
+                        x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
+                      ></div>
+                      <div 
+                        class="w-20 font-normal flex justify-center"
+                      >
+                        <span>$</span>
+                        <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                      </div>
+                      <div 
+                        class="w-20 font-normal flex justify-center"
+                        :class="healthColor(userData.accounts[address].healthRatio)"
+                      >
+                        <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <!-- ACCOUNT DATA END -->
 
-                <!-- ACCOUNT DATA START -->
-                  <div class="w-60 flex flex-row justify-around" x-show="!expanded">
+                    <!-- EDIT ACCOUNT FORM START -->
                     <div 
-                      class="w-20 font-normal flex justify-center" 
-                      x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
-                    ></div>
-                    <div 
-                      class="w-20 font-normal flex justify-center"
+                      class="w-60 flex flex-row mx-auto items-center"  
+                      x-show="expandedEdit"
+                      x-data="{editedAddress: address}"
+                      @click.outside="expandedEdit = false"
                     >
-                      <span>$</span>
-                      <span x-text="parseFloat(userData.accounts[address].equity).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                      <input 
+                        type="text" 
+                        class="text-black text-xs h-4 w-3/4" 
+                        x-model="editedAddress"
+                      >
+                      <button 
+                        @click="deleteAccount(address); addNewAccount(editedAddress); expandedEdit = false"
+                        class="ml-2 -mr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                      >
+                        Confirm
+                      </button>
                     </div>
-                    <div 
-                      class="w-20 font-normal flex justify-center"
-                      :class="healthColor(userData.accounts[address].healthRatio)"
-                    >
-                      <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
-                      <span>%</span>
+                    <!-- EDIT ACCOUNT FORM END -->
+
+                    <!-- ACCOUNT BUTTONS START -->
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="expandedEdit = !expandedEdit; addingAccount = false" :aria-expanded="expandedEdit">
+                      <img src="./icons/pencil.svg" width="18" height="18">
+                      </button>
                     </div>
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="expandedAlert = !expandedAlert; addingAccount = false" :aria-expanded="expandedAlert">
+                      <img src="./icons/alert.svg" width="18" height="18">
+                      </button>
+                    </div>
+                    <div class="w-6 font-normal flex justify-center ">
+                      <button @click="deleteAccount(address)">
+                      <img src="./icons/delete.svg" width="18" height="18">
+                      </button>
+                    </div>
+                    <!-- ACCOUNT BUTTONS END -->
                   </div>
-                  <!-- ACCOUNT DATA END -->
 
-                  <!-- EDIT ACCOUNT FORM START -->
-                  <div 
-                    class="w-48 flex flex-row justify-around items-center"  
-                    x-show="expanded"
-                    x-data="{editedAddress: address}"
-                    @click.outside="expanded = false"
+                  <!-- ACCOUNT ALERTS COLLAPSABLE START -->
+                  <div
+                    x-show="expandedAlert"
+                    @click.outside="expandedAlert = false"
+                    class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
+                    x-data="{
+                      priceType: 'static',
+                      metric: 'balance',
+                      triggerValue: 0,
+                      deltaValue: 0,
+                      triggerValid: true,
+                      deltaValid: true,
+                      inputError: false,
+                      
+                      showInputError() {
+                        if (this.priceType == 'static' && !this.triggerValid) {
+                          this.inputError = true
+                        } else if (this.priceType == 'delta' && !this.deltaValid) {
+                          this.inputError = true
+                        } else {
+                          this.inputError = false
+                        }
+                      },
+
+                      validateInput() {
+                        if (!parseFloat(this.triggerValue) && this.triggerValue != 0) {
+                          this.triggerValid = false
+                        } else {
+                          this.triggerValid = true;
+                        }
+                        if (!parseFloat(this.deltaValue) && this.deltaValue != 0) {
+                          this.deltaValid = false
+                        } else {
+                          this.deltaValid = true
+                        }
+                        this.showInputError()
+                      },
+
+                      addAccountAlert() {
+                        chrome.runtime.sendMessage({
+                          msg: 'add account alert',
+                          data: {
+                            address:{
+                              priceType: this.priceType,
+                              metric: this.metric,
+                              triggerValue: this.triggerValue,
+                              deltaValue: this.deltaValue
+                            }
+                          }
+                        }, function(response) {
+                          if (!response) {
+                            throw new Error('could not add account alert')
+                          } else {
+                            console.log(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
+                          }
+                        })
+                      }
+                    }"
                   >
-                    <input 
-                      type="text" 
-                      class="text-black text-xs h-4 w-3/4" 
-                      x-model="editedAddress"
-                    >
-                    <button 
-                      @click="deleteAccount(address); addNewAccount(editedAddress); expanded = false"
-                      class="ml-2 -mr-2 flex h-6 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
-                    >
-                      Confirm
-                    </button>
+                    <div class="w-16 self-start">
+                      <label for="priceType" class="text-xs">Type</label>
+                      <select 
+                        id="priceType" 
+                        class="text-black text-xs h-1.5" 
+                        x-model="priceType"
+                        style="height: 18px;"
+                        @change="validateInput()""
+                      >
+                        <option value="static">Static</option>
+                        <option value="delta">Delta</option>
+                      </select>
+                      <label for="metric" class="text-xs">Metric</label>
+                      <select 
+                        id="metric" 
+                        class="text-black text-xs" 
+                        x-model="metric"
+                        style="height: 18px;"
+                      >
+                        <option value="balance">Balance</option>
+                        <option value="health">Health</option>
+                      </select>
+                    </div>
+                    
+                    <div class="w-32 pl-8">
+                      <label 
+                        x-show="priceType == 'static'" 
+                        for="trigger" 
+                        x-text="metric == 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                        class="text-xs"
+                      ></label>
+                      <input 
+                        x-show="priceType == 'static'" 
+                        type="text" 
+                        id="trigger" 
+                        x-model="triggerValue" 
+                        size="8"
+                        class="text-black"
+                        style="height: 18px;"
+                        @change="validateInput()"
+                      >
+                      <label 
+                        x-show="priceType == 'delta'" 
+                        for="delta"
+                        x-text="metric == 'balance' ? 'Balance Delta' : 'Health Delta'"
+                        class="text-xs"
+                      ></label>
+                      <input 
+                        x-show="priceType == 'delta'" 
+                        type="text" 
+                        id="delta" 
+                        x-model="deltaValue" 
+                        size="8"
+                        class="text-black"
+                        style="height: 18px;"
+                        @change="validateInput()"
+                      >
+
+                      <div x-show="inputError">
+                        input real numbers plz
+                      </div>
+                      <button 
+                        x-show="!inputError"
+                        @click="addAccountAlert()"
+                        class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
+                      >
+                        Submit
+                      </button>
+                    </div>
                   </div>
-                  <!-- EDIT ACCOUNT FORM END -->
-                  <div class="w-4 font-normal flex justify-center ml-4">
-                    <button @click="expanded = !expanded; addingAccount = false" :aria-expanded="expanded">
-                    <img src="./icons/pencil.svg" width="18" height="18">
-                    </button>
-                  </div>
-                  <div class="w-4 font-normal flex justify-center ml-4">
-                    <button @click="deleteAccount(address)">
-                    <img src="./icons/delete.svg" width="18" height="18">
-                    </button>
-                  </div>
+                  <!-- ACCOUNT ALERTS COLLAPSABLE END -->
+
                 </div>
               </template>
               <!-- ACCOUNT ROWS END -->
@@ -746,23 +897,23 @@
       <!-- NAV BUTTONS START-->
         <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
           <div class="flex text-center">
-              <button @click="page = 'settings'; headerText = 'Token Settings'">
-              <img src="./icons/settings.svg" width="24" height="24" />
-              </button>
-          </div>
-          <div class="flex text-center">
               <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
               <img src="./icons/home.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'alert'; headerText='Alerts'">
+              <button @click="page = 'alert'; headerText='Token Alerts'">
               <img src="./icons/alert.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'account'; headerText='Accounts'">
+              <button @click="page = 'account'; headerText='Mango Accounts'">
               <img src="./icons/key.svg" width="24" height="24" />
+              </button>
+          </div>
+          <div class="flex text-center">
+              <button @click="page = 'settings'; headerText = 'Token Settings'">
+              <img src="./icons/settings.svg" width="24" height="24" />
               </button>
           </div>
         </div>
