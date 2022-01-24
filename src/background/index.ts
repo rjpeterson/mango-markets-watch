@@ -1,197 +1,34 @@
-import _ from "lodash-joins";
-import {
-  IDS as IDS_v3,
-  MangoClient as MangoClient_v3,
-  Config as Config_v3,
-  I80F48,
-} from "@blockworks-foundation/mango-client-v3";
-import { Connection, PublicKey } from "@solana/web3.js";
-import token from "./token";
-import Big from "big.js";
+import { updateAccounts, refreshAccounts } from './accountData';
+import { getTokenInfo_v3 } from './tokenData';
 
-const rpcToken = `https://mango.rpcpool.com/${token}`;
-
-const getAccountData = async (accounts) => {
-  const accountsData = {}
-  const {mangoGroup, client, mangoCache} = await establishConnection();
-  for (const key of Object.keys(accounts)) {
-    console.log(`looking up account ${key}...`)
-    const accountPK = new PublicKey(key)
-    const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
-    const healthRatio = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toString()
-    const equity = mangoAccount.computeValue(mangoGroup, mangoCache).toString()
-    const name = mangoAccount.name ? mangoAccount.name : null
-    accountsData[key] = {healthRatio: healthRatio, equity: equity, name: name}
-    console.log(`fetched healthRatio: ${healthRatio}, equity: ${equity}, name: ${name}`)
-  }
-  return accountsData
+enum AlertType {
+  Borrow = 'borrow',
+  Deposit = 'deposit',
+  Fundung = 'funding'
 }
-
-const refreshAccounts = async () => {
-  chrome.storage.local.get(['accounts'], async (result) => {
-    const accountData = await getAccountData(result.accounts);
-    chrome.storage.local.set({accounts: accountData})
-    chrome.runtime.sendMessage({
-      msg: 'accounts data updated',
-      data: {
-        accounts: accountData
-      }
-    })
-  })
+enum AlertSide {
+  Above = 'above',
+  Below = 'below'
 }
-
-const fetchPerpStats = async (groupConfig, marketName) => {
-  const urlParams = new URLSearchParams({ mangoGroup: groupConfig.name });
-  urlParams.append("market", marketName);
-  const perpStats = await fetch(
-    `https://mango-stats-v3.herokuapp.com/perp/funding_rate?` + urlParams
-  );
-  const parsedPerpStats = await perpStats.json();
-  return parsedPerpStats;
-};
-
-const calculateFundingRate = (perpStats, perpMarket) => {
-  const quoteDecimals = 6;
-  const oldestStat = perpStats[perpStats.length - 1];
-  const latestStat = perpStats[0];
-
-  if (!latestStat) return 0.0;
-
-  // Averaging long and short funding excludes socialized loss
-  const startFunding =
-    (parseFloat(oldestStat.longFunding) + parseFloat(oldestStat.shortFunding)) /
-    2;
-  const endFunding =
-    (parseFloat(latestStat.longFunding) + parseFloat(latestStat.shortFunding)) /
-    2;
-  const fundingDifference = endFunding - startFunding;
-
-  const fundingInQuoteDecimals =
-    fundingDifference / Math.pow(10, quoteDecimals);
-
-  const avgPrice =
-    (parseFloat(latestStat.baseOraclePrice) +
-      parseFloat(oldestStat.baseOraclePrice)) /
-    2;
-  const basePriceInBaseLots =
-    avgPrice * perpMarket.baseLotsToNumber(new Big(1));
-  return (fundingInQuoteDecimals / basePriceInBaseLots) * 100;
-};
-
-const getTokenFundingRate = async (groupConfig, market, client) => {
-  const perpMarket = await client.getPerpMarket(
-    new PublicKey(market.publicKey),
-    market.baseDecimals,
-    market.quoteDecimals
-  );
-
-  const perpStats = await fetchPerpStats(groupConfig, market.name);
-  const funding1h = calculateFundingRate(perpStats, perpMarket);
-  const [funding1hStr, fundingAprStr] = funding1h
-    ? [funding1h.toFixed(4), (funding1h * 24 * 365).toFixed(2)]
-    : ["-", "-"];
-  return fundingAprStr;
-};
-
-const getAllFundingRates = async (clusterData, groupConfig, client) => {
-  return Promise.all(
-    clusterData.perpMarkets.map(async (market) => {
-      const funding = await getTokenFundingRate(groupConfig, market, client);
-      return { baseSymbol: market.baseSymbol, funding: funding };
-    })
-  );
-};
-
-const getInterestRates = async (mangoGroup, connection, groupConfig) => {
-  if (mangoGroup) {
-    const rootBanks = await mangoGroup.loadRootBanks(connection);
-    const tokensInfo = groupConfig.tokens.map((token) => {
-      const rootBank = rootBanks.find((bank) => {
-        if (!bank) {
-          return false;
-        }
-        return bank.publicKey.toBase58() == token.rootKey.toBase58();
-      });
-
-      if (!rootBank) {
-        throw new Error("rootBanks is undefined");
-      }
-      return {
-        baseSymbol: token.symbol,
-        deposit: rootBank
-          .getDepositRate(mangoGroup)
-          .mul(I80F48.fromNumber(100))
-          .toFixed(2),
-        borrow: rootBank
-          .getBorrowRate(mangoGroup)
-          .mul(I80F48.fromNumber(100))
-          .toFixed(2),
-      };
-    });
-    return tokensInfo;
-  } else {
-    console.log(`Mango Group not found`);
-  }
-};
-
-const establishConnection = async () => {
-  const cluster = "mainnet";
-  const group = "mainnet.1";
-
-  const clusterData = IDS_v3.groups.find((g) => {
-    return g.name == group && g.cluster == cluster;
-  });
-  const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
-
-  const config = new Config_v3(IDS_v3);
-  const groupConfig = config.getGroup(cluster, group);
-  if (!groupConfig) {
-    throw new Error("unable to get mango group config");
-  }
-  const mangoGroupKey = groupConfig.publicKey;
-
-  let connection;
-  try {
-    connection = new Connection(rpcToken, "singleGossip");
-  } catch (error) {
-    throw new Error("could not establish v3 connection");
-  }
-  const client = new MangoClient_v3(connection, mangoProgramIdPk);
-  const mangoGroup = await client.getMangoGroup(mangoGroupKey);
-  const mangoCache = await mangoGroup.loadCache(connection);
-
-  return {mangoGroup, client, connection, groupConfig, clusterData, mangoCache}
+interface TokenAlertTypes {
+    browser: boolean,
+    os: boolean
 }
+interface Token {
+  baseSymbol: string,
+  deposit: string,
+  borrow: string,
+  funding: string
+}
+interface TokenAlert {
+  baseSymbol: string,
+  type: AlertType,
+  side: AlertSide,
+  percent: number
+}
+type TokensInfo = Token[]
 
-const getTokenInfo_v3 = async () => {
-  console.log(`getting v3 token info...`);
-  const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
-
-  const interestRates = await getInterestRates(
-    mangoGroup,
-    connection,
-    groupConfig
-  );
-  const fundingRates = await getAllFundingRates(
-    clusterData,
-    groupConfig,
-    client
-  );
-
-  const accessor = (obj) => {
-    return obj.baseSymbol;
-  };
-  let res = _.sortedMergeFullOuterJoin(
-    interestRates,
-    accessor,
-    fundingRates,
-    accessor
-  );
-
-  return res;
-};
-
-const checkToggles = (tokensInfo) => {
+const checkToggles = (tokensInfo: TokensInfo) => {
   chrome.storage.local.get(["toggles"], (result) => {
     if (Object.keys(result.toggles).length !== tokensInfo.length) {
       tokensInfo.forEach((token) => {
@@ -204,7 +41,7 @@ const checkToggles = (tokensInfo) => {
   });
 };
 
-const onTriggered = (tokenAlertId, tokenAlert, tokenAlertTypes) => {
+const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, tokenAlertTypes: TokenAlertTypes) => {
   if (tokenAlertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
@@ -222,7 +59,7 @@ const onTriggered = (tokenAlertId, tokenAlert, tokenAlertTypes) => {
   });
 };
 
-const onUntriggered = (tokenAlertId) => {
+const onUntriggered = (tokenAlertId: string) => {
   chrome.notifications.clear(tokenAlertId);
   chrome.runtime.sendMessage({
     msg: "tokenAlert untriggered",
@@ -232,13 +69,13 @@ const onUntriggered = (tokenAlertId) => {
   });
 };
 
-const checkTokenAlerts = (tokensInfo) => {
+const checkTokenAlerts = (tokensInfo: TokensInfo) => {
   console.log("calling checkTokenAlerts...");
   chrome.storage.local.get(["tokenAlerts", "tokenAlertTypes"], (response) => {
     console.log(`got tokenAlerts: ${JSON.stringify(response.tokenAlerts)}, tokenAlertTypes: ${JSON.stringify(response.tokenAlertTypes)}`)
     let triggeredAlerts = 0;
     for (const entry in response.tokenAlerts) {
-      const tokenAlert = response.tokenAlerts[entry];
+      const tokenAlert : TokenAlert = response.tokenAlerts[entry];
       tokensInfo
         .filter((token) => token.baseSymbol == tokenAlert.baseSymbol)
         .forEach((token) => {
@@ -254,7 +91,7 @@ const checkTokenAlerts = (tokensInfo) => {
             return;
           }
           if (tokenAlert.side == "above") {
-            if (token[tokenAlert.type] > tokenAlert.percent) {
+            if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
 
@@ -264,7 +101,7 @@ const checkTokenAlerts = (tokensInfo) => {
               console.log("conditions not met");
             }
           } else {
-            if (token[tokenAlert.type] < tokenAlert.percent) {
+            if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
               triggeredAlerts += 1;
               console.log(`token notification triggered`);
 
@@ -284,7 +121,7 @@ const checkTokenAlerts = (tokensInfo) => {
 
 // ONSTARTUP: get token info & send to storage
 // ONALARM: get token info, send to storage, send to popup
-const refreshData = async (sendResponse) => {
+const refreshData = async (sendResponse?: Function) => {
   const tokensInfo = await getTokenInfo_v3();
   chrome.storage.local.set({ tokensInfo: tokensInfo });
   console.log("checking token info against tokenAlerts...");
@@ -304,7 +141,7 @@ const refreshData = async (sendResponse) => {
 };
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
-const onPopup = (sendResponse) => {
+const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(
     ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page"],
     (response) => {
@@ -321,15 +158,15 @@ chrome.runtime.onInstalled.addListener(() => {
     "tokensInfo": [], 
     "toggles": {},
     "tokenAlerts": {},
-    "tokenAlertTypes": {browser: true, os: true}
+    "tokenAlertTypes": {browser: true, os: true},
+    "accounts": {},
+    "accountsHistory": []
   }, (result) => {
     console.log(`got values from storage: ${JSON.stringify(result)}`)
     chrome.storage.local.set(result)
   })
   console.log("setting fetch alarm...");
   setFetchAlarm();
-  // console.log("setting watchdog alarm...");
-  // setWatchdogAlarm();
   console.log("refreshing data...");
   refreshData();
 });
@@ -393,7 +230,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       })
       return false;
     case "update accounts":
-      getAccountData(request.data.accounts).then((result) => {
+      updateAccounts(request.data.accounts).then((result) => {
         console.log(`callback result :${JSON.stringify(result)}`)
         chrome.storage.local.set({accounts: result})
         sendResponse({
@@ -406,7 +243,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       break;
     case "add account alert": 
       chrome.storage.local.set({accountAlerts: request.data.address})
-      // getAccountData().then((result) => {checkAccountAlerts(result)});
+      // updateAccounts().then((result) => {checkAccountAlerts(result)});
       sendResponse({ msg: "accountAlerts updated successuflly" });
       break;
     case undefined:
@@ -428,19 +265,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (!alarm) {
     throw new Error("alarm triggered with no alarm");
   }
-  // if watchdog is triggered, check whether refresh alarm is there
-  // if (alarm.name == "watchdog") {
-  //   chrome.alarms.get("refresh", (alarm) => {
-  //     if (alarm) {
-  //       console.log("Refresh alarm exists.");
-  //     } else {
-  //       //if it is no there, start a new request and reschedule refresh alarm
-  //       console.log("Refresh alarm doesn't exist, starting a new one");
-  //       refreshData();
-  //       setFetchAlarm();
-  //     }
-  //   });
-  // } else
+
   if (alarm.name == "refresh") {
     //if refresh alarm triggered, start a new request
     console.log("Refresh alarm triggered");
