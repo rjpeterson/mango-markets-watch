@@ -5,6 +5,10 @@ import {
   MangoClient as MangoClient_v3,
   Config as Config_v3,
 } from "@blockworks-foundation/mango-client-v3";
+import debugCreator from 'debug';
+
+const debug = debugCreator('connection')
+
 
 // export interface Group {
 //   groups?: (GroupsEntity)[] | null;

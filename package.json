@@ -17,11 +17,13 @@
     },
     "devDependencies": {
         "@types/chrome": "^0.0.176",
+        "@types/debug": "^4.1.7",
         "alpinejs": "^3.2.4",
         "autoprefixer": "^9.7.4",
         "concurrently": "^5.1.0",
         "copy-webpack-plugin": "^5.1.1",
         "cross-env": "^7.0.0",
+        "debug": "^4.3.3",
         "loader-utils": "^2.0.0",
         "postcss-cli": "^7.1.0",
         "postcss-loader": "^3.0.0",
