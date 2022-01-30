@@ -8,74 +8,8 @@
   <body 
     class="bg-bkg-1 flex flex-col justify-between" 
     style="width:24rem" 
-    x-data="{
-      page: 'home',
-      tokensInfo:[],
-      userData: {
-        toggles: {},
-        tokenAlerts: {},
-        accounts: {},
-        accountAlerts: []
-      },
-      headerText: 'Mango Markets Watch',
-      browserNotifs: true,
-      OSNotifs: true
-    }" 
-    x-init="
-
-      chrome.runtime.sendMessage({
-        msg: 'onPopup'
-      },
-      function(response) {
-        if (!response) {
-          console.error('could not get stored tokensInfo')
-        }
-        console.debug(`got response from background script for msg 'onPopup': ${
-          JSON.stringify(response)
-        }`)
-        page = response.page ? response.page : 'home'
-        tokensInfo = response.tokensInfo
-        userData.toggles = response.toggles
-        userData.tokenAlerts = response.tokenAlerts
-        userData.accounts = response.accounts
-        userData.accountAlerts = response.accountAlerts
-        browserNotifs = response.tokenAlertTypes.browser
-        OSNotifs = response.tokenAlertTypes.os
-      });
-
-      chrome.runtime.onMessage.addListener(
-        function(request, sender, sendResponse) {
-          console.info(`received message ${request.msg}` )
-          if (request.msg === 'tokensInfo updated') {
-            tokensInfo = request.data.tokensInfo
-          } else if (request.msg === 'accounts data updated') {
-            userData.accounts = request.data.accounts
-          }
-        }
-      )
-
-      chrome.runtime.sendMessage({
-        msg: 'refresh tokensInfo'
-      }, 
-      function(response) {
-        if (!response) {
-          console.warn('could not refresh tokensInfo')
-        }
-        console.debug(`got response from background script for msg 'refresh tokensInfo': ${
-          JSON.stringify(response)
-        }`)
-        tokensInfo = response
-      });
-
-      $watch('page', value => chrome.runtime.sendMessage({
-        msg: 'change page',
-        data: {
-          page: value
-        }
-      }))
-      
-    ">
-
+    x-data="Body()"
+  >
     <header class="
         flex
         justify-center
@@ -86,7 +20,7 @@
         text-orange-DEFAULT
         ">
         <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
-        <span x-text="headerText"></span>
+        <span x-text="$store.AppData.headerTexts[$store.AppData.page]"></span>
     </header>
 
     <div class="justify-between px-4 py-2 flex flex-col">
@@ -94,23 +28,10 @@
       <!-- INFO CONTAINER START -->
 
         <!-- HOME PAGE START -->
-        <div x-show="page == 'home'" style="height: 14.7rem"
-          x-data="{
-            colorToggle: false,
-            rowColors(index) {
-              if (index % 2 != 0) {
-                return 'bg-bkg-2'
-              } else {
-                return 'bg-bkg-3'
-              }
-            },
-            filterToggles() {
-              return Object.entries(userData.toggles).filter(([key,val]) => val )
-            },
-            findToken(baseSymbol) {
-              return tokensInfo.find(token => token.baseSymbol == baseSymbol)
-            }
-          }"
+        <div 
+          x-show="$store.AppData.page == 'home'" 
+          x-data="HomePage"
+          style="height: 14.7rem"
         >
           <div class="flex scroller min-w-full overflow-y-auto" style="max-height: 14.1rem;">
             <table class="flex-col flex-grow mx-auto table-auto">
@@ -131,7 +52,9 @@
                   </th>
                 </tr>
               </thead>
-              <tbody class="text-sm">
+              <tbody 
+                class="text-sm"
+              >
                 <!-- TOKEN INFO ROWS START -->
                 <template x-for="(token, index) in filterToggles()" :key="token[0]">
                   <tr :class="rowColors(index)">
@@ -179,7 +102,7 @@
         <!-- HOME PAGE END -->
 
         <!-- SETTINGS PAGE START -->
-        <div x-show="page == 'settings'" style="height: 14.7rem">
+        <div x-show="$store.AppData.page == 'settings'" style="height: 14.7rem">
           <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
             <table class="
               flex-col flex-grow
@@ -190,7 +113,7 @@
             ">
 
               <!-- TOGGLE ROWS START -->
-              <template x-for="[baseSymbol, toggle] in Object.entries(userData.toggles)" :key="baseSymbol">
+              <template x-for="[baseSymbol, toggle] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
                 <tr class="flex flex-row pb-1">
                   <td class="flex items-end flex-auto px-2 text-left">
                     <img
@@ -247,12 +170,12 @@
                           focus:outline-none
                         "
                         @click="
-                          userData.toggles[baseSymbol] = !toggle;
+                          $store.UserData.toggles[baseSymbol] = !toggle;
                           console.info('updating toggles...')
                           chrome.runtime.sendMessage({
                             msg: 'change toggles',
                             data: {
-                              toggles: userData.toggles
+                              toggles: $store.UserData.toggles
                             }
                           })
                         "
@@ -268,93 +191,19 @@
         </div>
 
         <!-- TOKEN ALERTS PAGE START -->
-        <div x-show="page == 'alert'" style="height: 14.7rem" 
-          x-data="{
-            addTokenAlert: false,
-            inputError: false,
-            lastAlertKey() {
-              if (Object.keys(this.userData.tokenAlerts).length > 0) {
-                return Math.max(...Object.keys(this.userData.tokenAlerts))
-              } else {
-                return 0
-              }
-            },
-            checkInput(percent, callback) {
-              if (!parseFloat(percent) && percent != 0) {
-                this.inputError = true
-              } else {
-                this.inputError = false
-                if (callback) {
-                  callback()
-                }
-              }
-            },
-            createTokenAlert(baseSymbol, type, side, percent, id) {
-              if (!id) {
-                id = this.lastAlertKey() + 1
-              }
-              this.userData.tokenAlerts[id] = {
-                baseSymbol: baseSymbol,
-                type: type,
-                side: side,
-                percent: percent
-              }
-              chrome.runtime.sendMessage({
-                msg: 'update tokenAlerts',
-                data: {
-                  tokenAlerts: this.userData.tokenAlerts
-                }
-              }, function(response) {
-                if (!response) {
-                  console.warn('could not update tokenAlerts')
-                }
-                console.debug(`tokenAlerts updated: ${JSON.stringify(response)}`)
-              })
-            },
-            parsePercent(value) {
-              if (value >= 10) {
-                return parseFloat(value).toFixed(1)
-              } else {
-                return parseFloat(value).toFixed(2)
-              }
-            }
-          }"
-        >
+        <div x-show="$store.AppData.page == 'alert'" style="height: 14.7rem">
           <div 
             class="scroller min-w-full overflow-y-auto py-2" 
             style="max-height: 14.1rem;" 
-            x-data="{
-              active: null,
-              triggered: [],
-              changeTokenAlertType() {
-                chrome.runtime.sendMessage({
-                  msg: 'change alert type',
-                  data: {
-                    browser: browserNotifs,
-                    os: OSNotifs
-                  }
-                })
-              }
-            }" 
-            x-init="
-              chrome.runtime.onMessage.addListener(
-                function(request, sender, sendResponse) {
-                  if (request.msg === 'tokenAlert triggered') {
-                    triggered.push(request.data.tokenAlertId)
-                  } else if (request.msg === 'tokenAlert untriggered') {
-                    triggered = triggered.filter(val => val != request.data.tokenAlertId)
-                  }
-                }
-              )
-            "
+            x-data="TokenAlertsPage"
           >
             <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
                 <div>
-                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="browserNotifs" checked @change="changeTokenAlertType()">
+                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="$store.UserData.browserNotifs" checked @change="changeTokenAlertType()">
                   <label for="browser-notif">Icon Badge</label>
                 </div>
                 <div>
-                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="OSNotifs" checked @change="changeTokenAlertType()">
+                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="$store.UserData.OSNotifs" checked @change="changeTokenAlertType()">
                   <label for="os-notif">OS Tray</label>
                 </div>
             </div>
@@ -374,57 +223,39 @@
 
               <!-- TOKEN ALERT ROWS START -->
               <div class="w-full">
-                <template x-for="[ id ] in Object.entries(userData.tokenAlerts)" :key="id">
+                <template x-for="id in Object.keys($store.UserData.tokenAlerts)" :key="id">
                   <div 
                     class="w-full text-sm flex flex-col space-y-2"
-                    x-data="{
-                      get expanded() {
-                        return this.active === this.id
-                      },
-                      set expanded(value) {
-                        this.active = value ? this.id : null
-                      },
-                      deleteTokenAlert(id) {
-                        delete userData.tokenAlerts[id];
-                        chrome.notifications.clear(id);
-                        chrome.runtime.sendMessage({
-                          msg: 'update tokenAlerts',
-                          data: {
-                            tokenAlerts: userData.tokenAlerts
-                          }
-                        })
-                      }
-                    }"
+                    x-data="TokenAlertsRow"
                   >
-
                     <div class="w-full flex justify-center space-x-2">
                       <div class="w-1/12 flex font-normal flex justify-center">
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
                           viewBox="0 0 20 20"
-                          x-show="triggered.includes(id)"
+                          x-show="$store.TokenAlertsPage.triggered.includes(id)"
                           >
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
                       <div class="w-3/12 flex font-normal flex justify-center">
                         <img
-                          :src="'./icons/'+(userData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
+                          :src="'./icons/'+($store.UserData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
                           height="18"
                           class="mr-1"
                           />
-                        <span x-text="userData.tokenAlerts[id].baseSymbol"></span>
+                        <span x-text="$store.UserData.tokenAlerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.tokenAlerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="userData.tokenAlerts[id].side"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].type"></div>
+                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].side"></div>
                       <div class="w-2/12 font-normal flex justify-end">
-                        <span x-text="parsePercent(userData.tokenAlerts[id].percent)"></span>
+                        <span x-text="parsePercent($store.UserData.tokenAlerts[id].percent)"></span>
                         <span>%</span>
                       </div>
                       <div class="w-1/12 font-normal flex justify-center -mr-4">
-                        <button @click="expanded = !expanded; addTokenAlert = false" :aria-expanded="expanded">
+                        <button @click="expanded = !expanded" :aria-expanded="expanded">
                         <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
@@ -440,10 +271,10 @@
                       x-show="expanded" 
                       x-collapse
                       x-data="{
-                        editBaseSymbol: userData.tokenAlerts[id].baseSymbol,
-                        editType: userData.tokenAlerts[id].type,
-                        editSide: userData.tokenAlerts[id].side,
-                        editPercent: userData.tokenAlerts[id].percent
+                        editBaseSymbol: $store.UserData.tokenAlerts[id].baseSymbol,
+                        editType: $store.UserData.tokenAlerts[id].type,
+                        editSide: $store.UserData.tokenAlerts[id].side,
+                        editPercent: $store.UserData.tokenAlerts[id].percent
                       }"
                     >
                       <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
@@ -451,7 +282,7 @@
                           <div>
                             <span>Alert me when</span>
                             <select class="text-black" x-model="editBaseSymbol">
-                              <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
+                              <template x-for="[baseSymbol] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
                                   <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
                               </template>
                             </select>
@@ -471,18 +302,23 @@
                             <input type="text" size="6" maxlength="6" class="text-black" x-model="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
                             <span>percent</span>
                           </div>
-                          <div x-show="inputError">Please input a number</div>
+                          <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
                         </div>
                         <div class="flex justify-center">
-                          <button class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" @click="
-                              checkInput(editPercent, () => {
-                              createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
-                              expanded = !expanded
+                          <button 
+                            class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
+                            @click="
+                              $store.TokenAlertsPage.checkInput(editPercent, () => {
+                                createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
+                                expanded = !expanded
                               })
-                              ">
+                            ">
                           Confirm
                           </button>
-                          <button class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" @click="expanded = !expanded">
+                          <button 
+                            class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
+                            @click="expanded = !expanded"
+                          >
                           Cancel
                           </button>
                         </div>
@@ -494,7 +330,10 @@
               </div>
               <!-- TOKEN ALERT ROWS END -->
 
-              <button @click="addTokenAlert = true, active = null" class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1">
+              <button 
+                @click="$store.TokenAlertsPage.addTokenAlert = true, $store.TokenAlertsPage.active = null" 
+                class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+              >
                 <span>Add New Alert</span>
               </button>
 
@@ -508,9 +347,9 @@
                     percent: 0
                   }
                 }" 
-                x-show="addTokenAlert" 
+                x-show="$store.TokenAlertsPage.addTokenAlert" 
                 x-collapse 
-                @click.outside="addTokenAlert = false" 
+                @click.outside="$store.TokenAlertsPage.addTokenAlert = false" 
                 class="mx-auto"
               >
                 <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
@@ -518,7 +357,7 @@
                     <div>
                       <span>Alert me when</span>
                       <select class="text-black" x-model="newAlert.baseSymbol">
-                        <template x-for="[baseSymbol] in Object.entries(userData.toggles)" :key="baseSymbol">
+                        <template x-for="[baseSymbol] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
                             <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
                         </template>
                       </select>
@@ -535,18 +374,18 @@
                         <option>above</option>
                         <option>below</option>
                       </select>
-                      <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="checkInput($event.target.value)" :value="0">
+                      <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="$store.TokenAlertsPage.checkInput($event.target.value)" :value="0">
                       <span>percent</span>
                     </div>
-                    <div x-show="inputError">Please input a number</div>
+                    <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
                   </div>
                   <div class="flex justify-center">
                     <button 
                       class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                       @click="
-                        checkInput(newAlert.percent, () => {
+                        $store.TokenAlertsPage.checkInput(newAlert.percent, () => {
                           createTokenAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
-                          addTokenAlert = !addTokenAlert;
+                          $store.TokenAlertsPage.addTokenAlert = !$store.TokenAlertsPage.addTokenAlert;
                           newAlert = {
                             baseSymbol: 'BTC',
                             type: 'borrow',
@@ -560,7 +399,7 @@
                     </button>
                     <button 
                       class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
-                      @click="addTokenAlert = !addTokenAlert"
+                      @click="$store.TokenAlertsPage.addTokenAlert = !$store.TokenAlertsPage.addTokenAlert"
                     >
                       Cancel
                     </button>
@@ -575,71 +414,10 @@
         <!-- TOKEN ALERT PAGE END -->
 
         <!-- ACCOUNT PAGE START -->
-        <div x-show="page == 'account'" style="height: 14.7rem" 
-          x-data="{
-            triggered: [],
-            addingAccount: false,
-            addNewAccount(address) {
-              if (!userData.accounts) {userData.accounts = {}}
-              userData.accounts[address] = {healthRatio:  0, balance: 0, name: null};
-              chrome.runtime.sendMessage({
-                msg: 'update accounts',
-                data: {
-                  accounts: userData.accounts
-                }
-              }, function(response) {
-                if (!response) {
-                  console.warn('could not update accounts')
-                }
-                userData.accounts = response.data.accounts
-                console.debug(`accounts updated: ${JSON.stringify(response)}`)
-              })
-            },
-            deleteAccount(address) {
-              delete userData.accounts[address];
-              chrome.runtime.sendMessage({
-                msg: 'update accounts',
-                data: {
-                  accounts: userData.accounts
-                }
-              }, function(response) {
-                if (!response) {
-                  console.warn('could not delete account')
-                }
-                userData.accounts = response.data.accounts
-                console.debug(`accounts updated: ${JSON.stringify(response)}`)
-              })
-            },
-            healthColor(healthRatio) {
-              if (healthRatio > 20) {
-                return 'text-green-dark'
-              } else if (healthRatio > 10) {
-                return 'text-yellow-dark'
-              } else if (healthRatio > 0) {
-                return 'text-orange-DEFAULT'
-              } else {
-                return 'text-red-dark'
-              }
-            },
-            parseHealth(healthRatio) {
-              if (healthRatio > 100) {
-                return '>100'
-              } else {
-                return Math.round(healthRatio)
-              }
-            }
-          }"
-          x-init="
-            chrome.runtime.onMessage.addListener(
-              function(request, sender, sendResponse) {
-                console.debug(`received message ${request.msg}` )
-                if (request.msg === 'alert triggered') {
-                  console.info(`Account alert triggered: ${JSON.stringify(request.data.alert)}`)
-                  triggered.push(request.data.alert.address)
-                }
-              }
-            )
-          "
+        <div 
+          x-show="$store.AppData.page == 'account'" 
+          style="height: 14.7rem" 
+          x-data="AccountPage"
         >
           <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
             <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
@@ -657,40 +435,24 @@
 
               <!-- ACCOUNT ROWS START --> 
               <template 
-                x-for="address in Object.keys(userData.accounts)" 
+                x-for="address in Object.keys($store.UserData.accounts)" 
                 :key="address">
                 <div 
                   class="w-full text-sm flex flex-col space-y-2"
-                  x-data="{
-                    get expandedEdit() {
-                      return this.editActive === this.address
-                    },
-                    set expandedEdit(value) {
-                      this.editActive = value ? this.address : null
-                    },
-                    get expandedNewAlert() {
-                      return this.newAlertActive === this.address
-                    },
-                    set expandedNewAlert(value) {
-                      this.newAlertActive = value ? this.address : null
-                    },
-                    get expandedShowAlerts() {
-                      return this.showAlertsActive === this.address
-                    },
-                    set expandedShowAlerts(value) {
-                      this.showAlertsActive = value ? this.address : null
-                    }
-                  }"  
+                  x-data="AccountRow"  
                 >
-                  <div class="w-full text-sm flex flex-row h-6">
+                  <div class="w-full text-sm flex flex-row h-6 justify-end">
                   <!-- ACCOUNT DATA START -->
-                    <div class="w-60 flex flex-row justify-end" x-show="!expandedEdit" x-data="{open: false}">
+                    <div 
+                      class="w-60 flex flex-row justify-end" 
+                      x-show="!expandedEdit" 
+                    >
                       <div class="w-5 flex font-normal flex justify-center">
                         <!-- TODO make button pulse when alert is triggered? -->
                         <button
-                          @click="expandedShowAlerts = !expandedShowAlerts; open = !open"
+                          @click="expandedShowAlerts = !expandedShowAlerts"
                           aria-expanded="open"
-                          :class="{'open': open, 'closed': !open}"
+                          :class="{'open': expandedShowAlerts, 'closed': !expandedShowAlerts}"
                           class="focus:outline-none active:outline-none focus:border-transparent"
                         >
                           <img 
@@ -703,19 +465,19 @@
                       </div>
                       <div 
                         class="w-20 font-normal flex justify-center" 
-                        x-text="userData.accounts[address].name ? userData.accounts[address].name : address.substring(0, 5)"
+                        x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
                       ></div>
                       <div 
                         class="w-20 font-normal flex justify-center"
                       >
                         <span>$</span>
-                        <span x-text="parseFloat(userData.accounts[address].balance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                        <span x-text="parseFloat($store.UserData.accounts[address].balance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                       </div>
                       <div 
                         class="w-15 font-normal flex justify-center"
-                        :class="healthColor(userData.accounts[address].healthRatio)"
+                        :class="healthColor($store.UserData.accounts[address].healthRatio)"
                       >
-                        <span x-text="parseHealth(userData.accounts[address].healthRatio)"></span>
+                        <span x-text="parseHealth($store.UserData.accounts[address].healthRatio)"></span>
                         <span>%</span>
                       </div>
                     </div>
@@ -734,7 +496,7 @@
                         x-model="editedAddress"
                       >
                       <button 
-                        @click="deleteAccount(address); addNewAccount(editedAddress); expandedEdit = false"
+                        @click="deleteAccount(address); addnewAccount(editedAddress); expandedEdit = false"
                         class="ml-2 -mr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
                       >
                         Confirm
@@ -744,12 +506,12 @@
 
                     <!-- ACCOUNT BUTTONS START -->
                     <div class="w-6 font-normal flex justify-center ">
-                      <button @click="expandedEdit = !expandedEdit; addingAccount = false" :aria-expanded="expandedEdit">
+                      <button @click="expandedEdit = !expandedEdit" :aria-expanded="expandedEdit">
                       <img src="./icons/pencil.svg" width="18" height="18">
                       </button>
                     </div>
                     <div class="w-6 font-normal flex justify-center ">
-                      <button @click="expandedNewAlert = !expandedNewAlert; addingAccount = false" :aria-expanded="expandedNewAlert">
+                      <button @click="expandedNewAlert = !expandedNewAlert" :aria-expanded="expandedNewAlert">
                       <img src="./icons/alert.svg" width="18" height="18">
                       </button>
                     </div>
@@ -767,11 +529,7 @@
                     @click.outside="expandedShowAlerts = false"
                     class="flex flex-row bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4"
                   >
-                    <template
-                      x-for=""
-                    >
-
-                    </template>
+                    Account alerts will go here
                   </div>
                   <!-- ACTIVE ACCOUNT ALERTS COLLAPSIBLE END -->
 
@@ -780,66 +538,7 @@
                     x-show="expandedNewAlert"
                     @click.outside="expandedNewAlert = false"
                     class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
-                    x-data="{
-                      priceType: 'static',
-                      metric: 'balance',
-                      triggerValue: 0,
-                      deltaValue: 0,
-                      timeFrame: 0,
-                      triggerValid: true,
-                      deltaValid: true,
-                      timeFrameValid: true,
-                      inputError: false,
-                      
-                      showInputError() {
-                        if (this.priceType == 'static' && !this.triggerValid) {
-                          this.inputError = true
-                        } else if (this.priceType == 'delta' && (!this.deltaValid || !this.timeFrameValid)) {
-                          this.inputError = true
-                        } else {
-                          this.inputError = false
-                        }
-                      },
-
-                      validateInput() {
-                        if (!parseFloat(this.triggerValue) && this.triggerValue != 0) {
-                          this.triggerValid = false
-                        } else {
-                          this.triggerValid = true;
-                        }
-                        if (!parseFloat(this.deltaValue) && this.deltaValue != 0) {
-                          this.deltaValid = false
-                        } else {
-                          this.deltaValid = true
-                        }
-                        if (!parseFloat(this.timeFrame) || this.timeFrame < 1) {
-                          this.timeFrameValid = false
-                        } else {
-                          this.timeFrameValid = true
-                        }
-                        this.showInputError()
-                      },
-
-                      addAccountAlert() {
-                        chrome.runtime.sendMessage({
-                          msg: 'add account alert',
-                          data: {
-                            address: this.address,
-                            priceType: this.priceType,
-                            metric: this.metric,
-                            triggerValue: this.triggerValue,
-                            deltaValue: this.deltaValue,
-                            timeFrame: this.timeFrame
-                          }
-                        }, function(response) {
-                          if (!response) {
-                            console.warn('could not add account alert')
-                          } else {
-                            console.debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
-                          }
-                        })
-                      }
-                    }"
+                    x-data="NewAccountAlert(address)"
                   >
                     <div class="w-16 self-start">
                       <label for="priceType" class="text-xs">Type</label>
@@ -937,17 +636,16 @@
               <!-- ADD ACCOUNT START -->
               <div class="flex flex-col mx-auto space-y-2">
                 <button 
-                  @click="addingAccount = !addingAccount;" 
+                  x-bind="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
                   class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                 >
                   <span>Add New Account</span>
                 </button>
                 <div 
-                  x-data="{
-                    newAccount: ''
-                  }" 
+                  x-data="{newAccount: ''}" 
                   class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 space-x-2 items-center"
-                  x-show="addingAccount"
+                  x-show="$store.AccountPage.addingAccount"
+                  @click.outside="$store.AccountPage.addingAccount = false"
                 >
                   <input 
                     placeholder="Enter a Mango Account" 
@@ -956,7 +654,7 @@
                     x-model="newAccount"
                   >
                   <button 
-                    @click="addNewAccount(newAccount); addingAccount = false;"
+                    @click="addnewAccount(newAccount); $store.AccountPage.addingAccount = false;"
                     class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                   >
                     Add
@@ -973,24 +671,26 @@
       <!-- INFO CONTAINER END -->
 
       <!-- NAV BUTTONS START-->
-        <div class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4">
+        <div
+          class="flex flex-row items-end justify-around pt-2 bg-bkg-1 text-fgd-4"
+        >
           <div class="flex text-center">
-              <button @click="page = 'home'; headerText = 'Mango Markets Watch'">
+              <button x-bind="navigate('home')">
               <img src="./icons/home.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'alert'; headerText='Token Alerts'">
+              <button x-bind="navigate('alert')">
               <img src="./icons/alert.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'account'; headerText='Mango Accounts'">
+              <button x-bind="navigate('account')">
               <img src="./icons/key.svg" width="24" height="24" />
               </button>
           </div>
           <div class="flex text-center">
-              <button @click="page = 'settings'; headerText = 'Token Settings'">
+              <button x-bind="navigate('settings')">
               <img src="./icons/settings.svg" width="24" height="24" />
               </button>
           </div>

@@ -3,7 +3,7 @@ import { getTokenInfo_v3 } from './tokenData';
 import debugCreator from 'debug';
 
 localStorage.debug = '*';
-const debug = debugCreator('index')
+const debug = debugCreator('background')
 export const refreshAlarmPeriod = 5;
 
 enum AlertType {

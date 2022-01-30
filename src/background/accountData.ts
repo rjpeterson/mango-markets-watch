@@ -2,20 +2,26 @@ import { establishConnection } from './connection';
 import { PublicKey } from "@solana/web3.js";
 import { refreshAlarmPeriod } from '.';
 import debugCreator from 'debug';
+import dayjs from 'dayjs';
 
-const debug = debugCreator('accountData')
+const debug = debugCreator('background:accountData')
 
 //alarm period * number of records to keep
-const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 //24 hrs
+const historicalDataPeriod = refreshAlarmPeriod * 12 * 48 //48 hrs
 
 interface AccountInfo {
   healthRatio: number,
   balance: number,
-  name: string
+  name: string,
 }
 
 interface Accounts {
-  [address: string]: AccountInfo
+  [address: string]: AccountInfo,
+}
+
+interface HistoricalEntry {
+  timestamp?: dayjs.Dayjs,
+  accounts: Accounts
 }
 
 // interface Alert {
@@ -120,13 +126,19 @@ export async function storeUpdatedAccounts() {
 // Push new data onto front of array
 // check alerts against historical data if passed 'true' as 2nd arg
 function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
+  const now = dayjs();
+  let entry: HistoricalEntry;
+  entry = {
+    timestamp: now,
+    accounts: accounts
+  }
   debug('storing fetch data in history')
   chrome.storage.local.get(['accountsHistory'], (result) => {
     let accountsHistory = result.accountsHistory
     if (accountsHistory.length >= historicalDataPeriod) {
       accountsHistory.pop();
     }
-    accountsHistory.unshift(accounts)
+    accountsHistory.unshift(entry)
     chrome.storage.local.set({accountsHistory: accountsHistory})
     if (checkAlerts) { 
       checkAccountAlerts()

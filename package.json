@@ -9,13 +9,15 @@
         "build": "yarn build:tailwind && webpack --config webpack.config.js --mode=production"
     },
     "dependencies": {
-        "@alpinejs/collapse": "^3.5.1",
         "@blockworks-foundation/mango-client-v3": "https://github.com/blockworks-foundation/mango-client-v3",
         "@solana/web3.js": "^1.24.1",
         "bn.js": "^5.2.0",
+        "dayjs": "^1.10.7",
         "lodash-joins": "^3.1.1"
     },
     "devDependencies": {
+        "@alpinejs/collapse": "^3.5.1",
+        "@types/alpinejs": "^3.7.0",
         "@types/chrome": "^0.0.176",
         "@types/debug": "^4.1.7",
         "alpinejs": "^3.2.4",

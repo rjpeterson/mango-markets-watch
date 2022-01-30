@@ -7,7 +7,7 @@ import {
 } from "@blockworks-foundation/mango-client-v3";
 import debugCreator from 'debug';
 
-const debug = debugCreator('connection')
+const debug = debugCreator('background:connection')
 
 
 // export interface Group {

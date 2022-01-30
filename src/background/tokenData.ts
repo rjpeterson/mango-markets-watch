@@ -11,7 +11,7 @@ import BN from 'bn.js';
 import { establishConnection, ClusterData, Market } from './connection';
 import debugCreator from 'debug';
 
-const debug = debugCreator('tokenData')
+const debug = debugCreator('background:tokenData')
 
 
 interface PerpStat {
