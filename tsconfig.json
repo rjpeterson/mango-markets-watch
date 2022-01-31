@@ -6,9 +6,15 @@
       "preserveConstEnums": true,
       "sourceMap": true,
       "esModuleInterop": true,
-      "target": "ES5"
+      "target": "ES5",
+      "baseUrl": "types",
+      "paths": {
+        "alpinejs": ["./alpinejs"],
+        "mango-markets-watch": ["./mango-markets-watch"]
+      }
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*", 
+    "types"  
   ]
 }
