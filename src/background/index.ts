@@ -82,7 +82,7 @@ const checkTokenAlerts = (tokensInfo: TokensInfo) => {
     for (const entry in response.tokenAlerts) {
       const tokenAlert : TokenAlert = response.tokenAlerts[entry];
       tokensInfo
-        .filter((token) => token.baseSymbol == tokenAlert.baseSymbol)
+        .filter((token) => token.baseSymbol === tokenAlert.baseSymbol)
         .forEach((token) => {
           debug(
             'comparing tokenAlert',
@@ -90,13 +90,13 @@ const checkTokenAlerts = (tokensInfo: TokensInfo) => {
             'to token data',
             JSON.stringify(token)
           );
-          if (token[tokenAlert.type] != '0.00' && !parseFloat(token[tokenAlert.type])) {
+          if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
             console.warn(
               `${tokenAlert.type} rate of ${token.baseSymbol} is not a number`
             );
             return;
           }
-          if (tokenAlert.side == "above") {
+          if (tokenAlert.side === "above") {
             if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
               triggeredAlerts += 1;
               debug(`token notification triggered`);
@@ -119,9 +119,9 @@ const checkTokenAlerts = (tokensInfo: TokensInfo) => {
           }
         });
     }
-    triggeredAlerts > 0 && response.tokenAlertTypes.browser == true
+    triggeredAlerts > 0 && response.tokenAlertTypes.browser === true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
-      : chrome.browserAction.setBadgeText({ text: null });
+      : chrome.browserAction.setBadgeText({ text: undefined });
   });
 };
 
@@ -215,7 +215,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse({ msg: "tokenAlerts updated successuflly" });
       break;
     case "change tokenAlert type":
-      !request.data.browser ? chrome.browserAction.setBadgeText({ text: null }) : null;
+      !request.data.browser ? chrome.browserAction.setBadgeText({ text: undefined }) : undefined;
       if(!request.data.os) {
         chrome.notifications.getAll((notifications) => {
           if (notifications) {
@@ -277,7 +277,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     debug('alarm triggered with no alarm');
   }
 
-  if (alarm.name == "refresh") {
+  if (alarm.name === "refresh") {
     //if refresh alarm triggered, start a new request
     debug("Refresh alarm triggered");
     refreshData();

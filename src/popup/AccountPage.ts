@@ -1,13 +1,17 @@
-import Alpine from 'alpinejs'
 import debugCreator from 'debug';
+
+import { AccountPageStoreType } from 'mango-markets-watch';
+import { UserDataStoreType } from 'mango-markets-watch';
 
 const debug = debugCreator('popup:AccountPage')
 
-const UserDataStore = Alpine.store('UserData')
-const AccountPageStore = Alpine.store('AccountPage')
+let UserDataStore: UserDataStoreType
+let AccountPageStore: AccountPageStoreType
 
 export default () => ({
   init() {
+    UserDataStore = Alpine.store('UserData') as UserDataStoreType
+    AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         console.debug(`received message ${request.msg}` )
@@ -19,8 +23,7 @@ export default () => ({
     )
   },
   addNewAccount(address: string) {
-    // if (!UserDataStore.accounts) {UserDataStore.accounts = {}}
-    UserDataStore.accounts[address] = {healthRatio:  0, balance: 0, name: null};
+    UserDataStore.accounts[address] = {healthRatio:  0, balance: 0, name: undefined};
     chrome.runtime.sendMessage({
       msg: 'update accounts',
       data: {

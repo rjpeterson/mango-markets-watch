@@ -27,7 +27,7 @@ interface HistoricalEntry {
 // interface Alert {
 //   address: string,
 //   priceType: 'static' | 'delta',
-//   metric: 'balance' | 'healthRatio',
+//   metricType: 'balance' | 'healthRatio',
 //   triggerValue: number,
 //   deltaValue: number,
 //   timeFrame: number,
@@ -46,26 +46,26 @@ function checkAccountAlerts() {
       let triggered = false
       const matchedAccount = accounts[alert.address]
       debug('checking against account:', JSON.stringify(matchedAccount))
-      if (alert.priceType == 'static') {
+      if (alert.priceType === 'static') {
         debug('priceType static')
-        if (alert.metric == 'balance') {
+        if (alert.metricType === 'balance') {
           debug('metric balance')
           debug('comparing:', matchedAccount.balance, 'less than or equal to', parseFloat(alert.triggerValue))
-          matchedAccount.balance <= parseFloat(alert.triggerValue) ? triggered = true : null
-        } else { //metric == 'healthRatio'
+          matchedAccount.balance <= parseFloat(alert.triggerValue) ? triggered = true : undefined
+        } else { //metricType === 'healthRatio'
           debug('metric healthRatio')
           debug('comparing:', matchedAccount.healthRatio, 'less than or equal to', parseFloat(alert.triggerValue))
-          matchedAccount.healthRatio <= parseFloat(alert.triggerValue) ? triggered = true : null
+          matchedAccount.healthRatio <= parseFloat(alert.triggerValue) ? triggered = true : undefined
         }
-      } else {//priceType == "delta"
+      } else {//priceType === "delta"
         const historySlot = alert.timeFrame / historicalDataPeriod;
         const historicalAccount = accountHistory[historySlot][alert.address]
-        if (alert.metric == 'balance') {
+        if (alert.metricType === 'balance') {
           const balanceDiff = Math.abs(historicalAccount.balance - matchedAccount.balance);
-          balanceDiff >= alert.deltaValue ? triggered = true : null
-        } else {//metric == 'healthRatio'
+          balanceDiff >= alert.deltaValue ? triggered = true : undefined
+        } else {//metricType === 'healthRatio'
           const healthRatioDiff = Math.abs(historicalAccount.healthRatio - matchedAccount.healthRatio);
-          healthRatioDiff >= alert.deltaValue ? triggered = true : null
+          healthRatioDiff >= alert.deltaValue ? triggered = true : undefined
         }
       }
       if (triggered) {
@@ -94,7 +94,7 @@ export async function updateAccountsData(accounts: Accounts) {
     const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
     const healthRatio = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toNumber()
     const balance = mangoAccount.computeValue(mangoGroup, mangoCache).toNumber()
-    const name = mangoAccount.name ? mangoAccount.name : null
+    const name = mangoAccount.name ? mangoAccount.name : undefined
     updatedAccounts[key] = {healthRatio: healthRatio, balance: balance, name: name}
     debug('fetched healthRatio:', healthRatio, 'balance:', balance, 'name:', name)
   }

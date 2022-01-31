@@ -1,19 +1,20 @@
-import Alpine from 'alpinejs'
+import { TokenAlertsPageStoreType, Side, Type, UserDataStoreType } from 'mango-markets-watch';
 import debugCreator from 'debug';
 
+let TokenAlertsStore: TokenAlertsPageStoreType
+let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
-
-const TokenAlertsStore = Alpine.store('TokenAlertsPage')
-const UserDataStore = Alpine.store('UserData')
 
 export default () => ({
   init() {
+    TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
+    UserDataStore = Alpine.store('UserData') as UserDataStoreType
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         if (request.msg === 'tokenAlert triggered') {
           TokenAlertsStore.triggered.push(request.data.tokenAlertId)
         } else if (request.msg === 'tokenAlert untriggered') {
-          TokenAlertsStore.triggered = TokenAlertsStore.triggered.filter(val => val != request.data.tokenAlertId)
+          TokenAlertsStore.triggered = TokenAlertsStore.triggered.filter((val: string) => val !== request.data.tokenAlertId)
         }
       }
     )
@@ -36,7 +37,7 @@ export default () => ({
     })
   },
   checkInput(percent: string, callback: Function) {
-    if (!parseFloat(percent) && percent != '0') {
+    if (!parseFloat(percent) && percent !== '0') {
       this.inputError = true
     } else {
       this.inputError = false
@@ -47,8 +48,8 @@ export default () => ({
   },
   createTokenAlert(
     baseSymbol: string, 
-    type: string, 
-    side: string, 
+    type: Type, 
+    side: Side, 
     percent: string, 
     id: number
   ) {

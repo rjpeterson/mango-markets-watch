@@ -1,36 +1,74 @@
-import Alpine from 'alpinejs'
 import debugCreator from 'debug';
+
+// import { NewAccountAlertStoreType, PriceType, MetricType } from 'mango-markets-watch';
+import { NewAccountAlertStoreType } from 'mango-markets-watch';
+
+declare enum PriceType {
+  Static,
+  Delta
+}
+
+declare enum MetricType {
+  Balance,
+  HealthRatio
+}
 
 const debug = debugCreator('popup:NewAccountAlert')
 
-const Store = Alpine.store('NewAccountAlert')
-
+let NewAccountAlertStore: NewAccountAlertStoreType
 export default (address: string) => ({
+  get priceType() {
+    switch (NewAccountAlertStore.priceType) {
+      case PriceType.Static: return 'static';
+      case PriceType.Delta: return 'delta';
+    }
+  },
+  set priceType(value) {
+    switch (value) {
+      case 'static': NewAccountAlertStore.priceType = PriceType.Static;
+      case 'delta': NewAccountAlertStore.priceType = PriceType.Delta;
+    }
+  },
+  get metricType() {
+    switch (NewAccountAlertStore.metricType) {
+      case MetricType.Balance: return 'balance';
+      case MetricType.HealthRatio: return 'healthRatio';
+    }
+  },
+  set metricType(value) {
+    switch (value) {
+      case 'balance': NewAccountAlertStore.metricType = MetricType.Balance;
+      case 'healthRatio': NewAccountAlertStore.metricType = MetricType.HealthRatio;
+    }
+  },
+  init() {
+    NewAccountAlertStore = Alpine.store('NewAccountAlert') as NewAccountAlertStoreType
+  },
   showInputError() {
-    if (Store.priceType == 'static' && !Store.triggerValid) {
-      Store.inputError = true
-    } else if (Store.priceType == 'delta' && (!Store.deltaValid || !Store.timeFrameValid)) {
-      Store.inputError = true
+    if (NewAccountAlertStore.priceType === PriceType.Static && !NewAccountAlertStore.triggerValid) {
+      NewAccountAlertStore.inputError = true
+    } else if (NewAccountAlertStore.priceType === PriceType.Delta && (!NewAccountAlertStore.deltaValid || !NewAccountAlertStore.timeFrameValid)) {
+      NewAccountAlertStore.inputError = true
     } else {
-      Store.inputError = false
+      NewAccountAlertStore.inputError = false
     }
   },
 
   validateInput() {
-    if (!parseFloat(this.triggerValue) && this.triggerValue != 0) {
-      Store.triggerValid = false
+    if (!parseFloat(this.triggerValue) && this.triggerValue !== 0) {
+      NewAccountAlertStore.triggerValid = false
     } else {
-      Store.triggerValid = true;
+      NewAccountAlertStore.triggerValid = true;
     }
-    if (!parseFloat(this.deltaValue) && this.deltaValue != 0) {
-      Store.deltaValid = false
+    if (!parseFloat(this.deltaValue) && this.deltaValue !== 0) {
+      NewAccountAlertStore.deltaValid = false
     } else {
-      Store.deltaValid = true
+      NewAccountAlertStore.deltaValid = true
     }
     if (!parseFloat(this.timeFrame) || this.timeFrame < 1) {
-      Store.timeFrameValid = false
+      NewAccountAlertStore.timeFrameValid = false
     } else {
-      Store.timeFrameValid = true
+      NewAccountAlertStore.timeFrameValid = true
     }
     this.showInputError()
   },
@@ -40,11 +78,11 @@ export default (address: string) => ({
       msg: 'add account alert',
       data: {
         address: address,
-        priceType: Store.priceType,
-        metric: Store.metric,
-        triggerValue: Store.triggerValue,
-        deltaValue: Store.deltaValue,
-        timeFrame: Store.timeFrame
+        priceType: NewAccountAlertStore.priceType,
+        metricType: NewAccountAlertStore.metricType,
+        triggerValue: NewAccountAlertStore.triggerValue,
+        deltaValue: NewAccountAlertStore.deltaValue,
+        timeFrame: NewAccountAlertStore.timeFrame
       }
     }, function(response) {
       if (!response) {

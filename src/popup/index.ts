@@ -1,14 +1,16 @@
-import Alpine from 'alpinejs'
+import Alpine from 'alpinejs';
+import debugCreator from 'debug';
+
 // @ts-ignore
-import collapse from '@alpinejs/collapse'
-import Body from './Body'
-import HomePage from './HomePage';
-import TokenAlertsPage from './TokenAlertsPage';
-import TokenAlertsRow from './TokenAlertsRow';
+import collapse from '@alpinejs/collapse';
+
 import AccountPage from './AccountPage';
 import AccountRow from './AccountRow';
+import Body from './Body';
+import HomePage from './HomePage';
 import NewAccountAlert from './NewAccountAlert';
-import debugCreator from 'debug';
+import TokenAlertsPage from './TokenAlertsPage';
+import TokenAlertsRow from './TokenAlertsRow';
 
 const debug = debugCreator('popup')
 
@@ -33,7 +35,7 @@ Alpine.store('AppData', {
 })
 
 Alpine.store('TokenAlertsPage', {
-  active: null,
+  active: undefined,
   addTokenAlert: false,
   inputError: false,
   triggered: [],
@@ -46,7 +48,7 @@ Alpine.store('AccountPage', {
 
 Alpine.store('NewAccountAlert', {
   priceType: 'static',
-  metric: 'balance',
+  metricType: 'balance',
   triggerValue: 0,
   deltaValue: 0,
   timeFrame: 0,
@@ -84,6 +86,5 @@ Alpine.data('AccountRow', AccountRow)
 Alpine.data('NewAccountAlert', NewAccountAlert)
 
 Alpine.plugin(collapse)
-// @ts-ignore
 window.Alpine = Alpine
 Alpine.start()

@@ -91,7 +91,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
         if (!bank) {
           return false;
         }
-        return bank.publicKey.toBase58() == token.rootKey.toBase58();
+        return bank.publicKey.toBase58() === token.rootKey.toBase58();
       });
 
       if (!rootBank) {
