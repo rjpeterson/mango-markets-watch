@@ -29,7 +29,7 @@
 
         <!-- HOME PAGE START -->
         <div 
-          x-show="$store.AppData.page == 'home'" 
+          x-show="$store.AppData.page === 'home'" 
           x-data="HomePage"
           style="height: 14.7rem"
         >
@@ -102,7 +102,7 @@
         <!-- HOME PAGE END -->
 
         <!-- SETTINGS PAGE START -->
-        <div x-show="$store.AppData.page == 'settings'" style="height: 14.7rem">
+        <div x-show="$store.AppData.page === 'settings'" style="height: 14.7rem">
           <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
             <table class="
               flex-col flex-grow
@@ -191,7 +191,7 @@
         </div>
 
         <!-- TOKEN ALERTS PAGE START -->
-        <div x-show="$store.AppData.page == 'alert'" style="height: 14.7rem">
+        <div x-show="$store.AppData.page === 'alert'" style="height: 14.7rem">
           <div 
             class="scroller min-w-full overflow-y-auto py-2" 
             style="max-height: 14.1rem;" 
@@ -299,7 +299,7 @@
                               <option :selected="editSide === 'above'">above</option>
                               <option :selected="editSide === 'below'">below</option>
                             </select>
-                            <input type="text" size="6" maxlength="6" class="text-black" x-model="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
+                            <input type="text" size="6" maxlength="6" class="text-black" x-model.number="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
                             <span>percent</span>
                           </div>
                           <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
@@ -331,7 +331,7 @@
               <!-- TOKEN ALERT ROWS END -->
 
               <button 
-                @click="$store.TokenAlertsPage.addTokenAlert = true, $store.TokenAlertsPage.active = null" 
+                @click="$store.TokenAlertsPage.addTokenAlert = true, $store.TokenAlertsPage.active = undefined" 
                 class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
               >
                 <span>Add New Alert</span>
@@ -415,7 +415,7 @@
 
         <!-- ACCOUNT PAGE START -->
         <div 
-          x-show="$store.AppData.page == 'account'" 
+          x-show="$store.AppData.page === 'account'" 
           style="height: 14.7rem" 
           x-data="AccountPage"
         >
@@ -545,18 +545,18 @@
                       <select 
                         id="priceType" 
                         class="text-black text-xs h-1.5" 
-                        x-model="priceType"
+                        x-model="$store.NewAccountAlert.priceType"
                         style="height: 18px;"
                         @change="validateInput()""
                       >
                         <option value="static">Static</option>
                         <option value="delta">Delta</option>
                       </select>
-                      <label for="metric" class="text-xs">Metric</label>
+                      <label for="metricType" class="text-xs">Metric</label>
                       <select 
-                        id="metric" 
+                        id="metricType" 
                         class="text-black text-xs" 
-                        x-model="metric"
+                        x-model="$store.NewAccountAlert.metricType"
                         style="height: 18px;"
                       >
                         <option value="balance">Balance</option>
@@ -566,60 +566,60 @@
                     
                     <div class="w-32 pl-8">
                       <label 
-                        x-show="priceType == 'static'" 
+                        x-show="$store.NewAccountAlert.priceType === 'static'" 
                         for="trigger" 
-                        x-text="metric == 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                        x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
                         class="text-xs"
                       ></label>
                       <input 
-                        x-show="priceType == 'static'" 
+                        x-show="$store.NewAccountAlert.priceType === 'static'" 
                         type="text" 
                         id="trigger" 
-                        x-model="triggerValue" 
+                        x-model.number="$store.NewAccountAlert.triggerValue" 
                         size="8"
                         class="text-black"
                         style="height: 18px;"
                         @change="validateInput()"
                       >
                       <label 
-                        x-show="priceType == 'delta'" 
+                        x-show="$store.NewAccountAlert.priceType === 'delta'" 
                         for="delta"
-                        x-text="metric == 'balance' ? 'Balance Delta' : 'Health Delta'"
+                        x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
                         class="text-xs"
                       ></label>
                       <input 
-                        x-show="priceType == 'delta'" 
+                        x-show="$store.NewAccountAlert.priceType === 'delta'" 
                         type="text" 
                         id="delta" 
-                        x-model="deltaValue" 
+                        x-model.number="$store.NewAccountAlert.deltaValue" 
                         size="8"
                         class="text-black"
                         style="height: 18px;"
                         @change="validateInput()"
                       >
                       <label
-                        x-show="priceType == 'delta'"
+                        x-show="$store.NewAccountAlert.priceType === 'delta'"
                         for="time-frame"
                         class="text-xs"
                       >
                         Time Frame
                       </label>
                       <input
-                        x-show="priceType =='delta'"
+                        x-show="$store.NewAccountAlert.priceType =='delta'"
                         type="text"
                         id="time-frame"
-                        x-model="timeFrame"
+                        x-model.number="$store.NewAccountAlert.timeFrame"
                         size="8"
                         class="text-black"
                         style="height: 18px;"
                         @change="validateInput()"
                       >
 
-                      <div x-show="inputError">
+                      <div x-show="$store.NewAccountAlert.inputError">
                         input real numbers plz
                       </div>
                       <button 
-                        x-show="!inputError"
+                        x-show="!$store.NewAccountAlert.inputError"
                         @click="addAccountAlert(); expandedNewAlert = false"
                         class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
                       >
