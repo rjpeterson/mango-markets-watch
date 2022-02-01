@@ -1,5 +1,5 @@
 import { XData } from "alpinejs";
-import { PriceType, MetricType } from "./NewAccountAlertStoreType";
+import { MetricType, PriceType } from "./NewAccountAlert";
 
 export interface UserDataStoreType extends XData {
   toggles: Toggles,
@@ -23,12 +23,12 @@ interface TokenAlerts {
 	},
 }
 
-export declare enum Side {
+export enum Side {
   Below,
   Above
 }
 
-export declare enum Type {
+export enum Type {
   Deposit,
   Borrow,
   Funding

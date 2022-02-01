@@ -1,12 +1,20 @@
-import { TokenAlertsPageStoreType, Side, Type, UserDataStoreType } from 'mango-markets-watch';
 import debugCreator from 'debug';
+import { XData } from 'alpinejs';
+import { Side, Type, UserDataStoreType } from './UserDataStore';
+
+export interface TokenAlertsPageStoreType extends XData {
+  active: string | undefined,
+  addTokenAlert: boolean,
+  inputError: boolean,
+  triggered: string[],
+}
 
 let TokenAlertsStore: TokenAlertsPageStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
 
-export default () => ({
-  init() {
+export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(): void; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: Type, side: Side, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
+  init(): void {
     TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     chrome.runtime.onMessage.addListener(
@@ -19,7 +27,7 @@ export default () => ({
       }
     )
   },
-  lastAlertKey() {
+  lastAlertKey(): number {
     const IdsAsNums = Object.keys(UserDataStore.tokenAlerts).map(id => parseInt(id))
     if (IdsAsNums.length > 0) {
       return Math.max(...IdsAsNums)
@@ -27,7 +35,7 @@ export default () => ({
       return 0
     }
   },
-  changeTokenAlertType() {
+  changeTokenAlertType(): void {
     chrome.runtime.sendMessage({
       msg: 'change alert type',
       data: {
@@ -36,13 +44,15 @@ export default () => ({
       }
     })
   },
-  checkInput(percent: string, callback: Function) {
-    if (!parseFloat(percent) && percent !== '0') {
+  checkInput(percent: string, callback: Function): void {
+    if (!parseFloat(percent) && percent != '0') {
       this.inputError = true
+      debug('invalid input for: percent')
     } else {
+      debug('valid input for: percent')
       this.inputError = false
       if (callback) {
-        callback()
+        callback(percent)
       }
     }
   },
@@ -52,7 +62,7 @@ export default () => ({
     side: Side, 
     percent: string, 
     id: number
-  ) {
+  ): void {
     if (!id) {
       id = this.lastAlertKey() + 1
     }
@@ -74,7 +84,7 @@ export default () => ({
       debug(`tokenAlerts updated: ${JSON.stringify(response)}`)
     })
   },
-  deleteTokenAlert(id: number) {
+  deleteTokenAlert(id: number): void {
     delete UserDataStore.tokenAlerts[id];
     chrome.notifications.clear(id.toString());
     chrome.runtime.sendMessage({
@@ -84,7 +94,7 @@ export default () => ({
       }
     })
   },
-  parsePercent(value: string) {
+  parsePercent(value: string): string {
     if (parseInt(value) >= 10) {
       return parseFloat(value).toFixed(1)
     } else {

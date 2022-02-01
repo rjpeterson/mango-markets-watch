@@ -8,21 +8,21 @@ export interface AppDataStoreType extends XData {
   },
 }
 
-interface TokenInfo {
+export interface TokenInfo {
   baseSymbol: string,
   borrow?: string,
   deposit?: string,
   funding?: string
 }
 
-export declare enum Page {
+export enum Page {
   Home,
   Alert,
   Account,
   Settings
 }
 
-declare enum HeaderTexts {
+export enum HeaderTexts {
   Home = 'Mango Markets Watch',
   Alert = 'Token Alerts',
   Account = 'Mango Accounts',

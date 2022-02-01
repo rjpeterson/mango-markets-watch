@@ -1,10 +1,11 @@
-import { TokenAlertsPageStoreType } from 'mango-markets-watch';
 import debugCreator from 'debug';
+import { TokenAlertsPageStoreType } from './TokenAlertsPage';
 
 let TokenAlertsStore: TokenAlertsPageStoreType
 const debug = debugCreator('popup:TokenAlertsRow')
-export default () => ({
-  init() {
+
+export default (): { init(): void; expanded: boolean; } => ({
+  init(): void {
     TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
   },
   get expanded() {

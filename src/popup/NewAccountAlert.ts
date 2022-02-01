@@ -1,14 +1,24 @@
+import { XData } from 'alpinejs';
 import debugCreator from 'debug';
 
-// import { NewAccountAlertStoreType, PriceType, MetricType } from 'mango-markets-watch';
-import { NewAccountAlertStoreType } from 'mango-markets-watch';
+export interface NewAccountAlertStoreType extends XData {
+  priceType: PriceType,
+  metricType: MetricType,
+  triggerValue: number | undefined,
+  deltaValue: number | undefined,
+  timeFrame: number | undefined,
+  triggerValid: boolean,
+  deltaValid: boolean,
+  timeFrameValid: boolean,
+  inputError: boolean,
+}
 
-declare enum PriceType {
+export enum PriceType {
   Static,
   Delta
 }
 
-declare enum MetricType {
+export enum MetricType {
   Balance,
   HealthRatio
 }
@@ -16,7 +26,8 @@ declare enum MetricType {
 const debug = debugCreator('popup:NewAccountAlert')
 
 let NewAccountAlertStore: NewAccountAlertStoreType
-export default (address: string) => ({
+
+export default (address: string): { priceType: "static" | "delta"; metricType: "balance" | "healthRatio"; init(): void; showInputError(): void; validateInput(): void; addAccountAlert(): void; } => ({
   get priceType() {
     switch (NewAccountAlertStore.priceType) {
       case PriceType.Static: return 'static';
@@ -41,10 +52,10 @@ export default (address: string) => ({
       case 'healthRatio': NewAccountAlertStore.metricType = MetricType.HealthRatio;
     }
   },
-  init() {
+  init(): void {
     NewAccountAlertStore = Alpine.store('NewAccountAlert') as NewAccountAlertStoreType
   },
-  showInputError() {
+  showInputError(): void {
     if (NewAccountAlertStore.priceType === PriceType.Static && !NewAccountAlertStore.triggerValid) {
       NewAccountAlertStore.inputError = true
     } else if (NewAccountAlertStore.priceType === PriceType.Delta && (!NewAccountAlertStore.deltaValid || !NewAccountAlertStore.timeFrameValid)) {
@@ -54,7 +65,7 @@ export default (address: string) => ({
     }
   },
 
-  validateInput() {
+  validateInput(): void {
     if (!parseFloat(this.triggerValue) && this.triggerValue !== 0) {
       NewAccountAlertStore.triggerValid = false
     } else {
@@ -73,7 +84,7 @@ export default (address: string) => ({
     this.showInputError()
   },
 
-  addAccountAlert() {
+  addAccountAlert(): void {
     chrome.runtime.sendMessage({
       msg: 'add account alert',
       data: {
@@ -86,9 +97,9 @@ export default (address: string) => ({
       }
     }, function(response) {
       if (!response) {
-        console.warn('could not add account alert')
+        debug('could not add account alert')
       } else {
-        console.debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
+        debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
       }
     })
   }

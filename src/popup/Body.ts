@@ -1,8 +1,8 @@
 import debugCreator from 'debug';
+import { AppDataStoreType } from './AppDataStore';
+import { UserDataStoreType } from './UserDataStore';
 
-import { AppDataStoreType, UserDataStoreType } from 'mango-markets-watch';
-
-declare enum Page {
+export enum Page {
   Home,
   Alert,
   Account,
@@ -13,7 +13,7 @@ let AppDataStore: AppDataStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:Body')
 
-export default () => ({
+export default (): { page: "account" | "alert" | "home" | "settings"; init(): void; } => ({
   get page() {
     switch (AppDataStore.page) {
       case Page.Account: return 'account';
@@ -30,7 +30,7 @@ export default () => ({
       case 'settings': AppDataStore.page = Page.Settings;
     }
   },
-  init() {
+  init(): void {
     AppDataStore = Alpine.store('AppData') as AppDataStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     chrome.runtime.sendMessage({
@@ -38,9 +38,9 @@ export default () => ({
     },
     function(response) {
       if (!response) {
-        console.error('could not get stored tokensInfo')
+        debug('could not get stored tokensInfo')
       }
-      console.debug(`got response from background script for msg 'onPopup': ${
+      debug(`got response from background script for msg 'onPopup': ${
         JSON.stringify(response)
       }`)
         AppDataStore.page = response.page ? response.page : Page.Home
@@ -55,7 +55,7 @@ export default () => ({
 
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
-        console.info(`received message ${request.msg}` )
+        debug(`received message ${request.msg}` )
         if (request.msg === 'tokensInfo updated') {
           AppDataStore.tokensInfo = request.data.tokensInfo
         } else if (request.msg === 'accounts data updated') {
@@ -69,9 +69,9 @@ export default () => ({
     }, 
     function(response) {
       if (!response) {
-        console.warn('could not refresh tokensInfo')
+        debug('could not refresh tokensInfo')
       }
-      console.debug(`got response from background script for msg 'refresh tokensInfo': ${
+      debug(`got response from background script for msg 'refresh tokensInfo': ${
         JSON.stringify(response)
       }`)
         AppDataStore.tokensInfo = response

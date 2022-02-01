@@ -1,8 +1,8 @@
-import debugCreator from 'debug';
+// import debugCreator from 'debug';
 
-const debug = debugCreator('popup:AccountRow')
+// const debug = debugCreator('popup:AccountRow')
 
-export default () => ({
+export default (): { expandedEdit: boolean; expandedNewAlert: boolean; expandedShowAlerts: boolean } => ({
   get expandedEdit() {
     return this.editActive === this.address
   },
