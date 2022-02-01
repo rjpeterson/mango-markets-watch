@@ -427,7 +427,28 @@
           x-data="AccountPage"
         >
           <div class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" style="max-height: 14.1rem;">
-            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
+            <button 
+              class="absolute top-4 left-4 rounded-full h-4 w-4 bg-bkg-3"
+              @click="selectedAccount = undefined"  
+            >
+              <img 
+                src="./icons/arrow-left.svg" 
+                width="18" 
+                height="18" 
+              >
+            </button>
+            <div 
+              x-show="selectedAccount !== undefined"
+              class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4"
+            >
+              <span>Info about account: </span>
+              <span x-text="selectedAccount"></span>
+              <span>goes here</span>
+            </div>
+            <div 
+              class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4"
+              x-show="selectedAccount === undefined"
+            >
               <div class="w-full flex text-xs text-fgd-4 ">
                 <div class="w-60 flex">
                   <div class="w-20 font-normal flex justify-center items-end">Address</div>
@@ -457,17 +478,16 @@
                       <div class="w-5 flex font-normal flex justify-center">
                         <!-- TODO make button pulse when alert is triggered? -->
                         <button
-                          @click="expandedShowAlerts = !expandedShowAlerts"
+                          @click="selectedAccount = address"
                           aria-expanded="open"
                           :class="{'open': expandedShowAlerts, 'closed': !expandedShowAlerts}"
                           class="focus:outline-none active:outline-none focus:border-transparent"
                         >
                           <img 
-                          src="./icons/right.svg" 
-                          width="18" 
-                          height="18" 
-                          
-                        >
+                            src="./icons/search.svg" 
+                            width="18" 
+                            height="18" 
+                          >
                         </button>
                       </div>
                       <div 

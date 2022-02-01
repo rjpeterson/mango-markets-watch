@@ -12,7 +12,9 @@ export interface AccountPageStoreType extends XData {
 let UserDataStore: UserDataStoreType
 let AccountPageStore: AccountPageStoreType
 
-export default (): { init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth(healthRatio: number): number | ">100"; } => ({
+export default (): { selectedAccount: undefined | string, init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth(healthRatio: number): number | ">100"; } => ({
+  selectedAccount: undefined,
+
   init(): void {
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
