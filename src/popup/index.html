@@ -193,7 +193,7 @@
         <!-- TOKEN ALERTS PAGE START -->
         <div x-show="$store.AppData.page === 'alert'" style="height: 14.7rem">
           <div 
-            class="scroller min-w-full overflow-y-auto py-2" 
+            class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" 
             style="max-height: 14.1rem;" 
             x-data="TokenAlertsPage"
           >
@@ -308,7 +308,7 @@
                           <button 
                             class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                             @click="
-                              $store.TokenAlertsPage.checkInput(editPercent, () => {
+                              checkInput(editPercent, () => {
                                 createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
                                 expanded = !expanded
                               })
@@ -374,7 +374,14 @@
                         <option>above</option>
                         <option>below</option>
                       </select>
-                      <input type="text" size="6" maxlength="6" class="text-black" x-model.number="newAlert.percent" @change="$store.TokenAlertsPage.checkInput($event.target.value)" :value="0">
+                      <input 
+                        type="text" 
+                        size="6" 
+                        maxlength="6" 
+                        class="text-black" 
+                        x-model.number="newAlert.percent" 
+                        @change="checkInput($event.target.value)" 
+                        :value="0">
                       <span>percent</span>
                     </div>
                     <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
@@ -383,7 +390,7 @@
                     <button 
                       class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                       @click="
-                        $store.TokenAlertsPage.checkInput(newAlert.percent, () => {
+                        checkInput(newAlert.percent, () => {
                           createTokenAlert(newAlert.baseSymbol, newAlert.type, newAlert.side, newAlert.percent);
                           $store.TokenAlertsPage.addTokenAlert = !$store.TokenAlertsPage.addTokenAlert;
                           newAlert = {
@@ -419,7 +426,7 @@
           style="height: 14.7rem" 
           x-data="AccountPage"
         >
-          <div class="scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
+          <div class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" style="max-height: 14.1rem;">
             <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
               <div class="w-full flex text-xs text-fgd-4 ">
                 <div class="w-60 flex">
@@ -636,7 +643,7 @@
               <!-- ADD ACCOUNT START -->
               <div class="flex flex-col mx-auto space-y-2">
                 <button 
-                  x-bind="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
+                  @click="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
                   class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                 >
                   <span>Add New Account</span>
