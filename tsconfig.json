@@ -10,7 +10,6 @@
       "baseUrl": "types",
       "paths": {
         "alpinejs": ["./alpinejs"],
-        "mango-markets-watch": ["./mango-markets-watch"]
       }
   },
   "include": [
