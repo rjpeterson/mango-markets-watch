@@ -2,14 +2,6 @@ const ExtensionReloader  = require('webpack-extension-reloader');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
-// const contentScripts = {
-//   content: './content/index.js'
-// }
-// const extensionPages = {
-//   // options: './options/index.js',
-//   popup: './popup/index.ts',
-// }
-
 let config = {
   mode: process.env.NODE_ENV,
   context: __dirname + '/src',
@@ -21,9 +13,7 @@ let config = {
 let ExtensionConfig = Object.assign({}, config, {
     entry: {
       background: './background/index.ts',
-      popup: './popup/index.js',
-      // ...contentScripts,
-      // ...extensionPages
+      popup: './popup/index.ts',
     },
     module: {
       rules: [
@@ -46,8 +36,6 @@ let ExtensionConfig = Object.assign({}, config, {
         port: 9090,
         reloadPage: true,
         entries: {
-          // contentScript: Object.keys(contentScripts),
-          // extensionPage: Object.keys(extensionPages),
           popup: 'popup',
           background: 'background'
         }
@@ -65,18 +53,6 @@ let ExtensionConfig = Object.assign({}, config, {
           from: './popup/index.css',
           to: __dirname + '/extension/dist/popup.css',
         },
-        // {
-        //   from: './options/index.html',
-        //   to: __dirname + '/extension/dist/options.html',
-        // },
-        // {
-        //   from: './options/index.css',
-        //   to: __dirname + '/extension/dist/options.css',
-        // },
-        // {
-        //   from: './content/index.css',
-        //   to: __dirname + '/extension/dist/content.css',
-        // },
       ]),
     ]
 });

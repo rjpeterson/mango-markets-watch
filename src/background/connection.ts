@@ -5,6 +5,10 @@ import {
   MangoClient as MangoClient_v3,
   Config as Config_v3,
 } from "@blockworks-foundation/mango-client-v3";
+import debugCreator from 'debug';
+
+const debug = debugCreator('background:connection')
+
 
 // export interface Group {
 //   groups?: (GroupsEntity)[] | null;
@@ -51,7 +55,7 @@ export async function establishConnection() {
   const group = "mainnet.1";
 
   const clusterData = IDS_v3.groups.find((g : ClusterData) => {
-    return g.name == group && g.cluster == cluster;
+    return g.name === group && g.cluster === cluster;
   });
   const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
 

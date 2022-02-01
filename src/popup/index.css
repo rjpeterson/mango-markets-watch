@@ -6,6 +6,15 @@
   scrollbar-width: thin;
 }
 
+.open {
+  transform: rotate(90deg);
+  transition-duration: 150ms;
+}
+
+.closed {
+  transform: rotate(0deg);
+  transition-duration: 150ms;
+}
 
 /* width */
 ::-webkit-scrollbar {
@@ -16,7 +25,7 @@
 /* Track */
 ::-webkit-scrollbar-track {
   border-radius: 100vh;
-  background: #2A2440;
+  /* background: #2A2440; */
 }
 
 /* Handle */

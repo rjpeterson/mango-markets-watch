@@ -9,6 +9,10 @@ import {
 import { Connection, PublicKey } from "@solana/web3.js";
 import BN from 'bn.js';
 import { establishConnection, ClusterData, Market } from './connection';
+import debugCreator from 'debug';
+
+const debug = debugCreator('background:tokenData')
+
 
 interface PerpStat {
   longFunding: string;
@@ -62,8 +66,8 @@ async function getTokenFundingRate(groupConfig: GroupConfig, market: Market, cli
     market.quoteDecimals
   );
 
-  const perpStats = await this.fetchPerpStats(groupConfig, market.name);
-  const funding1h = this.calculateFundingRate(perpStats, perpMarket);
+  const perpStats = await fetchPerpStats(groupConfig, market.name);
+  const funding1h = calculateFundingRate(perpStats, perpMarket);
   const [funding1hStr, fundingAprStr] = funding1h
     ? [funding1h.toFixed(4), (funding1h * 24 * 365).toFixed(2)]
     : ["-", "-"];
@@ -73,7 +77,7 @@ async function getTokenFundingRate(groupConfig: GroupConfig, market: Market, cli
 async function getAllFundingRates(clusterData: ClusterData, groupConfig: GroupConfig, client: MangoClient) {
   return Promise.all(
     clusterData.perpMarkets.map(async (market) => {
-      const funding = await this.getTokenFundingRate(groupConfig, market, client);
+      const funding = await getTokenFundingRate(groupConfig, market, client);
       return { baseSymbol: market.baseSymbol, funding: funding };
     })
   );
@@ -87,7 +91,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
         if (!bank) {
           return false;
         }
-        return bank.publicKey.toBase58() == token.rootKey.toBase58();
+        return bank.publicKey.toBase58() === token.rootKey.toBase58();
       });
 
       if (!rootBank) {
@@ -107,20 +111,20 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
     });
     return tokensInfo;
   } else {
-    console.log(`Mango Group not found`);
+    debug(`Mango Group not found`);
   }
 }
 
 export async function getTokenInfo_v3() {
-  console.log(`getting v3 token info...`);
+  debug(`getting v3 token info...`);
   const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
 
-  const interestRates = await this.getInterestRates(
+  const interestRates = await getInterestRates(
     mangoGroup,
     connection,
     groupConfig
   );
-  const fundingRates = await this.getAllFundingRates(
+  const fundingRates = await getAllFundingRates(
     clusterData,
     groupConfig,
     client

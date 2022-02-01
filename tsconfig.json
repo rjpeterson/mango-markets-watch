@@ -6,8 +6,14 @@
       "preserveConstEnums": true,
       "sourceMap": true,
       "esModuleInterop": true,
+      "target": "ES5",
+      "baseUrl": "types",
+      "paths": {
+        "alpinejs": ["./alpinejs"],
+      }
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*", 
+    "types"  
   ]
 }

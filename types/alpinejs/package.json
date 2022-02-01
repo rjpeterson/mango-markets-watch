@@ -1,0 +1,27 @@
+{
+    "name": "@types/alpinejs",
+    "version": "3.7.0",
+    "description": "TypeScript definitions for alpinejs",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/alpinejs",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Thomas Wirth",
+            "url": "https://github.com/wtho",
+            "githubUsername": "wtho"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/alpinejs"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@vue/reactivity": "^3.2.26"
+    },
+    "typesPublisherContentHash": "a1bbbc2334efee8e69e2fbe069255f5b107a9b660d65276564ceb191ab72f8ec",
+    "typeScriptVersion": "3.8"
+}

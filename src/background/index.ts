@@ -1,5 +1,10 @@
-import { updateAccounts, refreshAccounts } from './accountData';
+import { updateAccountsData, storeUpdatedAccounts } from './accountData';
 import { getTokenInfo_v3 } from './tokenData';
+import debugCreator from 'debug';
+
+localStorage.debug = '*';
+const debug = debugCreator('background')
+export const refreshAlarmPeriod = 5;
 
 enum AlertType {
   Borrow = 'borrow',
@@ -70,52 +75,53 @@ const onUntriggered = (tokenAlertId: string) => {
 };
 
 const checkTokenAlerts = (tokensInfo: TokensInfo) => {
-  console.log("calling checkTokenAlerts...");
+  debug("calling checkTokenAlerts...");
   chrome.storage.local.get(["tokenAlerts", "tokenAlertTypes"], (response) => {
-    console.log(`got tokenAlerts: ${JSON.stringify(response.tokenAlerts)}, tokenAlertTypes: ${JSON.stringify(response.tokenAlertTypes)}`)
+    debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'tokenAlertTypes:', JSON.stringify(response.tokenAlertTypes))
     let triggeredAlerts = 0;
     for (const entry in response.tokenAlerts) {
       const tokenAlert : TokenAlert = response.tokenAlerts[entry];
       tokensInfo
-        .filter((token) => token.baseSymbol == tokenAlert.baseSymbol)
+        .filter((token) => token.baseSymbol === tokenAlert.baseSymbol)
         .forEach((token) => {
-          console.log(
-            `comparing tokenAlert ${JSON.stringify(
-              tokenAlert
-            )} to token data ${JSON.stringify(token)}`
+          debug(
+            'comparing tokenAlert',
+            JSON.stringify(tokenAlert),
+            'to token data',
+            JSON.stringify(token)
           );
-          if (token[tokenAlert.type] != '0.00' && !parseFloat(token[tokenAlert.type])) {
-            console.log(
+          if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
+            console.warn(
               `${tokenAlert.type} rate of ${token.baseSymbol} is not a number`
             );
             return;
           }
-          if (tokenAlert.side == "above") {
+          if (tokenAlert.side === "above") {
             if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
               triggeredAlerts += 1;
-              console.log(`token notification triggered`);
+              debug(`token notification triggered`);
 
               onTriggered(entry, tokenAlert, response.tokenAlertTypes);
             } else {
               onUntriggered(entry);
-              console.log("conditions not met");
+              debug("conditions not met");
             }
           } else {
             if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
               triggeredAlerts += 1;
-              console.log(`token notification triggered`);
+              debug(`token notification triggered`);
 
               onTriggered(entry, tokenAlert, response.tokenAlertTypes);
             } else {
               onUntriggered(entry);
-              console.log("conditions not met");
+              debug("conditions not met");
             }
           }
         });
     }
-    triggeredAlerts > 0 && response.tokenAlertTypes.browser == true
+    triggeredAlerts > 0 && response.tokenAlertTypes.browser === true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
-      : chrome.browserAction.setBadgeText({ text: null });
+      : chrome.browserAction.setBadgeText({ text: undefined });
   });
 };
 
@@ -124,7 +130,6 @@ const checkTokenAlerts = (tokensInfo: TokensInfo) => {
 const refreshData = async (sendResponse?: Function) => {
   const tokensInfo = await getTokenInfo_v3();
   chrome.storage.local.set({ tokensInfo: tokensInfo });
-  console.log("checking token info against tokenAlerts...");
   checkTokenAlerts(tokensInfo);
   checkToggles(tokensInfo);
 
@@ -143,9 +148,8 @@ const refreshData = async (sendResponse?: Function) => {
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(
-    ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page"],
+    ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page", "accountAlerts"],
     (response) => {
-      console.log("checking token info against alerts...");
       checkTokenAlerts(response.tokensInfo);
       sendResponse(response);
     }
@@ -153,37 +157,39 @@ const onPopup = (sendResponse: Function) => {
 };
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("onInstalled...");
+  debug("onInstalled...");
   chrome.storage.local.get({
     "tokensInfo": [], 
     "toggles": {},
     "tokenAlerts": {},
     "tokenAlertTypes": {browser: true, os: true},
     "accounts": {},
-    "accountsHistory": []
+    "accountsHistory": [],
+    "accountAlerts": []
   }, (result) => {
-    console.log(`got values from storage: ${JSON.stringify(result)}`)
+    debug('got values from storage:', JSON.stringify(result))
     chrome.storage.local.set(result)
   })
-  console.log("setting fetch alarm...");
+  debug("setting fetch alarm...");
   setFetchAlarm();
-  console.log("refreshing data...");
+  debug("refreshing data...");
   refreshData();
 });
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
 chrome.runtime.onStartup.addListener(() => {
-  console.log("onStartup....");
-  console.log("getting token info...");
-  console.log("refreshing data...");
+  debug("onStartup....");
+  debug("getting token info...");
+  debug("refreshing data...");
   refreshData();
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(
-    `background received msg: "${request.msg}" data: ${JSON.stringify(
-      request.data
-    )}`
+  debug(
+    'background received msg:',
+    request.msg,
+    'data:',
+    JSON.stringify(request.data)
   );
   switch (request.msg) {
     case "change page":
@@ -193,7 +199,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       onPopup(sendResponse);
       break;
     case "refresh tokensInfo":
-      console.log(
+      debug(
         "received message 'refresh tokensInfo'... calling refreshData...."
       );
       refreshData(sendResponse);
@@ -209,7 +215,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse({ msg: "tokenAlerts updated successuflly" });
       break;
     case "change tokenAlert type":
-      !request.data.browser ? chrome.browserAction.setBadgeText({ text: null }) : null;
+      !request.data.browser ? chrome.browserAction.setBadgeText({ text: undefined }) : undefined;
       if(!request.data.os) {
         chrome.notifications.getAll((notifications) => {
           if (notifications) {
@@ -230,11 +236,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       })
       return false;
     case "update accounts":
-      updateAccounts(request.data.accounts).then((result) => {
-        console.log(`callback result :${JSON.stringify(result)}`)
+      debug('recieved message: update accounts')
+      updateAccountsData(request.data.accounts).then((result) => {
+        debug('callback result:', JSON.stringify(result))
         chrome.storage.local.set({accounts: result})
         sendResponse({
-          msg: "accounts updated successfully",
+          msg: "accounts updated",
           data: {
             accounts: result
           }
@@ -242,9 +249,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       })
       break;
     case "add account alert": 
-      chrome.storage.local.set({accountAlerts: request.data.address})
-      // updateAccounts().then((result) => {checkAccountAlerts(result)});
-      sendResponse({ msg: "accountAlerts updated successuflly" });
+      chrome.storage.local.get({'accountAlerts': []}, (response) => {
+        let accountAlerts = response.accountAlerts;
+        accountAlerts.push(request.data);
+        chrome.storage.local.set({accountAlerts: accountAlerts})
+        storeUpdatedAccounts()
+        sendResponse({ msg: "accountAlerts updated" })
+      })
       break;
     case undefined:
       return false;
@@ -256,20 +267,20 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 //schedule a new fetch every 5 minutes
 function setFetchAlarm() {
-  console.log("schedule refresh alarm to 5 minutes...");
-  chrome.alarms.create("refresh", { periodInMinutes: 5 });
+  debug('schedule refresh alarm to', refreshAlarmPeriod, 'minutes...');
+  chrome.alarms.create("refresh", { periodInMinutes: refreshAlarmPeriod });
 }
 
 // alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (!alarm) {
-    throw new Error("alarm triggered with no alarm");
+    debug('alarm triggered with no alarm');
   }
 
-  if (alarm.name == "refresh") {
+  if (alarm.name === "refresh") {
     //if refresh alarm triggered, start a new request
-    console.log("Refresh alarm triggered");
+    debug("Refresh alarm triggered");
     refreshData();
-    refreshAccounts();
+    storeUpdatedAccounts();
   }
 });
