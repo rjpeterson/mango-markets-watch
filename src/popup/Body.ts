@@ -56,10 +56,10 @@ export default (): { page: "account" | "alert" | "home" | "settings"; init(): vo
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         debug(`received message ${request.msg}` )
-        if (request.msg === 'tokensInfo updated') {
-          AppDataStore.tokensInfo = request.data.tokensInfo
-        } else if (request.msg === 'accounts data updated') {
-          UserDataStore.accounts = request.data.accounts
+        switch (request.msg) {
+          case 'tokensInfo updated': AppDataStore.tokensInfo = request.data.tokensInfo;
+          case 'accounts data updated': UserDataStore.accounts = request.data.accounts;
+          default: null
         }
       }
     )
