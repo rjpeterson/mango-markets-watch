@@ -1,5 +1,5 @@
 import debugCreator from 'debug';
-import { AccountPageStoreType } from './AccountPage';
+import { AccountPageStoreType, parseHealth, parseBalance } from './AccountPage';
 import { UserDataStoreType } from "./UserDataStore"
 
 const debug = debugCreator('popup:AccountRow')
@@ -12,24 +12,25 @@ export default () => ({
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
   },
-  getAccountName() {
+  getAccountName(): string {
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+    const length = AccountPageStore.selectedAccount.length;
+    const shortAddress = AccountPageStore.selectedAccount.substring(0, 4) + '...' + AccountPageStore.selectedAccount.substring(length - 4)
     debug('selected account: ', AccountPageStore.selectedAccount, JSON.stringify(selected))
     if (selected) {
       if (selected.name) {
-        return selected.name
+        return `${selected.name} - ${shortAddress}`
       } else {
-        const length = AccountPageStore.selectedAccount.length;
-        return AccountPageStore.selectedAccount.substring(0, 5) + '...' + AccountPageStore.selectedAccount.substring(length - 5)
+        return shortAddress
       }
     } else {
       return undefined
     }
   },
-  getAccountHealthRatio() {
+  getAccountHealthRatio(): number | ">100" {
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
     if (selected) {
-      return selected.healthRatio
+      return parseHealth(selected.healthRatio)
     } else {
       return undefined
     }
@@ -37,7 +38,7 @@ export default () => ({
   getAccountBalance() {
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
     if (selected) {
-      return selected.balance
+      return parseBalance(selected.balance)
     } else {
       return undefined
     }

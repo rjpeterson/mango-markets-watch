@@ -13,7 +13,7 @@ export interface AccountPageStoreType extends XData {
 let UserDataStore: UserDataStoreType
 let AccountPageStore: AccountPageStoreType
 
-export default (): { newAlert: boolean, init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth(healthRatio: number): number | ">100"; } => ({
+export default (): { newAlert: boolean; init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth: (healthRatio: number) => number | ">100"; parseBalance: (balance: number) => string; } => ({
   newAlert: false,
 
   init(): void {
@@ -71,11 +71,18 @@ export default (): { newAlert: boolean, init(): void; addNewAccount(address: str
       return 'text-red-dark'
     }
   },
-  parseHealth(healthRatio: number): number | ">100" {
-    if (healthRatio > 100) {
-      return '>100'
-    } else {
-      return Math.round(healthRatio)
-    }
-  }
+  parseHealth: parseHealth,
+  parseBalance: parseBalance
 })
+
+export const parseHealth = (healthRatio: number): number | ">100" => {
+  if (healthRatio > 100) {
+    return '>100'
+  } else {
+    return Math.round(healthRatio)
+  }
+}
+
+export const parseBalance = (balance: number): string => {
+  return balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+}

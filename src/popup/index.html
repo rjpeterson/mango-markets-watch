@@ -444,7 +444,7 @@
                 >
               </button>
               <div 
-                class="flex flex-row justify-around pt-2 pl-6"
+                class="flex flex-row justify-around pl-6"
               >
                 <div>
                   <div>Account</div>
@@ -461,11 +461,10 @@
               <div class="flex flex-col">
                 <div class="flex flex-row justify-between">
                   <div>Trig</div>
-                  <div>priceType</div>
-                  <div>metricType</div>
-                  <div>triggerValue</div>
-                  <div>deltaValue</div>
-                  <div>timeFrame</div>
+                  <div>Type</div>
+                  <div>Metric</div>
+                  <div>Price/Delta</div>
+                  <div>Time</div>
                 </div>
                 <template x-for="alert in getAlertsForAccount()">
                   <div class="flex flex-row justify-between">
@@ -481,8 +480,7 @@
                     </div>
                     <div x-text="alert.priceType"></div>
                     <div x-text="alert.metricType"></div>
-                    <div x-text="alert.triggerValue"></div>
-                    <div x-text="alert.deltaValue"></div>
+                    <div x-text="alert.priceType === 'static' ? alert.triggerPrice : alert.deltaValue"></div>
                     <div x-text="alert.timeFrame"></div>
                   </div>
                 </template>
@@ -505,93 +503,93 @@
                 class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
                 x-data="NewAccountAlert()"
               >
-              <div class="w-16 self-start">
-                <label for="priceType" class="text-xs">Type</label>
-                <select 
-                  id="priceType" 
-                  class="text-black text-xs h-1.5" 
-                  x-model="$store.NewAccountAlert.priceType"
-                  style="height: 18px;"
-                  @change="validateInput()""
-                >
-                  <option value="static">Static</option>
-                  <option value="delta">Delta</option>
-                </select>
-                <label for="metricType" class="text-xs">Metric</label>
-                <select 
-                  id="metricType" 
-                  class="text-black text-xs" 
-                  x-model="$store.NewAccountAlert.metricType"
-                  style="height: 18px;"
-                >
-                  <option value="balance">Balance</option>
-                  <option value="healthRatio">Health</option>
-                </select>
-              </div>
-              
-              <div class="w-32 pl-8">
-                <label 
-                  x-show="$store.NewAccountAlert.priceType === 'static'" 
-                  for="trigger" 
-                  x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
-                  class="text-xs"
-                ></label>
-                <input 
-                  x-show="$store.NewAccountAlert.priceType === 'static'" 
-                  type="text" 
-                  id="trigger" 
-                  x-model.number="$store.NewAccountAlert.triggerValue" 
-                  size="8"
-                  class="text-black"
-                  style="height: 18px;"
-                  @change="validateInput()"
-                >
-                <label 
-                  x-show="$store.NewAccountAlert.priceType === 'delta'" 
-                  for="delta"
-                  x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
-                  class="text-xs"
-                ></label>
-                <input 
-                  x-show="$store.NewAccountAlert.priceType === 'delta'" 
-                  type="text" 
-                  id="delta" 
-                  x-model.number="$store.NewAccountAlert.deltaValue" 
-                  size="8"
-                  class="text-black"
-                  style="height: 18px;"
-                  @change="validateInput()"
-                >
-                <label
-                  x-show="$store.NewAccountAlert.priceType === 'delta'"
-                  for="time-frame"
-                  class="text-xs"
-                >
-                  Time Frame
-                </label>
-                <input
-                  x-show="$store.NewAccountAlert.priceType =='delta'"
-                  type="text"
-                  id="time-frame"
-                  x-model.number="$store.NewAccountAlert.timeFrame"
-                  size="8"
-                  class="text-black"
-                  style="height: 18px;"
-                  @change="validateInput()"
-                >
-
-                <div x-show="$store.NewAccountAlert.inputError">
-                  input real numbers plz
+                <div class="w-16 self-start">
+                  <label for="priceType" class="text-xs">Type</label>
+                  <select 
+                    id="priceType" 
+                    class="text-black text-xs h-1.5" 
+                    x-model="$store.NewAccountAlert.priceType"
+                    style="height: 18px;"
+                    @change="validateInput()""
+                  >
+                    <option value="static">Static</option>
+                    <option value="delta">Delta</option>
+                  </select>
+                  <label for="metricType" class="text-xs">Metric</label>
+                  <select 
+                    id="metricType" 
+                    class="text-black text-xs" 
+                    x-model="$store.NewAccountAlert.metricType"
+                    style="height: 18px;"
+                  >
+                    <option value="balance">Balance</option>
+                    <option value="healthRatio">Health</option>
+                  </select>
                 </div>
-                <button 
-                  x-show="!$store.NewAccountAlert.inputError"
-                  @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountPage.newAlert = false"
-                  class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
-                >
-                  Submit
-                </button>
+                
+                <div class="w-32 pl-8">
+                  <label 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    for="trigger" 
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                    class="text-xs"
+                  ></label>
+                  <input 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    type="text" 
+                    id="trigger" 
+                    x-model.number="$store.NewAccountAlert.triggerValue" 
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                    @change="validateInput()"
+                  >
+                  <label 
+                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    for="delta"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                    class="text-xs"
+                  ></label>
+                  <input 
+                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    type="text" 
+                    id="delta" 
+                    x-model.number="$store.NewAccountAlert.deltaValue" 
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                    @change="validateInput()"
+                  >
+                  <label
+                    x-show="$store.NewAccountAlert.priceType === 'delta'"
+                    for="time-frame"
+                    class="text-xs"
+                  >
+                    Time Frame
+                  </label>
+                  <input
+                    x-show="$store.NewAccountAlert.priceType =='delta'"
+                    type="text"
+                    id="time-frame"
+                    x-model.number="$store.NewAccountAlert.timeFrame"
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                    @change="validateInput()"
+                  >
+
+                  <div x-show="$store.NewAccountAlert.inputError">
+                    input real numbers plz
+                  </div>
+                  <button 
+                    x-show="!$store.NewAccountAlert.inputError"
+                    @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountPage.newAlert = false"
+                    class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
-            </div>
             <!-- New account alert collapsible end -->
             </div>
             <!-- View account details end -->
@@ -649,7 +647,7 @@
                         class="w-20 font-normal flex justify-center"
                       >
                         <span>$</span>
-                        <span x-text="parseFloat($store.UserData.accounts[address].balance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                        <span x-text="parseBalance($store.UserData.accounts[address].balance)"></span>
                       </div>
                       <div 
                         class="w-15 font-normal flex justify-center"
