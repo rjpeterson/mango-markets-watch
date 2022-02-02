@@ -16,10 +16,10 @@ export interface TokenInfo {
 }
 
 export enum Page {
-  Home,
-  Alert,
-  Account,
-  Settings
+  Home = 'home',
+  Alert = 'alert',
+  Account = 'account',
+  Settings = 'settings'
 }
 
 export enum HeaderTexts {

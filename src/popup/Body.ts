@@ -1,13 +1,6 @@
 import debugCreator from 'debug';
-import { AppDataStoreType } from './AppDataStore';
+import { AppDataStoreType, Page } from './AppDataStore';
 import { UserDataStoreType } from './UserDataStore';
-
-export enum Page {
-  Home,
-  Alert,
-  Account,
-  Settings
-}
 
 let AppDataStore: AppDataStoreType
 let UserDataStore: UserDataStoreType

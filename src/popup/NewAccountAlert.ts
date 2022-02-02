@@ -14,13 +14,13 @@ export interface NewAccountAlertStoreType extends XData {
 }
 
 export enum PriceType {
-  Static,
-  Delta
+  Static = 'static',
+  Delta = 'delta'
 }
 
 export enum MetricType {
-  Balance,
-  HealthRatio
+  Balance = 'balance',
+  HealthRatio = 'healthRatio'
 }
 
 const debug = debugCreator('popup:NewAccountAlert')

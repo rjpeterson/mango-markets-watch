@@ -18,20 +18,20 @@ interface TokenAlerts {
   [id: string]: {
 		baseSymbol: string,
 		percent: string,
-		side: Side,
-		type: Type
+		side: AlertSide,
+		type: AlertType
 	},
 }
 
-export enum Side {
-  Below,
-  Above
+export enum AlertSide {
+  Below = 'below',
+  Above = 'above'
 }
 
-export enum Type {
-  Deposit,
-  Borrow,
-  Funding
+export enum AlertType {
+  Deposit = 'deposit',
+  Borrow = 'borrow',
+  Funding = 'funding'
 }
 
 interface Accounts {

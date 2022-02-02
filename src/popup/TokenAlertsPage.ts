@@ -1,6 +1,6 @@
 import debugCreator from 'debug';
 import { XData } from 'alpinejs';
-import { Side, Type, UserDataStoreType } from './UserDataStore';
+import { AlertSide, AlertType, UserDataStoreType } from './UserDataStore';
 
 export interface TokenAlertsPageStoreType extends XData {
   active: string | undefined,
@@ -13,7 +13,7 @@ let TokenAlertsStore: TokenAlertsPageStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
 
-export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(): void; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: Type, side: Side, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
+export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(): void; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: AlertType, side: AlertSide, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
   init(): void {
     TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -58,8 +58,8 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
   },
   createTokenAlert(
     baseSymbol: string, 
-    type: Type, 
-    side: Side, 
+    type: AlertType, 
+    side: AlertSide, 
     percent: string, 
     id: number
   ): void {
@@ -95,10 +95,6 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
     })
   },
   parsePercent(value: string): string {
-    if (parseInt(value) >= 10) {
-      return parseFloat(value).toFixed(1)
-    } else {
-      return parseFloat(value).toFixed(2)
-    }
+    return parseFloat(value).toFixed(parseInt(value) >= 10 ? 1 : 2)
   }
 })

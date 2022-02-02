@@ -38,13 +38,13 @@ interface AccountAlert {
 }
 
 enum PriceType {
-  Static,
-  Delta
+  Static = 'static',
+  Delta = 'delta'
 }
 
 enum MetricType {
-  Balance,
-  HealthRatio
+  Balance = 'balance',
+  HealthRatio = 'healthRatio'
 }
 
 // Get Accounts, AccountAlerts, & Account history from storage
