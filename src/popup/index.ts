@@ -11,6 +11,7 @@ import HomePage from './HomePage';
 import NewAccountAlert from './NewAccountAlert';
 import TokenAlertsPage from './TokenAlertsPage';
 import TokenAlertsRow from './TokenAlertsRow';
+import AccountAlerts from './AccountAlerts';
 
 const debug = debugCreator('popup')
 
@@ -44,6 +45,7 @@ Alpine.store('TokenAlertsPage', {
 Alpine.store('AccountPage', {
   triggered: [],
   addingAccount: false,
+  selectedAccount: undefined
 })
 
 Alpine.store('NewAccountAlert', {
@@ -71,18 +73,21 @@ Alpine.bind('navigate', (page: string) => ({
   }
 }))
 
+// @ts-ignore
+Alpine.bind('inspect', (address: string) => ({
+  '@click'() {
+    Alpine.store('AccountPage').selectedAccount = address;
+    debug('Inspecting account: ', address)
+  }
+}))
+
 Alpine.data('Body', Body)
-
 Alpine.data('HomePage', HomePage)
-
 Alpine.data('TokenAlertsPage', TokenAlertsPage)
-
 Alpine.data('TokenAlertsRow', TokenAlertsRow)
-
 Alpine.data('AccountPage', AccountPage)
-
 Alpine.data('AccountRow', AccountRow)
-
+Alpine.data('AccountAlerts', AccountAlerts)
 Alpine.data('NewAccountAlert', NewAccountAlert)
 
 Alpine.plugin(collapse)

@@ -6,23 +6,25 @@ const debug = debugCreator('popup:AccountPage')
 
 export interface AccountPageStoreType extends XData {
   triggered: string[],
-  addingAccount: boolean
+  addingAccount: boolean,
+  selectedAccount: string | undefined
 }
 
 let UserDataStore: UserDataStoreType
 let AccountPageStore: AccountPageStoreType
 
-export default (): { selectedAccount: undefined | string, init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth(healthRatio: number): number | ">100"; } => ({
-  selectedAccount: undefined,
+export default (): { newAlert: boolean, init(): void; addNewAccount(address: string): void; deleteAccount(address: string): void; healthColor(healthRatio: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark"; parseHealth(healthRatio: number): number | ">100"; } => ({
+  newAlert: false,
 
   init(): void {
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
+    debug('UserDataStore: ', JSON.stringify(UserDataStore))
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
-        console.debug(`received message ${request.msg}` )
+        debug(`received message ${request.msg}` )
         if (request.msg === 'alert triggered') {
-          console.info(`Account alert triggered: ${JSON.stringify(request.data.alert)}`)
+          debug(`Account alert triggered: ${JSON.stringify(request.data.alert)}`)
           AccountPageStore.triggered.push(request.data.alert.address)
         }
       }

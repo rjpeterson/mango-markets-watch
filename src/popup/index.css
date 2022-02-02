@@ -6,16 +6,6 @@
   scrollbar-width: thin;
 }
 
-.open {
-  transform: rotate(90deg);
-  transition-duration: 150ms;
-}
-
-.closed {
-  transform: rotate(0deg);
-  transition-duration: 150ms;
-}
-
 /* width */
 ::-webkit-scrollbar {
   width: 8px;
