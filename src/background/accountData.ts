@@ -4,10 +4,14 @@ import { refreshAlarmPeriod } from '.';
 import debugCreator from 'debug';
 import dayjs from 'dayjs';
 
+import objectSupport from "dayjs/plugin/objectSupport";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(objectSupport)
+dayjs.extend(isSameOrBefore)
 const debug = debugCreator('background:accountData')
 
 //alarm period * number of records to keep
-const historicalDataPeriod = refreshAlarmPeriod * 12 * 48 //48 hrs
+const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 * 7 //7 days with 5 mins refresh period
 
 interface AccountInfo {
   healthRatio: number,
@@ -20,18 +24,28 @@ interface Accounts {
 }
 
 interface HistoricalEntry {
-  timestamp?: dayjs.Dayjs,
   accounts: Accounts
+  timestamp: dayjs.Dayjs,
 }
 
-// interface Alert {
-//   address: string,
-//   priceType: 'static' | 'delta',
-//   metricType: 'balance' | 'healthRatio',
-//   triggerValue: number,
-//   deltaValue: number,
-//   timeFrame: number,
-// }
+interface AccountAlert {
+  address: string,
+  priceType: PriceType,
+  metricType: MetricType,
+  triggerValue: number,
+  deltaValue: number,
+  timeFrame: number
+}
+
+enum PriceType {
+  Static,
+  Delta
+}
+
+enum MetricType {
+  Balance,
+  HealthRatio
+}
 
 // Get Accounts, AccountAlerts, & Account history from storage
 // loop through alerts and check if triggered
@@ -40,39 +54,59 @@ function checkAccountAlerts() {
   debug('checking account alerts')
   let counter = 0
   chrome.storage.local.get(['accounts', 'accountAlerts', 'accountHistory'], (result) => {
-    const { accounts, accountAlerts, accountHistory } = result;
+    const accounts: Accounts = result.accounts
+    const accountAlerts: AccountAlert[] = result.accountAlerts
+    const accountHistory: HistoricalEntry[] = result.accountHistory
+
     for (const alert of accountAlerts) {
       debug('checking account alert:', JSON.stringify(alert))
       let triggered = false
       const matchedAccount = accounts[alert.address]
       debug('checking against account:', JSON.stringify(matchedAccount))
-      if (alert.priceType === 'static') {
+      if (!matchedAccount) {
+        debug('could not find matching account')
+        continue
+      }
+      if (alert.priceType === PriceType.Static) {
         debug('priceType static')
-        if (alert.metricType === 'balance') {
+        if (alert.metricType === MetricType.Balance) {
           debug('metric balance')
-          debug('comparing:', matchedAccount.balance, 'less than or equal to', parseFloat(alert.triggerValue))
-          matchedAccount.balance <= parseFloat(alert.triggerValue) ? triggered = true : undefined
+          debug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
+          matchedAccount.balance <= alert.triggerValue ? triggered = true : undefined
         } else { //metricType === 'healthRatio'
           debug('metric healthRatio')
-          debug('comparing:', matchedAccount.healthRatio, 'less than or equal to', parseFloat(alert.triggerValue))
-          matchedAccount.healthRatio <= parseFloat(alert.triggerValue) ? triggered = true : undefined
+          debug('comparing:', matchedAccount.healthRatio, 'less than or equal to', alert.triggerValue)
+          matchedAccount.healthRatio <= alert.triggerValue ? triggered = true : undefined
         }
       } else {//priceType === "delta"
-        const historySlot = alert.timeFrame / historicalDataPeriod;
-        const historicalAccount = accountHistory[historySlot][alert.address]
-        if (alert.metricType === 'balance') {
+        debug('priceType delta: ', alert.timeFrame)
+        const historicalAccount = accountHistory // find first timestamp that is longer ago than alert.timeFrame and return matching account data
+          .find(slot => {slot.timestamp.isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))})
+          .accounts[alert.address]
+        debug('comparing against historical account: ', JSON.stringify(historicalAccount))
+        if (alert.metricType === MetricType.Balance) {
+          debug('metric balance')
           const balanceDiff = Math.abs(historicalAccount.balance - matchedAccount.balance);
           balanceDiff >= alert.deltaValue ? triggered = true : undefined
         } else {//metricType === 'healthRatio'
+          debug('metric healthratio')
           const healthRatioDiff = Math.abs(historicalAccount.healthRatio - matchedAccount.healthRatio);
           healthRatioDiff >= alert.deltaValue ? triggered = true : undefined
         }
       }
       if (triggered) {
-        debug('accounts alert triggered:', alert)
+        debug('accounts alert triggered:', JSON.stringify(alert))
         counter += 1
         chrome.runtime.sendMessage({
           msg: 'alert triggered',
+          data: {
+            alert: alert
+          }
+        })
+      } else {
+        debug('accounts alert not triggered:', JSON.stringify(alert))
+        chrome.runtime.sendMessage({
+          msg: 'alert untriggered',
           data: {
             alert: alert
           }
@@ -135,7 +169,7 @@ function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
   debug('storing fetch data in history')
   chrome.storage.local.get(['accountsHistory'], (result) => {
     let accountsHistory = result.accountsHistory
-    if (accountsHistory.length >= historicalDataPeriod) {
+    if (accountsHistory.length && accountsHistory.length >= historicalDataPeriod) {
       accountsHistory.pop();
     }
     accountsHistory.unshift(entry)

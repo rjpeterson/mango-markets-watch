@@ -31,7 +31,7 @@ interface TokenAlert {
   side: AlertSide,
   percent: number
 }
-type TokensInfo = Token[]
+export type TokensInfo = Token[]
 
 const checkToggles = (tokensInfo: TokensInfo) => {
   chrome.storage.local.get(["toggles"], (result) => {
@@ -91,7 +91,7 @@ const checkTokenAlerts = (tokensInfo: TokensInfo) => {
             JSON.stringify(token)
           );
           if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
-            console.warn(
+            debug(
               `${tokenAlert.type} rate of ${token.baseSymbol} is not a number`
             );
             return;
@@ -254,7 +254,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         accountAlerts.push(request.data);
         chrome.storage.local.set({accountAlerts: accountAlerts})
         storeUpdatedAccounts()
-        sendResponse({ msg: "accountAlerts updated" })
+        sendResponse({
+           msg: "accountAlerts updated",
+           data: accountAlerts
+          })
       })
       break;
     case undefined:
