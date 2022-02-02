@@ -9,6 +9,7 @@ import {
 import { Connection, PublicKey } from "@solana/web3.js";
 import BN from 'bn.js';
 import { establishConnection, ClusterData, Market } from './connection';
+import { TokensInfo } from './index'
 import debugCreator from 'debug';
 
 const debug = debugCreator('background:tokenData')
@@ -95,7 +96,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
       });
 
       if (!rootBank) {
-        throw new Error("rootBanks is undefined");
+        throw new Error("rootBank is undefined");
       }
       return {
         baseSymbol: token.symbol,
@@ -115,7 +116,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
   }
 }
 
-export async function getTokenInfo_v3() {
+export async function getTokenInfo_v3(): Promise<TokensInfo> {
   debug(`getting v3 token info...`);
   const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
 
