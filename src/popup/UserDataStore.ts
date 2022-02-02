@@ -45,7 +45,7 @@ interface Accounts {
 interface AccountAlert {
   address: string,
   priceType: PriceType,
-  metric: MetricType,
+  metricType: MetricType,
   triggerValue: number,
   deltaValue: number,
   timeFrame: number

@@ -27,7 +27,7 @@ const debug = debugCreator('popup:NewAccountAlert')
 
 let NewAccountAlertStore: NewAccountAlertStoreType
 
-export default (address: string): { priceType: "static" | "delta"; metricType: "balance" | "healthRatio"; init(): void; showInputError(): void; validateInput(): void; addAccountAlert(): void; } => ({
+export default (): { priceType: "static" | "delta"; metricType: "balance" | "healthRatio"; init(): void; showInputError(): void; validateInput(): void; addAccountAlert(address: string): void; } => ({
   get priceType() {
     switch (NewAccountAlertStore.priceType) {
       case PriceType.Static: return 'static';
@@ -84,22 +84,25 @@ export default (address: string): { priceType: "static" | "delta"; metricType: "
     this.showInputError()
   },
 
-  addAccountAlert(): void {
+  addAccountAlert(address: string): void {
+    const newAlert = {
+      address: address,
+      priceType: NewAccountAlertStore.priceType,
+      metricType: NewAccountAlertStore.metricType,
+      triggerValue: NewAccountAlertStore.triggerValue,
+      deltaValue: NewAccountAlertStore.deltaValue,
+      timeFrame: NewAccountAlertStore.timeFrame
+    }
+    debug('creating new account alert: ', JSON.stringify(newAlert))
     chrome.runtime.sendMessage({
       msg: 'add account alert',
-      data: {
-        address: address,
-        priceType: NewAccountAlertStore.priceType,
-        metricType: NewAccountAlertStore.metricType,
-        triggerValue: NewAccountAlertStore.triggerValue,
-        deltaValue: NewAccountAlertStore.deltaValue,
-        timeFrame: NewAccountAlertStore.timeFrame
-      }
+      data: newAlert
     }, function(response) {
       if (!response) {
         debug('could not add account alert')
       } else {
         debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
+        Alpine.store('UserData').accountAlerts = response.data
       }
     })
   }
