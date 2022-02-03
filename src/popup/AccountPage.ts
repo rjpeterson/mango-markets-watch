@@ -23,9 +23,12 @@ export default (): { newAlert: boolean; init(): void; addNewAccount(address: str
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         debug(`received message ${request.msg}` )
-        if (request.msg === 'alert triggered') {
+        if (request.msg === 'accountAlert triggered') {
           debug(`Account alert triggered: ${JSON.stringify(request.data.alert)}`)
-          AccountPageStore.triggered.push(request.data.alert.address)
+          AccountPageStore.triggered.push(request.data.alert.id)
+        } else if (request.msg === 'accountAlert untriggered') {
+          debug(`Account alert untriggered: ${JSON.stringify(request.data.alert)}`)
+          AccountPageStore.triggered = AccountPageStore.triggered.filter((id: string) => id !== request.data.alert.id)
         }
       }
     )

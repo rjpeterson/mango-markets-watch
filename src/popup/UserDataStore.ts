@@ -43,6 +43,7 @@ interface Accounts {
 }
 
 interface AccountAlert {
+  id: number,
   address: string,
   priceType: PriceType,
   metricType: MetricType,

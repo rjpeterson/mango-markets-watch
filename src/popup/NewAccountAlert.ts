@@ -1,5 +1,6 @@
 import { XData } from 'alpinejs';
 import debugCreator from 'debug';
+import { UserDataStoreType } from './UserDataStore';
 
 export interface NewAccountAlertStoreType extends XData {
   priceType: PriceType,
@@ -25,34 +26,17 @@ export enum MetricType {
 const debug = debugCreator('popup:NewAccountAlert')
 
 let NewAccountAlertStore: NewAccountAlertStoreType
+let UserDataStore: UserDataStoreType
 
 export default () => ({
-  // get priceType() {
-  //   switch (NewAccountAlertStore.priceType) {
-  //     case PriceType.Static: return 'static';
-  //     case PriceType.Delta: return 'delta';
-  //   }
-  // },
-  // set priceType(value) {
-  //   switch (value) {
-  //     case 'static': NewAccountAlertStore.priceType = PriceType.Static;
-  //     case 'delta': NewAccountAlertStore.priceType = PriceType.Delta;
-  //   }
-  // },
-  // get metricType() {
-  //   switch (NewAccountAlertStore.metricType) {
-  //     case MetricType.Balance: return 'balance';
-  //     case MetricType.HealthRatio: return 'healthRatio';
-  //   }
-  // },
-  // set metricType(value) {
-  //   switch (value) {
-  //     case 'balance': NewAccountAlertStore.metricType = MetricType.Balance;
-  //     case 'healthRatio': NewAccountAlertStore.metricType = MetricType.HealthRatio;
-  //   }
-  // },
+
   init(): void {
     NewAccountAlertStore = Alpine.store('NewAccountAlert') as NewAccountAlertStoreType
+    UserDataStore = Alpine.store('UserData') as UserDataStoreType
+  },
+  generateId(): number {
+    const last = UserDataStore.accountAlerts.at(-1)
+    return last ? last.id + 1 : 0
   },
   showInputError(): void {
     if (!NewAccountAlertStore.timeFrameValid) {
@@ -77,6 +61,7 @@ export default () => ({
 
   addAccountAlert(address: string): void {
     const newAlert = {
+      id: this.generateId(),
       address: address,
       priceType: NewAccountAlertStore.priceType,
       metricType: NewAccountAlertStore.metricType,
@@ -93,7 +78,7 @@ export default () => ({
         debug('could not add account alert')
       } else {
         debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
-        Alpine.store('UserData').accountAlerts = response.data
+        UserDataStore.accountAlerts = response.data
       }
     })
   }

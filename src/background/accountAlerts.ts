@@ -11,6 +11,7 @@ dayjs.extend(isSameOrBefore)
 const debug = debugCreator('background:accountAlerts')
 
 export interface AccountAlert {
+  id: number,
   address: string,
   priceType: PriceType,
   metricType: MetricType,
@@ -71,11 +72,19 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
       } else {//priceType.delta
         debug('priceType delta: ', alert.timeFrame)
         // find first timestamp that is longer ago than alert.timeFrame and return matching account data
-        const historicalAccount = accountsHistory 
+        const historicalDate = accountsHistory 
           .find(slot => {
-            return slot.timestamp.isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))
+            return dayjs(slot.timestamp).isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))
           })
-          .accounts[alert.address]
+        if (!historicalDate) {
+          debug('not enought historical data for timeframe: ', alert.timeFrame)
+          continue;
+        };
+        const historicalAccount = historicalDate.accounts[alert.address]
+        if (!historicalAccount) {
+          debug('no data for account ', alert.address, ' in compared historical entry')
+          continue;
+        };
         debug('comparing against historical account: ', JSON.stringify(historicalAccount))
         if (alert.metricType === MetricType.Balance) {
           debug('metric balance')
@@ -91,7 +100,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
         debug('accounts alert triggered:', JSON.stringify(alert))
         counter += 1
         chrome.runtime.sendMessage({
-          msg: 'alert triggered',
+          msg: 'accountAlert triggered',
           data: {
             alert: alert
           }
@@ -99,7 +108,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
       } else {
         debug('accounts alert not triggered:', JSON.stringify(alert))
         chrome.runtime.sendMessage({
-          msg: 'alert untriggered',
+          msg: 'accountAlert untriggered',
           data: {
             alert: alert
           }
