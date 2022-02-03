@@ -50,19 +50,21 @@ const onUntriggered = (tokenAlertId: string) => {
   });
 };
 
-export const updateTokenAlerts = (tokenAlerts:  TokenAlert[], sendResponse: Function) => {
+export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function) => {
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
-      getTokenInfo_v3().then((result) => {checkTokenAlerts(result)});
-      sendResponse({ msg: "tokenAlerts updated successuflly" });
+  const tokensInfo = await getTokenInfo_v3()
+  chrome.storage.local.get(['tokenAlerts', 'tokenAlertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.tokenAlertTypes)
+  })
+  sendResponse({ msg: "tokenAlerts updated successuflly" });
 }
 
-export const checkTokenAlerts = (tokensInfo: TokensInfo) => {
+export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], tokenAlertTypes: TokenAlertTypes) => {
   debug("calling checkTokenAlerts...");
-  chrome.storage.local.get(["tokenAlerts", "tokenAlertTypes"], (response) => {
-    debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'tokenAlertTypes:', JSON.stringify(response.tokenAlertTypes))
+    // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'tokenAlertTypes:', JSON.stringify(response.tokenAlertTypes))
     let triggeredAlerts = 0;
-    for (const entry in response.tokenAlerts) {
-      const tokenAlert : TokenAlert = response.tokenAlerts[entry];
+    for (const entry in tokenAlerts) {
+      const tokenAlert : TokenAlert = tokenAlerts[entry];
       tokensInfo
         .filter((token) => token.baseSymbol === tokenAlert.baseSymbol)
         .forEach((token) => {
@@ -83,7 +85,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo) => {
               triggeredAlerts += 1;
               debug(`token notification triggered`);
 
-              onTriggered(entry, tokenAlert, response.tokenAlertTypes);
+              onTriggered(entry, tokenAlert, tokenAlertTypes);
             } else {
               onUntriggered(entry);
               debug("conditions not met");
@@ -93,7 +95,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo) => {
               triggeredAlerts += 1;
               debug(`token notification triggered`);
 
-              onTriggered(entry, tokenAlert, response.tokenAlertTypes);
+              onTriggered(entry, tokenAlert, tokenAlertTypes);
             } else {
               onUntriggered(entry);
               debug("conditions not met");
@@ -101,10 +103,9 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo) => {
           }
         });
     }
-    triggeredAlerts > 0 && response.tokenAlertTypes.browser === true
+    triggeredAlerts > 0 && tokenAlertTypes.browser === true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
       : chrome.browserAction.setBadgeText({ text: undefined });
-  });
 };
 
 export const changeTokenAlertType = (browser: boolean, os: boolean) => {
@@ -124,7 +125,7 @@ export const changeTokenAlertType = (browser: boolean, os: boolean) => {
           os: os,
         },
       });
-      chrome.storage.local.get(['tokensInfo'], (result) => {
-        checkTokenAlerts(result.tokensInfo)
+      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'tokenAlertTypes'], (result) => {
+        checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.tokenAlertTypes)
       })
 }

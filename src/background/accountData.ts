@@ -86,7 +86,7 @@ function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
     accounts: accounts
   }
   debug('storing fetch data in history')
-  chrome.storage.local.get(['accountsHistory'], (result) => {
+  chrome.storage.local.get(['accounts', 'accountAlerts', 'accountsHistory'], (result) => {
     let accountsHistory = result.accountsHistory
     if (accountsHistory.length && accountsHistory.length >= historicalDataPeriod) {
       accountsHistory.pop();
@@ -94,7 +94,11 @@ function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
     accountsHistory.unshift(entry)
     chrome.storage.local.set({accountsHistory: accountsHistory})
     if (checkAlerts) { 
-      checkAccountAlerts()
+      checkAccountAlerts(
+        result.accounts, 
+        result.accountsAlerts, 
+        result.accountsHistory
+      )
     }
   })
 }

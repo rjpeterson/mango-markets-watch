@@ -1,6 +1,6 @@
 import debugCreator from 'debug';
 
-import { addAccountAlert } from './accountAlerts';
+import { addAccountAlert, checkAccountAlerts } from './accountAlerts';
 import { updateAccountsData } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import { checkToggles } from './toggles';
@@ -15,27 +15,30 @@ const debug = debugCreator('background')
 const refreshTokensInfo = async (sendResponse?: Function) => {
   const tokensInfo = await getTokenInfo_v3();
   chrome.storage.local.set({ tokensInfo: tokensInfo });
-  checkTokenAlerts(tokensInfo);
-  checkToggles(tokensInfo);
+  chrome.storage.local.get(['tokenAlerts', 'tokenAlertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.tokenAlertTypes);
+    checkToggles(tokensInfo);
 
-  if (sendResponse) {
-    sendResponse(tokensInfo);
-  } else {
-    chrome.runtime.sendMessage({
-      msg: "tokensInfo refreshed",
-      data: {
-        tokensInfo: tokensInfo,
-      },
-    });
-  }
+    if (sendResponse) {
+      sendResponse(tokensInfo);
+    } else {
+      chrome.runtime.sendMessage({
+        msg: "tokensInfo refreshed",
+        data: {
+          tokensInfo: tokensInfo,
+        },
+      });
+    }
+  })
 };
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(
-    ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page", "accountAlerts"],
+    ["tokensInfo", "toggles", "tokenAlerts", "tokenAlertTypes", "accounts", "page", "accountAlerts", "accountsHistory"],
     (response) => {
-      checkTokenAlerts(response.tokensInfo);
+      checkTokenAlerts(response.tokensInfo, response.tokenAlerts, response.tokenAlertTypes);
+      checkAccountAlerts(response.accounts, response.accountAlerts, response.accountsHistory)
       sendResponse(response);
     }
   );

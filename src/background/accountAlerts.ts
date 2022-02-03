@@ -45,14 +45,9 @@ export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function) 
 // Get Accounts, AccountAlerts, & Account history from storage
 // loop through alerts and check if triggered
 // if triggered, send message to popup
-export function checkAccountAlerts() {
+export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAlert[], accountsHistory: HistoricalEntry[]) {
   debug('checking account alerts')
   let counter = 0
-  chrome.storage.local.get(['accounts', 'accountAlerts', 'accountHistory'], (result) => {
-    const accounts: Accounts = result.accounts
-    const accountAlerts: AccountAlert[] = result.accountAlerts
-    const accountHistory: HistoricalEntry[] = result.accountHistory
-
     for (const alert of accountAlerts) {
       debug('checking account alert:', JSON.stringify(alert))
       let triggered = false
@@ -75,7 +70,7 @@ export function checkAccountAlerts() {
         }
       } else {//priceType === "delta"
         debug('priceType delta: ', alert.timeFrame)
-        const historicalAccount = accountHistory // find first timestamp that is longer ago than alert.timeFrame and return matching account data
+        const historicalAccount = accountsHistory // find first timestamp that is longer ago than alert.timeFrame and return matching account data
           .find(slot => {slot.timestamp.isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))})
           .accounts[alert.address]
         debug('comparing against historical account: ', JSON.stringify(historicalAccount))
@@ -109,5 +104,4 @@ export function checkAccountAlerts() {
       }
     }
     debug(counter, 'alerts triggered')
-  })
 }
