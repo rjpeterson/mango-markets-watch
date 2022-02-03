@@ -6,23 +6,23 @@ let AppDataStore: AppDataStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:Body')
 
-export default (): { page: "account" | "alert" | "home" | "settings"; init(): void; } => ({
-  get page() {
-    switch (AppDataStore.page) {
-      case Page.Account: return 'account';
-      case Page.Alert: return 'alert';
-      case Page.Home: return 'home';
-      case Page.Settings: return 'settings'
-    }
-  },
-  set page(value) {
-    switch (value) {
-      case 'account': AppDataStore.page = Page.Account;
-      case 'alert': AppDataStore.page = Page.Alert;
-      case 'home': AppDataStore.page = Page.Home;
-      case 'settings': AppDataStore.page = Page.Settings;
-    }
-  },
+export default (): { init(): void; } => ({
+  // get page() {
+  //   switch (AppDataStore.page) {
+  //     case Page.Account: return 'account';
+  //     case Page.Alert: return 'alert';
+  //     case Page.Home: return 'home';
+  //     case Page.Settings: return 'settings'
+  //   }
+  // },
+  // set page(value) {
+  //   switch (value) {
+  //     case 'account': AppDataStore.page = Page.Account;
+  //     case 'alert': AppDataStore.page = Page.Alert;
+  //     case 'home': AppDataStore.page = Page.Home;
+  //     case 'settings': AppDataStore.page = Page.Settings;
+  //   }
+  // },
   init(): void {
     AppDataStore = Alpine.store('AppData') as AppDataStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -50,7 +50,7 @@ export default (): { page: "account" | "alert" | "home" | "settings"; init(): vo
       function(request, sender, sendResponse) {
         debug(`received message ${request.msg}` )
         switch (request.msg) {
-          case 'tokensInfo updated': AppDataStore.tokensInfo = request.data.tokensInfo;
+          case 'tokensInfo refreshed': AppDataStore.tokensInfo = request.data.tokensInfo;
           case 'accounts data updated': UserDataStore.accounts = request.data.accounts;
           default: null
         }

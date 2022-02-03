@@ -54,8 +54,6 @@ Alpine.store('NewAccountAlert', {
   triggerValue: 0,
   deltaValue: 0,
   timeFrame: 0,
-  triggerValid: true,
-  deltaValid: true,
   timeFrameValid: true,
   inputError: false,
 })

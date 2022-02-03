@@ -13,11 +13,14 @@ export default () => ({
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
   },
   getAccountName(): string {
+    let length;
+    let shortAddress;
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
-    const length = AccountPageStore.selectedAccount.length;
-    const shortAddress = AccountPageStore.selectedAccount.substring(0, 4) + '...' + AccountPageStore.selectedAccount.substring(length - 4)
     debug('selected account: ', AccountPageStore.selectedAccount, JSON.stringify(selected))
+    
     if (selected) {
+      length = AccountPageStore.selectedAccount.length
+      shortAddress = AccountPageStore.selectedAccount.substring(0, 4) + '...' + AccountPageStore.selectedAccount.substring(length - 4)
       if (selected.name) {
         return `${selected.name} - ${shortAddress}`
       } else {

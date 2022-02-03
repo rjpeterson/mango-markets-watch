@@ -464,7 +464,7 @@
                   <div>Type</div>
                   <div>Metric</div>
                   <div>Price/Delta</div>
-                  <div>Time</div>
+                  <div>Delta Period</div>
                 </div>
                 <template x-for="alert in getAlertsForAccount()">
                   <div class="flex flex-row justify-between">
@@ -480,8 +480,14 @@
                     </div>
                     <div x-text="alert.priceType"></div>
                     <div x-text="alert.metricType"></div>
-                    <div x-text="alert.priceType === 'static' ? alert.triggerPrice : alert.deltaValue"></div>
-                    <div x-text="alert.timeFrame"></div>
+                    <div>
+                      <span x-text="alert.priceType === 'static' ? '$' : 'Δ'"></span>
+                      <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
+                    </div>
+                    <div>
+                      <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
+                      <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
+                    </div>
                   </div>
                 </template>
               </div>
@@ -578,9 +584,7 @@
                     @change="validateInput()"
                   >
 
-                  <div x-show="$store.NewAccountAlert.inputError">
-                    input real numbers plz
-                  </div>
+                  <div x-show="$store.NewAccountAlert.inputError" x-text="$store.NewAccountAlert.errorText"></div>
                   <button 
                     x-show="!$store.NewAccountAlert.inputError"
                     @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountPage.newAlert = false"
