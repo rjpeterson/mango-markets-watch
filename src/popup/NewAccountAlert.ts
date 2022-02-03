@@ -64,7 +64,7 @@ export default () => ({
   validateInput(): void {
     debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore))
 
-    if (NewAccountAlertStore.timeFrame <= 0) {
+    if (NewAccountAlertStore.priceType === PriceType.Delta && NewAccountAlertStore.timeFrame <= 0) {
       NewAccountAlertStore.timeFrameValid = false
       NewAccountAlertStore.errorText = 'TimeFrame must be > 0'
     } else {
