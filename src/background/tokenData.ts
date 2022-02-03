@@ -1,19 +1,23 @@
-import _ from "lodash-joins";
-import {
-  GroupConfig,
-  I80F48,
-  PerpMarket,
-  MangoClient,
-  MangoGroup
-} from "@blockworks-foundation/mango-client-v3";
-import { Connection, PublicKey } from "@solana/web3.js";
 import BN from 'bn.js';
-import { establishConnection, ClusterData, Market } from './connection';
-import { TokensInfo } from './index'
 import debugCreator from 'debug';
+import _ from 'lodash-joins';
+
+import {
+    GroupConfig, I80F48, MangoClient, MangoGroup, PerpMarket
+} from '@blockworks-foundation/mango-client-v3';
+import { Connection, PublicKey } from '@solana/web3.js';
+
+import { ClusterData, establishConnection, Market } from './connection';
 
 const debug = debugCreator('background:tokenData')
 
+interface Token {
+  baseSymbol: string,
+  deposit: string,
+  borrow: string,
+  funding: string
+}
+export type TokensInfo = Token[]
 
 interface PerpStat {
   longFunding: string;
