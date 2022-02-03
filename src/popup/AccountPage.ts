@@ -38,8 +38,8 @@ export default (): { newAlert: boolean; init(): void; addNewAccount(address: str
         accounts: UserDataStore.accounts
       }
     }, function(response) {
-      if (!response) {
-        debug('could not update accounts')
+      if (chrome.runtime.lastError) {
+        debug('could not update accounts: ', chrome.runtime.lastError)
       }
       UserDataStore.accounts = response.data.accounts
       debug(`accounts updated: ${JSON.stringify(response)}`)

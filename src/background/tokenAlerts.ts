@@ -50,7 +50,7 @@ const onUntriggered = (tokenAlertId: string) => {
   });
 };
 
-export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function) => {
+export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function): Promise<void> => {
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
   const tokensInfo = await getTokenInfo_v3()
   chrome.storage.local.get(['tokenAlerts', 'tokenAlertTypes'], (result) => {
@@ -59,7 +59,7 @@ export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse
   sendResponse({ msg: "tokenAlerts updated successuflly" });
 }
 
-export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], tokenAlertTypes: TokenAlertTypes) => {
+export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], tokenAlertTypes: TokenAlertTypes): void => {
   debug("calling checkTokenAlerts...");
     // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'tokenAlertTypes:', JSON.stringify(response.tokenAlertTypes))
     let triggeredAlerts = 0;
@@ -108,7 +108,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
       : chrome.browserAction.setBadgeText({ text: undefined });
 };
 
-export const changeTokenAlertType = (browser: boolean, os: boolean) => {
+export const changeTokenAlertType = (browser: boolean, os: boolean): void => {
   !browser ? chrome.browserAction.setBadgeText({ text: undefined }) : undefined;
       if(!os) {
         chrome.notifications.getAll((notifications) => {

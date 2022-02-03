@@ -29,7 +29,7 @@ enum MetricType {
   HealthRatio = 'healthRatio'
 }
 
-export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function) => {
+export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function): void => {
   chrome.storage.local.get({'accountAlerts': []}, (response) => {
     let accountAlerts = response.accountAlerts;
     accountAlerts.push(newAlert);
@@ -45,7 +45,7 @@ export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function) 
 // Get Accounts, AccountAlerts, & Account history from storage
 // loop through alerts and check if triggered
 // if triggered, send message to popup
-export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAlert[], accountsHistory: HistoricalEntry[]) {
+export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAlert[], accountsHistory: HistoricalEntry[]): void {
   debug('checking account alerts')
   let counter = 0
     for (const alert of accountAlerts) {
@@ -63,22 +63,25 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
           debug('metric balance')
           debug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
           matchedAccount.balance <= alert.triggerValue ? triggered = true : undefined
-        } else { //metricType === 'healthRatio'
+        } else { //metricType.healthRatio
           debug('metric healthRatio')
           debug('comparing:', matchedAccount.healthRatio, 'less than or equal to', alert.triggerValue)
           matchedAccount.healthRatio <= alert.triggerValue ? triggered = true : undefined
         }
-      } else {//priceType === "delta"
+      } else {//priceType.delta
         debug('priceType delta: ', alert.timeFrame)
-        const historicalAccount = accountsHistory // find first timestamp that is longer ago than alert.timeFrame and return matching account data
-          .find(slot => {slot.timestamp.isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))})
+        // find first timestamp that is longer ago than alert.timeFrame and return matching account data
+        const historicalAccount = accountsHistory 
+          .find(slot => {
+            return slot.timestamp.isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))
+          })
           .accounts[alert.address]
         debug('comparing against historical account: ', JSON.stringify(historicalAccount))
         if (alert.metricType === MetricType.Balance) {
           debug('metric balance')
           const balanceDiff = Math.abs(historicalAccount.balance - matchedAccount.balance);
           balanceDiff >= alert.deltaValue ? triggered = true : undefined
-        } else {//metricType === 'healthRatio'
+        } else {//metricType.healthRatio
           debug('metric healthratio')
           const healthRatioDiff = Math.abs(historicalAccount.healthRatio - matchedAccount.healthRatio);
           healthRatioDiff >= alert.deltaValue ? triggered = true : undefined
