@@ -35,7 +35,8 @@ export default () => ({
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
   },
   generateId(): number {
-    const last = UserDataStore.accountAlerts.at(-1)
+    let last = UserDataStore.accountAlerts.at(-1)
+    debug('last used account alert id: ', last)
     return last ? last.id + 1 : 0
   },
   showInputError(): void {
