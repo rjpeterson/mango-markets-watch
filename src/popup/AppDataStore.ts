@@ -4,7 +4,7 @@ export interface AppDataStoreType extends XData {
   page: Page,
   tokensInfo: TokenInfo[],
   headerTexts: {
-    Page: HeaderTexts
+    [key in Page]: string
   },
 }
 
@@ -20,11 +20,4 @@ export enum Page {
   Alert = 'alert',
   Account = 'account',
   Settings = 'settings'
-}
-
-export enum HeaderTexts {
-  Home = 'Mango Markets Watch',
-  Alert = 'Token Alerts',
-  Account = 'Mango Accounts',
-  Settings = 'Token Settings'
 }

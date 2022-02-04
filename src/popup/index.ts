@@ -12,6 +12,7 @@ import NewAccountAlert from './NewAccountAlert';
 import TokenAlertsPage from './TokenAlertsPage';
 import TokenAlertsRow from './TokenAlertsRow';
 import AccountAlerts from './AccountAlerts';
+import { Page } from './AppDataStore';
 
 const debug = debugCreator('popup')
 
@@ -25,13 +26,13 @@ Alpine.store('UserData', {
 })
 
 Alpine.store('AppData', {
-  page: 'home',
+  page: Page.Home,
   tokensInfo:[],
   headerTexts: {
     'home': 'Mango Markets Watch',
     'alert': 'Token Alerts',
     'account': 'Mango Accounts',
-    'settings': 'Token Settings'
+    'settings': 'Settings'
   },
 })
 
