@@ -1,13 +1,28 @@
 import { XData } from 'alpinejs';
 import debugCreator from 'debug';
+import { MetricType, PriceType } from './NewAccountAlert';
 import { UserDataStoreType } from './UserDataStore';
 
 const debug = debugCreator('popup:AccountPage')
 
 export interface AccountPageStoreType extends XData {
-  triggered: string[],
+  triggered: {
+    [address: string]: {
+      [id: number]: boolean
+    }
+  },
   addingAccount: boolean,
   selectedAccount: string | undefined
+}
+
+interface AccountAlert {
+  id: number,
+  address: string,
+  priceType: PriceType,
+  metricType: MetricType,
+  triggerValue: number,
+  deltaValue: number,
+  timeFrame: number
 }
 
 let UserDataStore: UserDataStoreType
@@ -18,17 +33,25 @@ export default (): { newAlert: boolean; init(): void; addNewAccount(address: str
 
   init(): void {
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
-    debug('UserDataStore: ', JSON.stringify(UserDataStore))
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
+    // debug('UserDataStore: ', JSON.stringify(UserDataStore))
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         debug(`received message ${request.msg}` )
         if (request.msg === 'accountAlert triggered') {
-          debug(`Account alert triggered: ${JSON.stringify(request.data.alert)}`)
-          AccountPageStore.triggered.push(request.data.alert.id)
+          const alert: AccountAlert = request.data.alert
+          debug('Account alert triggered: ',JSON.stringify(request.data.alert))
+          debug('Current triggered array: ', JSON.stringify(AccountPageStore.triggered))
+          AccountPageStore.triggered[alert.address] = {
+            [alert.id]: true
+          }
         } else if (request.msg === 'accountAlert untriggered') {
-          debug(`Account alert untriggered: ${JSON.stringify(request.data.alert)}`)
-          AccountPageStore.triggered = AccountPageStore.triggered.filter((id: string) => id !== request.data.alert.id)
+          const alert: AccountAlert = request.data.alert
+          debug('Account alert untriggered: ',JSON.stringify(request.data.alert))
+          debug('Current triggered array: ', JSON.stringify(AccountPageStore.triggered))
+          AccountPageStore.triggered[alert.address] = {
+            [alert.id]: false
+          }
         }
       }
     )

@@ -43,7 +43,7 @@ Alpine.store('TokenAlertsPage', {
 })
 
 Alpine.store('AccountPage', {
-  triggered: [],
+  triggered: {},
   addingAccount: false,
   selectedAccount: undefined
 })
