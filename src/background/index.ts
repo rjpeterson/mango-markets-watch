@@ -1,47 +1,30 @@
 import debugCreator from 'debug';
 
 import { addAccountAlert, checkAccountAlerts } from './accountAlerts';
-import { updateAccountsData } from './accountData';
+import { updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
-import { checkToggles } from './toggles';
-import { changeTokenAlertType, checkTokenAlerts, updateTokenAlerts } from './tokenAlerts';
-import { getTokenInfo_v3 } from './tokenData';
+import { changeAlertType, checkTokenAlerts, updateTokenAlerts } from './tokenAlerts';
+import { refreshTokensInfo } from './tokenData';
+
+export interface AlertTypes {
+  browser: boolean,
+  os: boolean
+}
 
 localStorage.debug = '*';
 const debug = debugCreator('background:index')
 
-// ONSTARTUP: get token info & send to storage
-// ONALARM: get token info, send to storage, send to popup
-const refreshTokensInfo = async (sendResponse?: Function) => {
-  const tokensInfo = await getTokenInfo_v3();
-  chrome.storage.local.set({ tokensInfo: tokensInfo });
-  chrome.storage.local.get(['tokenAlerts', 'tokenAlertTypes'], (result) => {
-    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.tokenAlertTypes);
-    checkToggles(tokensInfo);
-
-    if (sendResponse) {
-      sendResponse(tokensInfo);
-    } else {
-      chrome.runtime.sendMessage({
-        msg: "tokensInfo refreshed",
-        data: {
-          tokensInfo: tokensInfo,
-        },
-      });
-    }
-  })
-};
-
-// ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, getSingleVersion, send to storage, send response, display fresh data
+// ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
+
   chrome.storage.local.get(null, (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
       return
     }
     debug('onpopup fetched storage: ', JSON.stringify(result))
-    checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.tokenAlertTypes);
-    checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory)
+    checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     sendResponse(result);
   });
 };
@@ -53,7 +36,7 @@ chrome.runtime.onInstalled.addListener(() => {
     "tokensInfo": [], 
     "toggles": {},
     "tokenAlerts": {},
-    "tokenAlertTypes": {browser: true, os: true},
+    "alertTypes": {browser: true, os: true},
     "accounts": {},
     "accountsHistory": [],
     "accountAlerts": []
@@ -74,6 +57,7 @@ chrome.runtime.onStartup.addListener(() => {
   debug("onStartup....");
   debug("refreshing tokens info...");
   refreshTokensInfo();
+  updateAndStoreAccounts();
 });
 
 // listen for various messages from popup
@@ -98,7 +82,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       updateTokenAlerts(request.data.tokenAlerts, sendResponse)
       break;
     case "change tokenAlert type":
-      changeTokenAlertType(request.data.browser, request.data.os)
+      changeAlertType(request.data.browser, request.data.os)
       return false;
     case "update accounts":
       debug('recieved message: update accounts')

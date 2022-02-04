@@ -8,6 +8,8 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js';
 
 import { ClusterData, establishConnection, Market } from './connection';
+import { checkTokenAlerts } from './tokenAlerts';
+import { checkToggles } from './toggles';
 
 const debug = debugCreator('background:tokenData')
 
@@ -148,3 +150,24 @@ export async function getTokenInfo_v3(): Promise<TokensInfo> {
   return res;
 }
 
+// ONSTARTUP: get token info & send to storage
+// ONALARM: get token info, send to storage, send to popup
+export const refreshTokensInfo = async (sendResponse?: Function) => {
+  const tokensInfo = await getTokenInfo_v3();
+  chrome.storage.local.set({ tokensInfo: tokensInfo });
+  chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkToggles(tokensInfo);
+
+    if (sendResponse) {
+      sendResponse(tokensInfo);
+    } else {
+      chrome.runtime.sendMessage({
+        msg: "tokensInfo refreshed",
+        data: {
+          tokensInfo: tokensInfo,
+        },
+      });
+    }
+  })
+};

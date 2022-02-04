@@ -1,29 +1,26 @@
 import debugCreator from 'debug';
+import { AlertTypes } from '.';
 import { getTokenInfo_v3, TokensInfo } from './tokenData';
 
 const debug = debugCreator('background:tokenAlerts')
 
-enum AlertType {
+enum TokenRateType {
   Borrow = 'borrow',
   Deposit = 'deposit',
-  Fundung = 'funding'
+  Funding = 'funding'
 }
 enum AlertSide {
   Above = 'above',
   Below = 'below'
 }
-interface TokenAlertTypes {
-    browser: boolean,
-    os: boolean
-}
 interface TokenAlert {
   baseSymbol: string,
-  type: AlertType,
+  type: TokenRateType,
   side: AlertSide,
   percent: number
 }
-const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, tokenAlertTypes: TokenAlertTypes) => {
-  if (tokenAlertTypes.os) {
+const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
+  if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
       iconUrl: "dist/icons/mngo.svg",
@@ -53,15 +50,15 @@ const onUntriggered = (tokenAlertId: string) => {
 export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function): Promise<void> => {
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
   const tokensInfo = await getTokenInfo_v3()
-  chrome.storage.local.get(['tokenAlerts', 'tokenAlertTypes'], (result) => {
-    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.tokenAlertTypes)
+  chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes)
   })
   sendResponse({ msg: "tokenAlerts updated successuflly" });
 }
 
-export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], tokenAlertTypes: TokenAlertTypes): void => {
+export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], alertTypes: AlertTypes): void => {
   debug("calling checkTokenAlerts...");
-    // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'tokenAlertTypes:', JSON.stringify(response.tokenAlertTypes))
+    // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'alertTypes:', JSON.stringify(response.alertTypes))
     let triggeredAlerts = 0;
     for (const entry in tokenAlerts) {
       const tokenAlert : TokenAlert = tokenAlerts[entry];
@@ -84,8 +81,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
             if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
               triggeredAlerts += 1;
               debug(`token notification triggered`);
-
-              onTriggered(entry, tokenAlert, tokenAlertTypes);
+              onTriggered(entry, tokenAlert, alertTypes);
             } else {
               onUntriggered(entry);
               debug("conditions not met");
@@ -94,8 +90,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
             if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
               triggeredAlerts += 1;
               debug(`token notification triggered`);
-
-              onTriggered(entry, tokenAlert, tokenAlertTypes);
+              onTriggered(entry, tokenAlert, alertTypes);
             } else {
               onUntriggered(entry);
               debug("conditions not met");
@@ -103,12 +98,12 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
           }
         });
     }
-    triggeredAlerts > 0 && tokenAlertTypes.browser === true
+    triggeredAlerts > 0 && alertTypes.browser === true
       ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
       : chrome.browserAction.setBadgeText({ text: undefined });
 };
 
-export const changeTokenAlertType = (browser: boolean, os: boolean): void => {
+export const changeAlertType = (browser: boolean, os: boolean): void => {
   !browser ? chrome.browserAction.setBadgeText({ text: undefined }) : undefined;
       if(!os) {
         chrome.notifications.getAll((notifications) => {
@@ -120,12 +115,12 @@ export const changeTokenAlertType = (browser: boolean, os: boolean): void => {
         })
       }
       chrome.storage.local.set({
-        tokenAlertTypes: {
+        alertTypes: {
           browser: browser,
           os: os,
         },
       });
-      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'tokenAlertTypes'], (result) => {
-        checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.tokenAlertTypes)
+      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'alertTypes'], (result) => {
+        checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes)
       })
 }

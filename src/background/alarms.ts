@@ -1,12 +1,13 @@
 import debugCreator from 'debug';
 
-import { storeUpdatedAccounts } from './accountData';
+import { updateAndStoreAccounts } from './accountData';
+import { refreshTokensInfo } from './tokenData';
 
 const debug = debugCreator('background:alarms')
 
+//schedule a new fetch every 5 minutes
 export const refreshAlarmPeriod = 5;
 
-//schedule a new fetch every 5 minutes
 export function setFetchAlarm() {
   debug('schedule refresh alarm to', refreshAlarmPeriod, 'minutes...');
   chrome.alarms.create("refresh", { periodInMinutes: refreshAlarmPeriod });
@@ -22,13 +23,9 @@ export function setAlarmListener() {
     if (alarm.name === "refresh") {
       //if refresh alarm triggered, start a new request
       debug("Refresh alarm triggered");
-      refreshTokensInfo();
-      storeUpdatedAccounts();
+      refreshTokensInfo(); 
+      updateAndStoreAccounts();
     }
   });
   
-}
-
-function refreshTokensInfo() {
-  throw new Error('Function not implemented.');
 }

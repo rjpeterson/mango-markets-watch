@@ -12,7 +12,7 @@ const debug = debugCreator('background:accountData')
 //alarm period * number of records to keep
 const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 * 7 //7 days with 5 mins refresh period
 
-interface AccountInfo {
+export interface AccountInfo {
   healthRatio: number,
   balance: number,
   name: string,
@@ -55,24 +55,6 @@ export async function updateAccountsData(accounts: Accounts, sendResponse?: Func
   }
 }
 
-// gets current Accounts object and all Accounts history from storage.
-// gets updated data and sends to historical storage
-// checks alerts against data
-// finally, returns most recent Accounts object
-export async function storeUpdatedAccounts() {
-  debug('refreshing accounts data')
-  chrome.storage.local.get(['accounts', 'accountsHistory'], async (result) => {
-    const accountData = await updateAccountsData(result.accounts);
-    storeHistoricalData(accountData, true)
-    chrome.runtime.sendMessage({
-      msg: 'accounts data and history updated',
-      data: {
-        accounts: accountData
-      }
-    })
-  })
-}
-
 // Takes Accounts object as input.
 // Gets history array from storage, checks length
 // If too long, remove one from end
@@ -86,19 +68,42 @@ function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
     accounts: accounts
   }
   debug('storing fetch data in history')
-  chrome.storage.local.get(['accounts', 'accountAlerts', 'accountsHistory'], (result) => {
+  chrome.storage.local.get(['accounts', 'accountAlerts', 'accountsHistory', 'alertTypes'], (result) => {
     let accountsHistory = result.accountsHistory
     if (accountsHistory.length && accountsHistory.length >= historicalDataPeriod) {
+      debug('historical data too large...')
+      debug('removing oldest entry...')
       accountsHistory.pop();
     }
+    debug('adding most recent data to history...')
     accountsHistory.unshift(entry)
     chrome.storage.local.set({accountsHistory: accountsHistory})
-    if (checkAlerts) { 
+    if (checkAlerts && result.accountAlerts) { 
+      debug('checking accountAlerts: ', result.accountAlerts)
       checkAccountAlerts(
         result.accounts, 
-        result.accountsAlerts, 
-        result.accountsHistory
+        result.accountAlerts, 
+        result.accountsHistory,
+        result.alertTypes
       )
     }
+  })
+}
+
+// gets current Accounts object and all Accounts history from storage.
+// gets updated data and sends to historical storage
+// checks alerts against data
+// finally, returns most recent Accounts object
+export async function updateAndStoreAccounts() {
+  debug('refreshing accounts data')
+  chrome.storage.local.get(['accounts', 'accountsHistory'], async (result) => {
+    const accountData = await updateAccountsData(result.accounts);
+    storeHistoricalData(accountData, true)
+    chrome.runtime.sendMessage({
+      msg: 'accounts data and history updated',
+      data: {
+        accounts: accountData
+      }
+    })
   })
 }
