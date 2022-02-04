@@ -3,7 +3,8 @@ import debugCreator from 'debug';
 import { addAccountAlert, checkAccountAlerts } from './accountAlerts';
 import { updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
-import { changeAlertType, checkTokenAlerts, updateTokenAlerts } from './tokenAlerts';
+import { changeAlertType } from './toggles';
+import { checkTokenAlerts, updateTokenAlerts } from './tokenAlerts';
 import { refreshTokensInfo } from './tokenData';
 
 export interface AlertTypes {
@@ -81,7 +82,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     case "update tokenAlerts":
       updateTokenAlerts(request.data.tokenAlerts, sendResponse)
       break;
-    case "change tokenAlert type":
+    case "change alert type":
       changeAlertType(request.data.browser, request.data.os)
       return false;
     case "update accounts":

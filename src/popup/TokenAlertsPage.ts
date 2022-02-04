@@ -13,7 +13,7 @@ let TokenAlertsStore: TokenAlertsPageStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
 
-export default (): { init(): void; lastAlertKey(): number; changeAlertType(): void; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: TokenRateType, side: AlertSide, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
+export default (): { init(): void; lastAlertKey(): number; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: TokenRateType, side: AlertSide, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
   init(): void {
     TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -34,15 +34,6 @@ export default (): { init(): void; lastAlertKey(): number; changeAlertType(): vo
     } else {
       return 0
     }
-  },
-  changeAlertType(): void {
-    chrome.runtime.sendMessage({
-      msg: 'change alert type',
-      data: {
-        browser: UserDataStore.browserNotifs,
-        os: UserDataStore.OSNotifs
-      }
-    })
   },
   checkInput(percent: string, callback: Function): void {
     if (!parseFloat(percent) && percent != '0') {

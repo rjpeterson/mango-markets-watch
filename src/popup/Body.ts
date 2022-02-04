@@ -6,7 +6,7 @@ let AppDataStore: AppDataStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:Body')
 
-export default (): { init(): void; } => ({
+export default (): { init(): void; changeAlertType(): void; getHeaderText(): string; } => ({
   init(): void {
     AppDataStore = Alpine.store('AppData') as AppDataStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -58,5 +58,17 @@ export default (): { init(): void; } => ({
           AppDataStore.tokensInfo = response
       }
     );
+  },
+  changeAlertType(): void {
+    chrome.runtime.sendMessage({
+      msg: 'change alert type',
+      data: {
+        browser: UserDataStore.browserNotifs,
+        os: UserDataStore.OSNotifs
+      }
+    })
+  },
+  getHeaderText(): string {
+    return AppDataStore.headerTexts[AppDataStore.page]
   }
 })
