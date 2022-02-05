@@ -479,7 +479,7 @@
                         </button>
                       </div>
                       <div 
-                        :class="highlightTriggered(address)"
+                        :class="highlightTriggeredAccount(address)"
                         class="w-20 font-normal flex justify-center rounded-full" 
                         x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
                       ></div>
@@ -491,9 +491,9 @@
                       </div>
                       <div 
                         class="w-16 font-normal flex justify-center"
-                        :class="healthColor($store.UserData.accounts[address].healthRatio)"
+                        :class="healthColor($store.UserData.accounts[address].health)"
                       >
-                        <span x-text="parseHealth($store.UserData.accounts[address].healthRatio)"></span>
+                        <span x-text="parseHealth($store.UserData.accounts[address].health)"></span>
                         <span>%</span>
                       </div>
                     </div>
@@ -595,59 +595,177 @@
                 >
               </button>
               <div 
-                class="flex flex-row justify-around pl-6"
+                class="flex flex-col w-64 mx-auto"
               >
-                <div>
-                  <div>Account</div>
-                  <div>Balance</div>
-                  <div>Health</div>
-                </div>
-                <div>
+                <div class="flex flex-row justify-around">
                   <div x-text="getAccountName()"></div>
+                </div>
+                <div class="flex flex-row justify-around">
+                  <div>Balance</div>
                   <div x-text="getAccountBalance()"></div>
-                  <div x-text="getAccountHealthRatio()"></div>
+                  <div>Health</div>
+                  <div x-text="getAccountHealth()"></div>
                 </div>
               </div>
               <!-- Account alerts rows start -->
               <div class="flex flex-col">
                 <div class="flex flex-row justify-between">
-                  <div>Status</div>
-                  <div>Type</div>
-                  <div>Metric</div>
-                  <div>$ / %</div>
-                  <div>Period</div>
+                  <div class="w-10 flex justify-center">Status</div>
+                  <div class="w-12">Type</div>
+                  <div class="w-12">Metric</div>
+                  <div class="w-20">$ / %</div>
+                  <div class="w-10">Period</div>
+                  <div class="w-12"></div>
                 </div>
-                <template x-for="alert in getAlertsForAccount()">
-                  <div class="flex flex-row justify-between">
-                    <div>
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        class="h-5 w-5 fill-current text-green-dark" 
-                        viewBox="0 0 20 20"
-                        x-show="$store.AccountPage.triggered[alert.address][alert.id] === true"
-                      >
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
-                      </svg>
+                <template 
+                  x-for="alert in getAlertsForAccount($store.UserData.accountAlerts)"
+                  :key="alert.id"
+                >
+                  <div
+                    x-data="AccountAlertsRow"
+                  >
+                    <div class="flex flex-row justify-between">
+                      <div class="w-10 flex justify-center">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          class="h-5 w-5 fill-current text-green-dark" 
+                          viewBox="0 0 20 20"
+                          x-show="checkTriggeredForId(alert)"
+                        >
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                      <div x-text="formatForDisplay(alert.priceType)" class="w-12"></div>
+                      <div x-text="formatForDisplay(alert.metricType)" class="w-12"></div>
+                      <div class="w-20">
+                        <span x-text="alert.priceType === 'static' ? '$' : ''"></span>
+                        <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
+                        <span x-text="alert.priceType === 'static' ? '' : '%'"></span>
+                      </div>
+                      <div class="w-10">
+                        <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
+                        <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
+                      </div>
+                      <div class="w-12 flex flex-row space-x-2">
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="expanded = !expanded" :aria-expanded="expanded">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                          </button>
+                        </div>
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="deleteAccountAlert(alert)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div x-text="alert.priceType"></div>
-                    <div x-text="alert.metricType"></div>
-                    <div>
-                      <span x-text="alert.priceType === 'static' ? '$' : ''"></span>
-                      <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
-                      <span x-text="alert.priceType === 'static' ? '' : '%'"></span>
-                    </div>
-                    <div>
-                      <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
-                      <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
+                    <!-- Edit account alert collapsible start -->
+                    <div
+                      x-show="expanded"
+                      @click.outside="expanded = false"
+                      class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
+                      x-data="{
+                        editPriceType: alert.priceType,
+                        editMetricType: alert.metricType,
+                        editTriggerValue: alert.triggerValue,
+                        editDeltaValue: alert.deltaValue,
+                        editTimeFrame: alert.timeFrame
+                      }"
+                    >
+                      <div class="w-16 self-start">
+                        <label for="priceType" class="text-xs">Type</label>
+                        <select 
+                          id="priceType" 
+                          class="text-black text-xs h-1.5" 
+                          x-model="editPriceType"
+                          style="height: 18px;"
+                          @change="validateInput()""
+                        >
+                          <option value="static">Static</option>
+                          <option value="delta">% Change</option>
+                        </select>
+                        <label for="metricType" class="text-xs">Metric</label>
+                        <select 
+                          id="metricType" 
+                          class="text-black text-xs" 
+                          x-model="editMetricType"
+                          style="height: 18px;"
+                        >
+                          <option value="balance">Balance</option>
+                          <option value="health">Health</option>
+                        </select>
+                      </div>
+                      
+                      <div class="w-32 pl-8">
+                        <label 
+                          x-show="editPriceType === 'static'" 
+                          for="trigger" 
+                          x-text="editMetricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                          class="text-xs"
+                        ></label>
+                        <input 
+                          x-show="editPriceType === 'static'" 
+                          type="text" 
+                          id="trigger" 
+                          x-model.number="editTriggerValue" 
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                          @change="validateInput()"
+                        >
+                        <label 
+                          x-show="editPriceType === 'delta'" 
+                          for="delta"
+                          x-text="editMetricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                          class="text-xs"
+                        ></label>
+                        <input 
+                          x-show="editPriceType === 'delta'" 
+                          type="text" 
+                          id="delta" 
+                          x-model.number="editDeltaValue" 
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                          @change="validateInput()"
+                        >
+                        <label
+                          x-show="editPriceType === 'delta'"
+                          for="time-frame"
+                          class="text-xs"
+                        >
+                          Time Frame
+                        </label>
+                        <input
+                          x-show="editPriceType =='delta'"
+                          type="text"
+                          id="time-frame"
+                          x-model.number="editTimeFrame"
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                          @change="validateInput()"
+                        >
+            
+                        <div x-show="$store.AccountAlertsPage.inputError" x-text="$store.AccountAlertsPage.errorText"></div>
+                        <button 
+                          x-show="!$store.AccountAlertsPage.inputError"
+                          @click="updateAccountAlert(alert, editPriceType, editMetricType, editTriggerValue, editDeltaValue, editTimeFrame); expanded = undefined"
+                          class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
+                        >
+                          Submit
+                        </button>
+                      </div>
                     </div>
                   </div>
+                  <!-- Edit account alert collapsible end -->
                 </template>
               </div>
               <!-- Account alerts rows end -->
               <div>
                 <button 
-                  @click="$store.AccountPage.newAlert = !$store.AccountPage.newAlert"
-                  :aria-expanded="$store.AccountPage.newAlert"
+                  @click="$store.AccountAlertsPage.addAccountAlert = !$store.AccountAlertsPage.addAccountAlert"
+                  :aria-expanded="$store.AccountAlertsPage.addAccountAlert"
                   class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                   >
                   <span>Add New Alert</span>
@@ -656,8 +774,8 @@
       
               <!-- New account alert collapsible start -->
               <div
-                x-show="$store.AccountPage.newAlert"
-                @click.outside="$store.AccountPage.newAlert = false"
+                x-show="$store.AccountAlertsPage.addAccountAlert"
+                @click.outside="$store.AccountAlertsPage.addAccountAlert = false"
                 class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
                 x-data="NewAccountAlert()"
               >
@@ -681,7 +799,7 @@
                     style="height: 18px;"
                   >
                     <option value="balance">Balance</option>
-                    <option value="healthRatio">Health</option>
+                    <option value="health">Health</option>
                   </select>
                 </div>
                 
@@ -739,14 +857,14 @@
                   <div x-show="$store.NewAccountAlert.inputError" x-text="$store.NewAccountAlert.errorText"></div>
                   <button 
                     x-show="!$store.NewAccountAlert.inputError"
-                    @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountPage.newAlert = false"
+                    @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountAlertsPage.addAccountAlert = false"
                     class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
                   >
                     Submit
                   </button>
                 </div>
               </div>
-            <!-- New account alert collapsible end -->
+              <!-- New account alert collapsible end -->
             </div>
             <!-- View account details end -->
         

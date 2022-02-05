@@ -1,12 +1,20 @@
 import debugCreator from 'debug';
+import { AccountAlert } from '../background/accountAlerts';
 import { AccountPageStoreType, parseHealth, parseBalance } from './AccountPage';
 import { UserDataStoreType } from "./UserDataStore"
 
-const debug = debugCreator('popup:AccountRow')
+const debug = debugCreator('popup:AccountAlerts')
+
+export interface AccountAlertsStoreType {
+  active: number | undefined,
+  addAccountAlert: boolean,
+  inputError: string | undefined,
+  errorText: string | undefined
+}
 
 let UserDataStore: UserDataStoreType
 let AccountPageStore: AccountPageStoreType
-let selected: { name?: string; balance?: number; healthRatio?: number; }
+let selected: { name?: string; balance?: number; health?: number; }
 export default () => ({
   init(): void {
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -30,15 +38,15 @@ export default () => ({
       return undefined
     }
   },
-  getAccountHealthRatio(): number | ">100" {
+  getAccountHealth(): number | ">100" {
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
     if (selected) {
-      return parseHealth(selected.healthRatio)
+      return parseHealth(selected.health)
     } else {
       return undefined
     }
   },
-  getAccountBalance() {
+  getAccountBalance(): string {
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
     if (selected) {
       return parseBalance(selected.balance)
@@ -46,11 +54,41 @@ export default () => ({
       return undefined
     }
   },
-  getAlertsForAccount() {
-    debug('filtering alerts: ', JSON.stringify(UserDataStore.accountAlerts))
+  getAlertsForAccount(accountAlerts: AccountAlert[]): AccountAlert[] {
+    debug('filtering alerts: ', JSON.stringify(accountAlerts))
     debug('finding alerts for account: ', AccountPageStore.selectedAccount)
-    return UserDataStore.accountAlerts.filter((alert) => {
+    return accountAlerts.filter((alert) => {
       return alert.address === AccountPageStore.selectedAccount
+    })
+  },
+  checkTriggeredForId(alert: AccountAlert): boolean {
+    const triggeredAddress = AccountPageStore.triggered[alert.address]
+    if (!triggeredAddress) {return false}
+    if (!triggeredAddress[alert.id]) {return false}
+    return AccountPageStore.triggered[alert.address][alert.id]
+  },
+  formatForDisplay(value: string): string {
+    // insert a space before all caps
+    return value.replace(/([A-Z])/g, ' $1')
+    // uppercase the first character
+    .replace(/^./, function(str){ return str.toUpperCase(); })
+  },
+  deleteAccountAlert(deleted: AccountAlert) {
+    let filteredAlerts: AccountAlert[]
+    filteredAlerts = UserDataStore.accountAlerts.filter((alert) => {
+      return alert.id !== deleted.id
+    });
+    chrome.notifications.clear(deleted.id.toString());
+    chrome.runtime.sendMessage({
+      msg: 'update account alerts',
+      data: {
+        alerts : filteredAlerts
+      }
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        debug('could not delete account alert: ', chrome.runtime.lastError)
+      }
+      UserDataStore.accountAlerts = response.accountAlerts
     })
   }
 })

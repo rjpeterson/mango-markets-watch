@@ -13,6 +13,7 @@ import TokenAlertsPage from './TokenAlertsPage';
 import TokenAlertsRow from './TokenAlertsRow';
 import AccountAlerts from './AccountAlerts';
 import { Page } from './AppDataStore';
+import AccountAlertsRow from './AccountAlertsRow';
 
 const debug = debugCreator('popup')
 
@@ -47,6 +48,13 @@ Alpine.store('AccountPage', {
   triggered: {},
   addingAccount: false,
   selectedAccount: undefined
+})
+
+Alpine.store('AccountAlerts', {
+  active: undefined,
+  addAccountAlert: false,
+  inputError: undefined,
+  errorText: undefined
 })
 
 Alpine.store('NewAccountAlert', {
@@ -86,6 +94,7 @@ Alpine.data('TokenAlertsPage', TokenAlertsPage)
 Alpine.data('TokenAlertsRow', TokenAlertsRow)
 Alpine.data('AccountPage', AccountPage)
 Alpine.data('AccountRow', AccountRow)
+Alpine.data('AccountAlertsRow', AccountAlertsRow)
 Alpine.data('AccountAlerts', AccountAlerts)
 Alpine.data('NewAccountAlert', NewAccountAlert)
 
