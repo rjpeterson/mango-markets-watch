@@ -64,13 +64,13 @@ export default (): { init(): void; lastAlertKey(): number; checkInput(percent: s
       percent: percent
     }
     chrome.runtime.sendMessage({
-      msg: 'update tokenAlerts',
+      msg: 'update token alerts',
       data: {
         tokenAlerts: UserDataStore.tokenAlerts
       }
     }, function(response) {
       if (!response) {
-        debug('could not update tokenAlerts')
+        debug('could not update token alerts')
       }
       debug(`tokenAlerts updated: ${JSON.stringify(response)}`)
     })
@@ -79,7 +79,7 @@ export default (): { init(): void; lastAlertKey(): number; checkInput(percent: s
     delete UserDataStore.tokenAlerts[id];
     chrome.notifications.clear(id.toString());
     chrome.runtime.sendMessage({
-      msg: 'update tokenAlerts',
+      msg: 'update token alerts',
       data: {
         tokenAlerts: UserDataStore.tokenAlerts
       }

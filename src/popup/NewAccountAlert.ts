@@ -20,7 +20,7 @@ export enum PriceType {
 
 export enum MetricType {
   Balance = 'balance',
-  HealthRatio = 'healthRatio'
+  Health = 'health'
 }
 
 const debug = debugCreator('popup:NewAccountAlert')
@@ -73,7 +73,9 @@ export default () => ({
     debug('creating new account alert: ', JSON.stringify(newAlert))
     chrome.runtime.sendMessage({
       msg: 'add account alert',
-      data: newAlert
+      data: {
+        alert: newAlert
+      }
     }, function(response) {
       if (!response) {
         debug('could not add account alert')
