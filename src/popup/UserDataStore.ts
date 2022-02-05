@@ -37,7 +37,7 @@ export enum TokenRateType {
 interface Accounts {
   [address: string]: {
 		balance: number,
-		healthRatio: number,
+		health: number,
 		name: string | undefined
 	},
 }

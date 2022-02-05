@@ -13,7 +13,7 @@ const debug = debugCreator('background:accountData')
 const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 * 7 //7 days with 5 mins refresh period
 
 export interface AccountInfo {
-  healthRatio: number,
+  health: number,
   balance: number,
   name: string,
 }
@@ -36,11 +36,11 @@ export async function updateAccountsData(accounts: Accounts, sendResponse?: Func
     debug('updating account', key)
     const accountPK = new PublicKey(key)
     const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
-    const healthRatio = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toNumber()
+    const health = mangoAccount.getHealth(mangoGroup, mangoCache, 'Maint').toNumber()
     const balance = mangoAccount.computeValue(mangoGroup, mangoCache).toNumber()
     const name = mangoAccount.name ? mangoAccount.name : undefined
-    updatedAccounts[key] = {healthRatio: healthRatio, balance: balance, name: name}
-    debug('fetched healthRatio:', healthRatio, 'balance:', balance, 'name:', name)
+    updatedAccounts[key] = {health: health, balance: balance, name: name}
+    debug('fetched health:', health, 'balance:', balance, 'name:', name)
   }
   chrome.storage.local.set({accounts: updatedAccounts})
   if (sendResponse) {

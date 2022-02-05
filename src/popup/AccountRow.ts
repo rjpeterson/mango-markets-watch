@@ -4,7 +4,7 @@ import { AccountPageStoreType } from "./AccountPage"
 
 const debug = debugCreator('popup:AccountRow')
 let AccountPageStore: AccountPageStoreType
-export default (): { init(): void; expandedEdit: boolean; highlightTriggered(address: string): "bg-orange-DEFAULT text-bkg-1" | "" } => ({
+export default (): { init(): void; expandedEdit: boolean; highlightTriggeredAccount(address: string): "" | "bg-orange-DEFAULT text-bkg-1"; } => ({
   init(): void {
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
   },
@@ -14,7 +14,7 @@ export default (): { init(): void; expandedEdit: boolean; highlightTriggered(add
   set expandedEdit(value) {
     this.editActive = value ? this.address : undefined
   },
-  highlightTriggered(address: string) {
+  highlightTriggeredAccount(address: string) {
     const addressAlerts = AccountPageStore.triggered[address]
     if (!addressAlerts) {return ''}
     const triggered = Object.values(addressAlerts).includes(true)

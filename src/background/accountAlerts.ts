@@ -29,7 +29,7 @@ enum PriceType {
 
 enum MetricType {
   Balance = 'balance',
-  HealthRatio = 'healthRatio'
+  Health = 'health'
 }
 
 export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function): void => {
@@ -69,10 +69,10 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
           debug('metric balance')
           debug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
           matchedAccount.balance <= alert.triggerValue ? triggered = true : undefined
-        } else { //metricType.healthRatio
-          debug('metric healthRatio')
-          debug('comparing:', matchedAccount.healthRatio, 'less than or equal to', alert.triggerValue)
-          matchedAccount.healthRatio <= alert.triggerValue ? triggered = true : undefined
+        } else { //metricType.health
+          debug('metric health')
+          debug('comparing:', matchedAccount.health, 'less than or equal to', alert.triggerValue)
+          matchedAccount.health <= alert.triggerValue ? triggered = true : undefined
         }
       } else {//priceType.delta
         debug('priceType delta: ', alert.timeFrame)
@@ -95,10 +95,10 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
           debug('metric balance')
           const balanceDiff = Math.abs(matchedAccount.balance/historicalAccount.balance);
           balanceDiff >= alert.deltaValue ? triggered = true : undefined
-        } else {//metricType.healthRatio
-          debug('metric healthratio')
-          const healthRatioDiff = Math.abs(matchedAccount.healthRatio/historicalAccount.healthRatio);
-          healthRatioDiff >= alert.deltaValue ? triggered = true : undefined
+        } else {//metricType.health
+          debug('metric health')
+          const healthDiff = Math.abs(matchedAccount.health/historicalAccount.health);
+          healthDiff >= alert.deltaValue ? triggered = true : undefined
         }
       }
       if (triggered) {
@@ -158,3 +158,16 @@ const onUntriggered = (alert: AccountAlert): void => {
     },
   });
 };
+
+export const updateAccountAlerts = (accountAlerts:  AccountAlert[], sendResponse: Function): void => {
+  chrome.storage.local.set({ accountAlerts: accountAlerts });
+  chrome.storage.local.get(['accounts', 'accountsHistory', 'alertTypes'], (result) => {
+    checkAccountAlerts(result.accounts, accountAlerts, result.accountsHistory, result.alertTypes);
+    sendResponse({ 
+      msg: "accountAlerts updated successfully",
+      data: {
+        accountAlerts: accountAlerts
+      } 
+    });
+  })
+}

@@ -52,8 +52,8 @@ export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse
   const tokensInfo = await getTokenInfo_v3()
   chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
     checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes)
+    sendResponse({ msg: "tokenAlerts updated successfully" });
   })
-  sendResponse({ msg: "tokenAlerts updated successuflly" });
 }
 
 export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], alertTypes: AlertTypes): void => {

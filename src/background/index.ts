@@ -1,6 +1,6 @@
 import debugCreator from 'debug';
 
-import { addAccountAlert, checkAccountAlerts } from './accountAlerts';
+import { addAccountAlert, checkAccountAlerts, updateAccountAlerts } from './accountAlerts';
 import { updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import { changeAlertType } from './toggles';
@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     case "change toggles":
       chrome.storage.local.set({ toggles: request.data.toggles });
       return false;
-    case "update tokenAlerts":
+    case "update token alerts":
       updateTokenAlerts(request.data.tokenAlerts, sendResponse)
       break;
     case "change alert type":
@@ -90,7 +90,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       updateAccountsData(request.data.accounts, sendResponse)
       break;
     case "add account alert": 
-      addAccountAlert(request.data, sendResponse)
+      addAccountAlert(request.data.alert, sendResponse)
+      break;
+    case "update account alerts": 
+      updateAccountAlerts(request.data.alerts, sendResponse)
       break;
     case undefined:
       return false;
