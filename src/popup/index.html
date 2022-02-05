@@ -203,35 +203,37 @@
         </div>
 
         <!-- TOKEN ALERTS PAGE START -->
-        <div x-show="$store.AppData.page === 'alert'" style="height: 14.7rem">
+        <div 
+          x-show="$store.AppData.page === 'alert'" 
+          style="height: 14.7rem"
+          x-data="TokenAlertsPage"
+        >
           <div 
             class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" 
             style="max-height: 14.1rem;" 
-            x-data="TokenAlertsPage"
           >
             <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
 
               <!-- TOKEN ALERTS HEADERS START -->
-              <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
-                <div class="w-1/12 font-normal flex justify-center">Status</div>
-                <div class="w-3/12 font-normal flex justify-center">Token</div>
-                <div class="w-2/12 font-normal flex justify-center">Type</div>
-                <div class="w-2/12 font-normal flex justify-center">Side</div>
-                <div class="w-2/12 font-normal flex justify-center">%</div>
-                <div class="w-1/12 font-normal flex justify-center"></div>
-                <div class="w-1/12 font-normal flex justify-center"></div>
+              <div class="w-full flex flex-row text-xs text-fgd-4 justify-between">
+                <div class="w-10 font-normal flex justify-center">Status</div>
+                <div class="w-12 font-normal flex justify-center">Token</div>
+                <div class="w-12 font-normal flex justify-center">Type</div>
+                <div class="w-12 font-normal flex justify-center">Side</div>
+                <div class="w-12 font-normal flex justify-center">%</div>
+                <div class="w-12"></div>
               </div>
-              <!-- TOKEN ALERTS HEADERS START -->
+              <!-- TOKEN ALERTS HEADERS END -->
 
               <!-- TOKEN ALERT ROWS START -->
               <div class="w-full">
                 <template x-for="id in Object.keys($store.UserData.tokenAlerts)" :key="id">
                   <div 
-                    class="w-full text-sm flex flex-col space-y-2"
+                    class="text-sm flex flex-col space-y-2"
                     x-data="TokenAlertsRow"
                   >
-                    <div class="w-full flex justify-center space-x-2">
-                      <div class="w-1/12 flex font-normal flex justify-center">
+                    <div class="text-sm flex flex-row h-6 justify-between">
+                      <div class="w-10 flex font-normal flex justify-center">
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
@@ -241,7 +243,7 @@
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
-                      <div class="w-3/12 flex font-normal flex justify-center">
+                      <div class="w-12 flex font-normal flex justify-center">
                         <img
                           :src="'./icons/'+($store.UserData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
@@ -250,21 +252,23 @@
                           />
                         <span x-text="$store.UserData.tokenAlerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].side"></div>
-                      <div class="w-2/12 font-normal flex justify-end">
+                      <div class="w-12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].type"></div>
+                      <div class="w-12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].side"></div>
+                      <div class="w-12 font-normal flex justify-end">
                         <span x-text="parsePercent($store.UserData.tokenAlerts[id].percent)"></span>
                         <span>%</span>
                       </div>
-                      <div class="w-1/12 font-normal flex justify-center -mr-4">
-                        <button @click="expanded = !expanded" :aria-expanded="expanded">
-                        <img src="./icons/pencil.svg" width="18" height="18">
-                        </button>
-                      </div>
-                      <div class="w-1/12 font-normal flex justify-center">
-                        <button @click="deleteTokenAlert(id)">
-                        <img src="./icons/delete.svg" width="18" height="18">
-                        </button>
+                      <div class="w-12 flex flex-row space-x-2">
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="expanded = !expanded" :aria-expanded="expanded">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                          </button>
+                        </div>
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="deleteTokenAlert(id)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -279,7 +283,7 @@
                         editPercent: $store.UserData.tokenAlerts[id].percent
                       }"
                     >
-                      <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                      <div class="flex flex-col justify-center ml-2 bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                         <div class="text-center space-y-2">
                           <div>
                             <span>Alert me when</span>
@@ -428,7 +432,152 @@
           style="height: 14.7rem" 
           x-data="AccountPage"
         >
-          <div class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" style="max-height: 14.1rem;">
+          <div 
+            class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" 
+            style="max-height: 14.1rem;"
+          >
+            <!-- View all accounts start -->
+            <div 
+              class="text-fgd-1 flex flex-col overflow-hidden space-y-2 px-2"
+              x-show="$store.AccountPage.selectedAccount === undefined"
+            >
+              <div class="w-60 flex flex-row text-xs text-fgd-4 justify-between">
+                <div class="flex flex-row ">
+                  <div class="w-10 font-normal flex justify-center">Inspect</div>
+                  <div class="w-20 font-normal flex justify-center">Address</div>
+                  <div class="w-20 font-normal flex justify-center">Balance</div>
+                  <div class="w-16 font-normal flex justify-center">Health</div>
+                </div>
+                <div class="flex w-12"></div>
+              </div>
+
+              <!-- ACCOUNT ROWS START --> 
+              <template 
+                x-for="address in Object.keys($store.UserData.accounts)" 
+                :key="address">
+                <div 
+                  class="w-full text-sm flex flex-col space-y-2"
+                  x-data="AccountRow"  
+                >
+                  <div class="w-60 text-sm flex flex-row h-6 justify-between">
+                    <!-- ACCOUNT DATA START -->
+                    <div 
+                      class="flex flex-row" 
+                      x-show="!expandedEdit" 
+                    >
+                      <div class="w-10 flex font-normal justify-center">
+                        <button
+                          x-bind="inspect(address)"
+                          aria-expanded="open"
+                          class="focus:outline-none active:outline-none focus:border-transparent"
+                        >
+                          <img 
+                            src="./icons/search.svg" 
+                            width="18" 
+                            height="18" 
+                          >
+                        </button>
+                      </div>
+                      <div 
+                        :class="highlightTriggered(address)"
+                        class="w-20 font-normal flex justify-center rounded-full" 
+                        x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
+                      ></div>
+                      <div 
+                        class="w-20 font-normal flex justify-center"
+                      >
+                        <span>$</span>
+                        <span x-text="parseBalance($store.UserData.accounts[address].balance)"></span>
+                      </div>
+                      <div 
+                        class="w-16 font-normal flex justify-center"
+                        :class="healthColor($store.UserData.accounts[address].healthRatio)"
+                      >
+                        <span x-text="parseHealth($store.UserData.accounts[address].healthRatio)"></span>
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <!-- ACCOUNT DATA END -->
+
+                    <!-- EDIT ACCOUNT FORM START -->
+                    <div 
+                      class="w-60 flex flex-row mx-auto items-center"  
+                      x-show="expandedEdit"
+                      x-data="{editedAddress: address}"
+                      @click.outside="expandedEdit = false"
+                      >
+                      <input 
+                      type="text" 
+                        class="text-black text-xs h-4 w-3/4" 
+                        x-model="editedAddress"
+                        >
+                        <button 
+                        @click="deleteAccount(address); addnewAccount(editedAddress); expandedEdit = false"
+                        class="pl-2 -pr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                        >
+                        Confirm
+                      </button>
+                    </div>
+                    <!-- EDIT ACCOUNT FORM END -->
+                    
+                    <!-- ACCOUNT BUTTONS START -->
+                    <div class="w-12 flex flex-row space-x-2">
+                      <div class="w-6 font-normal flex justify-center ">
+                        <button @click="expandedEdit = !expandedEdit" :aria-expanded="expandedEdit">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                        </button>
+                      </div>
+                      <!-- <div class="w-6 font-normal flex justify-center ">
+                        <button @click="expandedNewAlert = !expandedNewAlert" :aria-expanded="expandedNewAlert">
+                          <img src="./icons/alert.svg" width="18" height="18">
+                        </button>
+                      </div> -->
+                      <div class="w-6 font-normal flex justify-center ">
+                        <button @click="deleteAccount(address)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                        </button>
+                      </div>
+                    </div>
+                    <!-- ACCOUNT BUTTONS END -->
+                  </div>
+                </div>
+              </template>
+              <!-- ACCOUNT ROWS END -->
+
+              
+              <!-- ADD ACCOUNT START -->
+              <div class="flex flex-col mx-auto space-y-2">
+                  <button 
+                  @click="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
+                  class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                  >
+                  <span>Add New Account</span>
+                </button>
+                <div 
+                x-data="{newAccount: ''}" 
+                class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 space-x-2 items-center"
+                x-show="$store.AccountPage.addingAccount"
+                @click.outside="$store.AccountPage.addingAccount = false"
+                >
+                <input 
+                placeholder="Enter a Mango Account" 
+                type="text" 
+                class="text-black" 
+                x-model="newAccount"
+                    >
+                    <button 
+                    @click="addNewAccount(newAccount); $store.AccountPage.addingAccount = false; newAccount = ''"
+                    class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                    >
+                    Add
+                  </button>
+                </div>
+              </div>
+              <!-- ADD ACCOUNT END -->
+
+            </div>
+            <!-- View all accounts end -->
+
             <!-- View account details start -->
             <div 
               x-show="$store.AccountPage.selectedAccount !== undefined"
@@ -504,7 +653,7 @@
                   <span>Add New Alert</span>
                 </button>
               </div>
-
+      
               <!-- New account alert collapsible start -->
               <div
                 x-show="$store.AccountPage.newAlert"
@@ -586,7 +735,7 @@
                     style="height: 18px;"
                     @change="validateInput()"
                   >
-
+      
                   <div x-show="$store.NewAccountAlert.inputError" x-text="$store.NewAccountAlert.errorText"></div>
                   <button 
                     x-show="!$store.NewAccountAlert.inputError"
@@ -600,152 +749,11 @@
             <!-- New account alert collapsible end -->
             </div>
             <!-- View account details end -->
-            
-            <!-- View all accounts start -->
-            <div 
-              class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2"
-              x-show="$store.AccountPage.selectedAccount === undefined"
-            >
-              <div class="w-full flex text-xs text-fgd-4 pl-2">
-                <div class="w-60 flex">
-                  <div class="w-8 font-normal flex justify-center">Inspect</div>
-                  <div class="w-20 font-normal flex justify-center">Address</div>
-                  <div class="w-20 font-normal flex justify-center">Balance</div>
-                  <div class="w-16 font-normal flex justify-center">Health</div>
-                </div>
-                <div class="w-12"></div>
-              </div>
-
-              <!-- ACCOUNT ROWS START --> 
-              <template 
-                x-for="address in Object.keys($store.UserData.accounts)" 
-                :key="address">
-                <div 
-                  class="w-full text-sm flex flex-col space-y-2"
-                  x-data="AccountRow"  
-                >
-                  <div class="w-full text-sm flex flex-row h-6 pl-2 justify-between">
-                  <!-- ACCOUNT DATA START -->
-                    <div 
-                      class="w-60 flex flex-row" 
-                      x-show="!expandedEdit" 
-                    >
-                      <div class="w-8 px-2 flex font-normal justify-center">
-                        <button
-                          x-bind="inspect(address)"
-                          aria-expanded="open"
-                          class="focus:outline-none active:outline-none focus:border-transparent"
-                        >
-                          <img 
-                            src="./icons/search.svg" 
-                            width="18" 
-                            height="18" 
-                          >
-                        </button>
-                      </div>
-                      <div 
-                        :class="highlightTriggered(address)"
-                        class="w-20 font-normal flex justify-center rounded-full" 
-                        x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
-                      ></div>
-                      <div 
-                        class="w-20 font-normal flex justify-center"
-                      >
-                        <span>$</span>
-                        <span x-text="parseBalance($store.UserData.accounts[address].balance)"></span>
-                      </div>
-                      <div 
-                        class="w-16 font-normal flex justify-center"
-                        :class="healthColor($store.UserData.accounts[address].healthRatio)"
-                      >
-                        <span x-text="parseHealth($store.UserData.accounts[address].healthRatio)"></span>
-                        <span>%</span>
-                      </div>
-                    </div>
-                    <!-- ACCOUNT DATA END -->
-
-                    <!-- EDIT ACCOUNT FORM START -->
-                    <div 
-                      class="w-60 flex flex-row mx-auto items-center"  
-                      x-show="expandedEdit"
-                      x-data="{editedAddress: address}"
-                      @click.outside="expandedEdit = false"
-                    >
-                      <input 
-                        type="text" 
-                        class="text-black text-xs h-4 w-3/4" 
-                        x-model="editedAddress"
-                      >
-                      <button 
-                        @click="deleteAccount(address); addnewAccount(editedAddress); expandedEdit = false"
-                        class="pl-2 -pr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
-                      >
-                        Confirm
-                      </button>
-                    </div>
-                    <!-- EDIT ACCOUNT FORM END -->
-
-                    <!-- ACCOUNT BUTTONS START -->
-                    <div class="flex flex-row">
-                      <div class="w-6 font-normal flex justify-center ">
-                        <button @click="expandedEdit = !expandedEdit" :aria-expanded="expandedEdit">
-                          <img src="./icons/pencil.svg" width="18" height="18">
-                        </button>
-                      </div>
-                      <!-- <div class="w-6 font-normal flex justify-center ">
-                        <button @click="expandedNewAlert = !expandedNewAlert" :aria-expanded="expandedNewAlert">
-                          <img src="./icons/alert.svg" width="18" height="18">
-                        </button>
-                      </div> -->
-                      <div class="w-6 font-normal flex justify-center ">
-                        <button @click="deleteAccount(address)">
-                          <img src="./icons/delete.svg" width="18" height="18">
-                        </button>
-                      </div>
-                    </div>
-                    <!-- ACCOUNT BUTTONS END -->
-                  </div>
-                </div>
-              </template>
-              <!-- ACCOUNT ROWS END -->
-
-              <!-- View all accounts end -->
-
-              <!-- ADD ACCOUNT START -->
-              <div class="flex flex-col mx-auto space-y-2">
-                <button 
-                  @click="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
-                  class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
-                >
-                  <span>Add New Account</span>
-                </button>
-                <div 
-                  x-data="{newAccount: ''}" 
-                  class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 space-x-2 items-center"
-                  x-show="$store.AccountPage.addingAccount"
-                  @click.outside="$store.AccountPage.addingAccount = false"
-                >
-                  <input 
-                    placeholder="Enter a Mango Account" 
-                    type="text" 
-                    class="text-black" 
-                    x-model="newAccount"
-                  >
-                  <button 
-                    @click="addNewAccount(newAccount); $store.AccountPage.addingAccount = false; newAccount = ''"
-                    class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-              <!-- ADD ACCOUNT END -->
-
-            </div>
+        
           </div>
         </div>
-          <!-- ACCOUNT PAGE END -->
-    
+        <!-- ACCOUNT PAGE END -->
+        
       <!-- INFO CONTAINER END -->
 
       <!-- NAV BUTTONS START-->
