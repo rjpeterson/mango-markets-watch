@@ -4,7 +4,7 @@ This is a browser extension for getting current mango.markets borrow/lend & fund
 ## Installation
 ### Setup local project
 * `git clone git@github.com:rjpeterson/mango-markets-watch.git`
-* Replace rpcToken variable in src/background/index.js with your own Solana rpc url
+* Replace rpcToken variable in src/background/connection.ts with your own Solana rpc url
 * `yarn && yarn build`
 
 ### Install on Chrome
