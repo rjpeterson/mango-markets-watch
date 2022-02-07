@@ -1,18 +1,25 @@
-import _ from "lodash-joins";
-import {
-  GroupConfig,
-  I80F48,
-  PerpMarket,
-  MangoClient,
-  MangoGroup
-} from "@blockworks-foundation/mango-client-v3";
-import { Connection, PublicKey } from "@solana/web3.js";
 import BN from 'bn.js';
-import { establishConnection, ClusterData, Market } from './connection';
 import debugCreator from 'debug';
+import _ from 'lodash-joins';
+
+import {
+    GroupConfig, I80F48, MangoClient, MangoGroup, PerpMarket
+} from '@blockworks-foundation/mango-client-v3';
+import { Connection, PublicKey } from '@solana/web3.js';
+
+import { ClusterData, establishConnection, Market } from './connection';
+import { checkTokenAlerts } from './tokenAlerts';
+import { checkToggles } from './toggles';
 
 const debug = debugCreator('background:tokenData')
 
+interface Token {
+  baseSymbol: string,
+  deposit: string,
+  borrow: string,
+  funding: string
+}
+export type TokensInfo = Token[]
 
 interface PerpStat {
   longFunding: string;
@@ -95,7 +102,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
       });
 
       if (!rootBank) {
-        throw new Error("rootBanks is undefined");
+        throw new Error("rootBank is undefined");
       }
       return {
         baseSymbol: token.symbol,
@@ -115,7 +122,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
   }
 }
 
-export async function getTokenInfo_v3() {
+export async function getTokenInfo_v3(): Promise<TokensInfo> {
   debug(`getting v3 token info...`);
   const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
 
@@ -143,3 +150,24 @@ export async function getTokenInfo_v3() {
   return res;
 }
 
+// ONSTARTUP: get token info & send to storage
+// ONALARM: get token info, send to storage, send to popup
+export const refreshTokensInfo = async (sendResponse?: Function) => {
+  const tokensInfo = await getTokenInfo_v3();
+  chrome.storage.local.set({ tokensInfo: tokensInfo });
+  chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkToggles(tokensInfo);
+
+    if (sendResponse) {
+      sendResponse(tokensInfo);
+    } else {
+      chrome.runtime.sendMessage({
+        msg: "tokensInfo refreshed",
+        data: {
+          tokensInfo: tokensInfo,
+        },
+      });
+    }
+  })
+};

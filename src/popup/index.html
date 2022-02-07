@@ -20,7 +20,7 @@
         text-orange-DEFAULT
         ">
         <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
-        <span x-text="$store.AppData.headerTexts[$store.AppData.page]"></span>
+        <span x-text="getHeaderText()"></span>
     </header>
 
     <div class="justify-between px-4 py-2 flex flex-col">
@@ -103,19 +103,31 @@
 
         <!-- SETTINGS PAGE START -->
         <div x-show="$store.AppData.page === 'settings'" style="height: 14.7rem">
-          <div class="text-sm scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-            <table class="
-              flex-col flex-grow
-              mx-auto
-              pt-2
+          <div class="text-sm text-fgd-1 scroller min-w-full overflow-y-auto py-2 space-y-2" style="max-height: 14.1rem;">
+            <div class="flex justify-center">Notifications</div>
+            <div class="flex justify-evenly -mt-1 mb-1">
+              <div>
+                <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="$store.UserData.browserNotifs" checked @change="changeAlertType()">
+                <label for="browser-notif">Icon Badge</label>
+              </div>
+              <div>
+                <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="$store.UserData.OSNotifs" checked @change="changeAlertType()">
+                <label for="os-notif">OS Tray</label>
+              </div>
+            </div>
+            <div class="flex justify-center">Tokens</div>
+            <div class="
+              grid
+              grid-cols-2
+              gap-x-8
+              gap-y-1
+              px-8
               table-auto
-              text-fgd-1
             ">
-
               <!-- TOGGLE ROWS START -->
               <template x-for="[baseSymbol, toggle] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
-                <tr class="flex flex-row pb-1">
-                  <td class="flex items-end flex-auto px-2 text-left">
+                <div class="flex flex-row pb-1">
+                  <div class="flex flex-auto px-2">
                     <img
                       x-data="{icon: './icons/'+(baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'}"
                       :src="icon"
@@ -124,8 +136,8 @@
                       class="mr-1"
                     />
                     <span x-text="baseSymbol"></span>
-                  </td>
-                  <td class="flex items-center justify-center ml-10">
+                  </div>
+                  <div class="flex">
                     <div
                       class="
                       relative
@@ -181,55 +193,47 @@
                         "
                         />
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               </template>
               <!-- TOGGLE ROWS END -->
 
-            </table>
+            </div>
           </div>
         </div>
 
         <!-- TOKEN ALERTS PAGE START -->
-        <div x-show="$store.AppData.page === 'alert'" style="height: 14.7rem">
+        <div 
+          x-show="$store.AppData.page === 'alert'" 
+          style="height: 14.7rem"
+          x-data="TokenAlertsPage"
+        >
           <div 
             class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" 
             style="max-height: 14.1rem;" 
-            x-data="TokenAlertsPage"
           >
-            <div class="flex justify-evenly text-fgd-1 -mt-1 mb-1">
-                <div>
-                  <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="$store.UserData.browserNotifs" checked @change="changeTokenAlertType()">
-                  <label for="browser-notif">Icon Badge</label>
-                </div>
-                <div>
-                  <input type="checkbox" id="os-notif" name="os-notif" value="true" x-model="$store.UserData.OSNotifs" checked @change="changeTokenAlertType()">
-                  <label for="os-notif">OS Tray</label>
-                </div>
-            </div>
             <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-2">
 
               <!-- TOKEN ALERTS HEADERS START -->
-              <div class="w-full flex text-xs text-fgd-4 space-x-2 justify-center">
-                <div class="w-1/12 font-normal flex justify-center">Status</div>
-                <div class="w-3/12 font-normal flex justify-center">Token</div>
-                <div class="w-2/12 font-normal flex justify-center">Type</div>
-                <div class="w-2/12 font-normal flex justify-center">Side</div>
-                <div class="w-2/12 font-normal flex justify-center">%</div>
-                <div class="w-1/12 font-normal flex justify-center"></div>
-                <div class="w-1/12 font-normal flex justify-center"></div>
+              <div class="w-full flex flex-row text-xs text-fgd-4 justify-between">
+                <div class="w-10 font-normal flex justify-center">Status</div>
+                <div class="w-12 font-normal flex justify-center">Token</div>
+                <div class="w-12 font-normal flex justify-center">Type</div>
+                <div class="w-12 font-normal flex justify-center">Side</div>
+                <div class="w-12 font-normal flex justify-center">%</div>
+                <div class="w-12"></div>
               </div>
-              <!-- TOKEN ALERTS HEADERS START -->
+              <!-- TOKEN ALERTS HEADERS END -->
 
               <!-- TOKEN ALERT ROWS START -->
               <div class="w-full">
                 <template x-for="id in Object.keys($store.UserData.tokenAlerts)" :key="id">
                   <div 
-                    class="w-full text-sm flex flex-col space-y-2"
+                    class="flex flex-col space-y-2"
                     x-data="TokenAlertsRow"
                   >
-                    <div class="w-full flex justify-center space-x-2">
-                      <div class="w-1/12 flex font-normal flex justify-center">
+                    <div class="flex flex-row text-sm h-6 justify-between">
+                      <div class="w-10 flex font-normal flex justify-center">
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
@@ -239,7 +243,7 @@
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
-                      <div class="w-3/12 flex font-normal flex justify-center">
+                      <div class="w-12 flex font-normal flex justify-center">
                         <img
                           :src="'./icons/'+($store.UserData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
@@ -248,21 +252,23 @@
                           />
                         <span x-text="$store.UserData.tokenAlerts[id].baseSymbol"></span>
                       </div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].type"></div>
-                      <div class="w-2/12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].side"></div>
-                      <div class="w-2/12 font-normal flex justify-end">
+                      <div class="w-12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].type"></div>
+                      <div class="w-12 font-normal flex justify-center" x-text="$store.UserData.tokenAlerts[id].side"></div>
+                      <div class="w-12 font-normal flex justify-end">
                         <span x-text="parsePercent($store.UserData.tokenAlerts[id].percent)"></span>
                         <span>%</span>
                       </div>
-                      <div class="w-1/12 font-normal flex justify-center -mr-4">
-                        <button @click="expanded = !expanded" :aria-expanded="expanded">
-                        <img src="./icons/pencil.svg" width="18" height="18">
-                        </button>
-                      </div>
-                      <div class="w-1/12 font-normal flex justify-center">
-                        <button @click="deleteTokenAlert(id)">
-                        <img src="./icons/delete.svg" width="18" height="18">
-                        </button>
+                      <div class="w-12 flex flex-row space-x-2">
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="expanded = !expanded, $nextTick(() => document.getElementById('editBaseSymbolInput').focus())" :aria-expanded="expanded">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                          </button>
+                        </div>
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="deleteTokenAlert(id)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -276,12 +282,14 @@
                         editSide: $store.UserData.tokenAlerts[id].side,
                         editPercent: $store.UserData.tokenAlerts[id].percent
                       }"
+                      @click.outside="expanded = undefined"
+                      class="mx-auto"
                     >
-                      <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                      <div class="flex flex-col justify-center ml-2 bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                         <div class="text-center space-y-2">
                           <div>
                             <span>Alert me when</span>
-                            <select class="text-black" x-model="editBaseSymbol">
+                            <select class="text-black" x-model="editBaseSymbol" id="editBaseSymbolInput">
                               <template x-for="[baseSymbol] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
                                   <option x-text="baseSymbol" :value="baseSymbol" :selected="editBaseSymbol === baseSymbol"></option>
                               </template>
@@ -299,7 +307,15 @@
                               <option :selected="editSide === 'above'">above</option>
                               <option :selected="editSide === 'below'">below</option>
                             </select>
-                            <input type="text" size="6" maxlength="6" class="text-black" x-model.number="editPercent" :value="editPercent" @change="checkInput($event.target.value)">
+                            <input 
+                              type="text" 
+                              size="6" 
+                              maxlength="6" 
+                              class="text-black" 
+                              x-model.number="editPercent" 
+                              :value="editPercent" 
+                              @change="checkInput($event.target.value)"
+                            >
                             <span>percent</span>
                           </div>
                           <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
@@ -312,14 +328,15 @@
                                 createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
                                 expanded = !expanded
                               })
-                            ">
-                          Confirm
+                            "
+                          >
+                            Confirm
                           </button>
                           <button 
                             class="bg-red-dark rounded-full px-2 py-1 text-center align-center flex justify-around" 
                             @click="expanded = !expanded"
                           >
-                          Cancel
+                              Cancel
                           </button>
                         </div>
                       </div>
@@ -331,7 +348,7 @@
               <!-- TOKEN ALERT ROWS END -->
 
               <button 
-                @click="$store.TokenAlertsPage.addTokenAlert = true, $store.TokenAlertsPage.active = undefined" 
+                @click="$store.TokenAlertsPage.addTokenAlert = true; $nextTick(() => document.getElementById('baseSymbol').focus())" 
                 class="flex mt-2 mx-auto h-6 w-24 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
               >
                 <span>Add New Alert</span>
@@ -339,6 +356,8 @@
 
               <!-- NEW TOKEN ALERT FORM START -->
               <div 
+                x-show="$store.TokenAlertsPage.addTokenAlert" 
+                x-collapse 
                 x-data="{
                   newAlert: {
                     baseSymbol: 'BTC',
@@ -347,16 +366,14 @@
                     percent: 0
                   }
                 }" 
-                x-show="$store.TokenAlertsPage.addTokenAlert" 
-                x-collapse 
                 @click.outside="$store.TokenAlertsPage.addTokenAlert = false" 
                 class="mx-auto"
               >
-                <div class="flex flex-col justify-center bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
+                <div class="flex flex-col justify-center ml-2 bg-bkg-1 text-fgd-1 rounded-lg p-2 space-y-2">
                   <div class="text-center space-y-2">
                     <div>
                       <span>Alert me when</span>
-                      <select class="text-black" x-model="newAlert.baseSymbol">
+                      <select class="text-black" x-model="newAlert.baseSymbol" id="baseSymbol">
                         <template x-for="[baseSymbol] in Object.entries($store.UserData.toggles)" :key="baseSymbol">
                             <option x-text="baseSymbol" :value="baseSymbol" :selected="baseSymbol === 'BTC'"></option>
                         </template>
@@ -381,7 +398,8 @@
                         class="text-black" 
                         x-model.number="newAlert.percent" 
                         @change="checkInput($event.target.value)" 
-                        :value="0">
+                        :value="0"
+                      >
                       <span>percent</span>
                     </div>
                     <div x-show="$store.TokenAlertsPage.inputError">Please input a number</div>
@@ -426,18 +444,23 @@
           style="height: 14.7rem" 
           x-data="AccountPage"
         >
-          <div class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" style="max-height: 14.1rem;">
-            <div class="text-fgd-1 flex flex-wrap overflow-hidden space-y-2 px-4">
-              <div class="w-full flex text-xs text-fgd-4 ">
-                <div class="w-60 flex">
-                  <div class="w-20 font-normal flex justify-center items-end">Address</div>
-                  <div class="w-20 font-normal flex justify-center items-end">Balance</div>
-                  <div class="w-20 font-normal flex justify-end items-end">
-                    <div class="w-3/4">Health Ratio</div>
-                  </div>
+          <div 
+            class="scroller min-w-full overflow-y-auto py-2 overflow-y-scroll" 
+            style="max-height: 14.1rem;"
+          >
+            <!-- View all accounts start -->
+            <div 
+              class="text-fgd-1 flex flex-col overflow-hidden space-y-2 px-2"
+              x-show="$store.AccountPage.selectedAccount === undefined"
+            >
+              <div class="w-60 flex flex-row text-xs text-fgd-4 justify-between">
+                <div class="flex flex-row ">
+                  <div class="w-10 font-normal flex justify-center">Inspect</div>
+                  <div class="w-20 font-normal flex justify-center">Address</div>
+                  <div class="w-20 font-normal flex justify-center">Balance</div>
+                  <div class="w-16 font-normal flex justify-center">Health</div>
                 </div>
-                <div class="w-4"></div>
-                <div class="w-4"></div>
+                <div class="flex w-12"></div>
               </div>
 
               <!-- ACCOUNT ROWS START --> 
@@ -448,43 +471,41 @@
                   class="w-full text-sm flex flex-col space-y-2"
                   x-data="AccountRow"  
                 >
-                  <div class="w-full text-sm flex flex-row h-6 justify-end">
-                  <!-- ACCOUNT DATA START -->
+                  <div class="w-60 text-sm flex flex-row h-6 justify-between">
+                    <!-- ACCOUNT DATA START -->
                     <div 
-                      class="w-60 flex flex-row justify-end" 
+                      class="flex flex-row" 
                       x-show="!expandedEdit" 
                     >
-                      <div class="w-5 flex font-normal flex justify-center">
-                        <!-- TODO make button pulse when alert is triggered? -->
+                      <div class="w-10 flex font-normal justify-center">
                         <button
-                          @click="expandedShowAlerts = !expandedShowAlerts"
+                          x-bind="inspect(address)"
                           aria-expanded="open"
-                          :class="{'open': expandedShowAlerts, 'closed': !expandedShowAlerts}"
                           class="focus:outline-none active:outline-none focus:border-transparent"
                         >
                           <img 
-                          src="./icons/right.svg" 
-                          width="18" 
-                          height="18" 
-                          
-                        >
+                            src="./icons/search.svg" 
+                            width="18" 
+                            height="18" 
+                          >
                         </button>
                       </div>
                       <div 
-                        class="w-20 font-normal flex justify-center" 
+                        :class="highlightTriggeredAccount(address)"
+                        class="w-20 font-normal flex justify-center rounded-full" 
                         x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
                       ></div>
                       <div 
                         class="w-20 font-normal flex justify-center"
                       >
                         <span>$</span>
-                        <span x-text="parseFloat($store.UserData.accounts[address].balance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                        <span x-text="parseBalance($store.UserData.accounts[address].balance)"></span>
                       </div>
                       <div 
-                        class="w-15 font-normal flex justify-center"
-                        :class="healthColor($store.UserData.accounts[address].healthRatio)"
+                        class="w-16 font-normal flex justify-center"
+                        :class="healthColor($store.UserData.accounts[address].health)"
                       >
-                        <span x-text="parseHealth($store.UserData.accounts[address].healthRatio)"></span>
+                        <span x-text="parseHealth($store.UserData.accounts[address].health)"></span>
                         <span>%</span>
                       </div>
                     </div>
@@ -492,158 +513,52 @@
 
                     <!-- EDIT ACCOUNT FORM START -->
                     <div 
-                      class="w-60 flex flex-row mx-auto items-center"  
+                      class="w-60 flex flex-row mx-auto space-x-2 items-center"  
                       x-show="expandedEdit"
                       x-data="{editedAddress: address}"
                       @click.outside="expandedEdit = false"
-                    >
+                      >
                       <input 
                         type="text" 
                         class="text-black text-xs h-4 w-3/4" 
                         x-model="editedAddress"
+                        id="editAddress"
+                        x-bind:id="address"
+                        x-on:focus="$el.select()"
                       >
                       <button 
                         @click="deleteAccount(address); addnewAccount(editedAddress); expandedEdit = false"
-                        class="ml-2 -mr-2 flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
+                        class="flex h-5 px-2 justify-center items-center text-xs rounded-full bg-bkg-4 text-fgd-1"
                       >
                         Confirm
                       </button>
                     </div>
                     <!-- EDIT ACCOUNT FORM END -->
-
+                    
                     <!-- ACCOUNT BUTTONS START -->
-                    <div class="w-6 font-normal flex justify-center ">
-                      <button @click="expandedEdit = !expandedEdit" :aria-expanded="expandedEdit">
-                      <img src="./icons/pencil.svg" width="18" height="18">
-                      </button>
-                    </div>
-                    <div class="w-6 font-normal flex justify-center ">
-                      <button @click="expandedNewAlert = !expandedNewAlert" :aria-expanded="expandedNewAlert">
-                      <img src="./icons/alert.svg" width="18" height="18">
-                      </button>
-                    </div>
-                    <div class="w-6 font-normal flex justify-center ">
-                      <button @click="deleteAccount(address)">
-                      <img src="./icons/delete.svg" width="18" height="18">
-                      </button>
+                    <div class="w-12 flex flex-row space-x-2">
+                      <div class="w-6 font-normal flex justify-center ">
+                        <button @click="expandedEdit = !expandedEdit; $nextTick(() => document.getElementById(address).focus())" :aria-expanded="expandedEdit">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                        </button>
+                      </div>
+                      <div class="w-6 font-normal flex justify-center ">
+                        <button @click="deleteAccount(address)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                        </button>
+                      </div>
                     </div>
                     <!-- ACCOUNT BUTTONS END -->
                   </div>
-
-                  <!-- ACTIVE ACCOUNT ALERTS COLLAPSIBLE START -->
-                  <div
-                    x-show="expandedShowAlerts"
-                    @click.outside="expandedShowAlerts = false"
-                    class="flex flex-row bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4"
-                  >
-                    Account alerts will go here
-                  </div>
-                  <!-- ACTIVE ACCOUNT ALERTS COLLAPSIBLE END -->
-
-                  <!-- NEW ACCOUNT ALERT COLLAPSIBLE START -->
-                  <div
-                    x-show="expandedNewAlert"
-                    @click.outside="expandedNewAlert = false"
-                    class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
-                    x-data="NewAccountAlert(address)"
-                  >
-                    <div class="w-16 self-start">
-                      <label for="priceType" class="text-xs">Type</label>
-                      <select 
-                        id="priceType" 
-                        class="text-black text-xs h-1.5" 
-                        x-model="$store.NewAccountAlert.priceType"
-                        style="height: 18px;"
-                        @change="validateInput()""
-                      >
-                        <option value="static">Static</option>
-                        <option value="delta">Delta</option>
-                      </select>
-                      <label for="metricType" class="text-xs">Metric</label>
-                      <select 
-                        id="metricType" 
-                        class="text-black text-xs" 
-                        x-model="$store.NewAccountAlert.metricType"
-                        style="height: 18px;"
-                      >
-                        <option value="balance">Balance</option>
-                        <option value="healthRatio">Health</option>
-                      </select>
-                    </div>
-                    
-                    <div class="w-32 pl-8">
-                      <label 
-                        x-show="$store.NewAccountAlert.priceType === 'static'" 
-                        for="trigger" 
-                        x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
-                        class="text-xs"
-                      ></label>
-                      <input 
-                        x-show="$store.NewAccountAlert.priceType === 'static'" 
-                        type="text" 
-                        id="trigger" 
-                        x-model.number="$store.NewAccountAlert.triggerValue" 
-                        size="8"
-                        class="text-black"
-                        style="height: 18px;"
-                        @change="validateInput()"
-                      >
-                      <label 
-                        x-show="$store.NewAccountAlert.priceType === 'delta'" 
-                        for="delta"
-                        x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
-                        class="text-xs"
-                      ></label>
-                      <input 
-                        x-show="$store.NewAccountAlert.priceType === 'delta'" 
-                        type="text" 
-                        id="delta" 
-                        x-model.number="$store.NewAccountAlert.deltaValue" 
-                        size="8"
-                        class="text-black"
-                        style="height: 18px;"
-                        @change="validateInput()"
-                      >
-                      <label
-                        x-show="$store.NewAccountAlert.priceType === 'delta'"
-                        for="time-frame"
-                        class="text-xs"
-                      >
-                        Time Frame
-                      </label>
-                      <input
-                        x-show="$store.NewAccountAlert.priceType =='delta'"
-                        type="text"
-                        id="time-frame"
-                        x-model.number="$store.NewAccountAlert.timeFrame"
-                        size="8"
-                        class="text-black"
-                        style="height: 18px;"
-                        @change="validateInput()"
-                      >
-
-                      <div x-show="$store.NewAccountAlert.inputError">
-                        input real numbers plz
-                      </div>
-                      <button 
-                        x-show="!$store.NewAccountAlert.inputError"
-                        @click="addAccountAlert(); expandedNewAlert = false"
-                        class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
-                      >
-                        Submit
-                      </button>
-                    </div>
-                  </div>
-                  <!-- NEW ACCOUNT ALERT COLLAPSIBLE END -->
-
                 </div>
               </template>
               <!-- ACCOUNT ROWS END -->
 
+              
               <!-- ADD ACCOUNT START -->
               <div class="flex flex-col mx-auto space-y-2">
                 <button 
-                  @click="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount"
+                  @click="$store.AccountPage.addingAccount = !$store.AccountPage.addingAccount; $nextTick(() => document.getElementById('addAddress').focus());"
                   class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                 >
                   <span>Add New Account</span>
@@ -659,9 +574,11 @@
                     type="text" 
                     class="text-black" 
                     x-model="newAccount"
+                    id="addAddress"
+                    x-on:focus="$el.select()"
                   >
                   <button 
-                    @click="addnewAccount(newAccount); $store.AccountPage.addingAccount = false;"
+                    @click="addNewAccount(newAccount); $store.AccountPage.addingAccount = false; newAccount = ''"
                     class="flex mx-auto h-6 w-12 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
                   >
                     Add
@@ -671,10 +588,301 @@
               <!-- ADD ACCOUNT END -->
 
             </div>
+            <!-- View all accounts end -->
+
+            <!-- View account details start -->
+            <div 
+              x-show="$store.AccountPage.selectedAccount !== undefined"
+              class="text-fgd-1 flex flex-col flex-wrap overflow-hidden space-y-2 px-2 pb-2"
+              x-data="AccountAlerts"
+            >
+              <button 
+                class="flex justify-center items-center absolute top-4 left-4 rounded-full h-6 w-6 bg-bkg-4"
+                x-bind="inspect(undefined)"
+              >
+                <img 
+                  src="./icons/arrow-left.svg" 
+                  width="18" 
+                  height="18" 
+                >
+              </button>
+              <div 
+                class="flex flex-col w-64 mx-auto"
+              >
+                <div class="flex flex-row justify-around">
+                  <div x-text="getAccountName()"></div>
+                </div>
+                <div class="flex flex-row justify-around">
+                  <div>Balance</div>
+                  <div x-text="getAccountBalance()"></div>
+                  <div>Health</div>
+                  <div x-text="getAccountHealth()"></div>
+                </div>
+              </div>
+              <!-- Account alerts rows start -->
+              <div class="flex flex-col">
+                <div class="flex flex-row justify-between">
+                  <div class="w-10 flex justify-center">Status</div>
+                  <div class="w-12">Type</div>
+                  <div class="w-12">Metric</div>
+                  <div class="w-20">$ / %</div>
+                  <div class="w-10">Period</div>
+                  <div class="w-12"></div>
+                </div>
+                <template 
+                  x-for="alert in getAlertsForAccount()"
+                  :key="alert.id"
+                >
+                  <div
+                    x-data="AccountAlertsRow"
+                    class="space-y-2"
+                  >
+                    <div class="flex flex-row justify-between">
+                      <div class="w-10 flex justify-center">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          class="h-5 w-5 fill-current text-green-dark" 
+                          viewBox="0 0 20 20"
+                          x-show="checkTriggeredForId(alert)"
+                        >
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                      </div>
+                      <div x-text="formatForDisplay(alert.priceType)" class="w-12"></div>
+                      <div x-text="formatForDisplay(alert.metricType)" class="w-12"></div>
+                      <div class="w-20">
+                        <span x-text="alert.priceType === 'static' ? '$' : ''"></span>
+                        <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
+                        <span x-text="alert.priceType === 'static' ? '' : '%'"></span>
+                      </div>
+                      <div class="w-10">
+                        <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
+                        <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
+                      </div>
+                      <div class="w-12 flex flex-row space-x-2">
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="expanded = !expanded; $store.AccountAlerts.addAccountAlert = false; $nextTick(() => document.getElementById('editPriceTypeInput').focus())" :aria-expanded="expanded">
+                          <img src="./icons/pencil.svg" width="18" height="18">
+                          </button>
+                        </div>
+                        <div class="w-6 font-normal flex justify-center">
+                          <button @click="deleteAccountAlert(alert)">
+                          <img src="./icons/delete.svg" width="18" height="18">
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Edit account alert collapsible start -->
+                    <div
+                      x-show="expanded"
+                      @click.outside="expanded = false"
+                      class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg pt-1 pb-2"
+                      x-data="{
+                        editPriceType: alert.priceType,
+                        editMetricType: alert.metricType,
+                        editTriggerValue: alert.triggerValue,
+                        editDeltaValue: alert.deltaValue,
+                        editTimeFrame: alert.timeFrame
+                      }"
+                    >
+                      <div class="w-16 self-start">
+                        <label for="editPriceTypeInput" class="text-xs">Type</label>
+                        <select 
+                          id="editPriceTypeInput" 
+                          class="text-black text-xs h-1.5" 
+                          x-model="editPriceType"
+                          style="height: 18px;"
+                          @change="validateInput()""
+                        >
+                          <option value="static">Static</option>
+                          <option value="delta">% Change</option>
+                        </select>
+                        <label for="editMetricTypeInput" class="text-xs">Metric</label>
+                        <select 
+                          id="editMetricTypeInput" 
+                          class="text-black text-xs" 
+                          x-model="editMetricType"
+                          style="height: 18px;"
+                        >
+                          <option value="balance">Balance</option>
+                          <option value="health">Health</option>
+                        </select>
+                      </div>
+                      
+                      <div class="w-32 pl-8">
+                        <label 
+                          for="editTriggerInput" 
+                          x-show="editPriceType === 'static'" 
+                          x-text="editMetricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                          class="text-xs"
+                        ></label>
+                        <input 
+                          id="editTriggerInput" 
+                          type="text" 
+                          x-show="editPriceType === 'static'" 
+                          x-model.number="editTriggerValue" 
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                        >
+                        <label 
+                          x-show="editPriceType === 'delta'" 
+                          for="editDeltaInput"
+                          x-text="editMetricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                          class="text-xs"
+                        ></label>
+                        <input 
+                          x-show="editPriceType === 'delta'" 
+                          type="text" 
+                          id="editDeltaInput" 
+                          x-model.number="editDeltaValue" 
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                        >
+                        <label
+                          x-show="editPriceType === 'delta'"
+                          for="editTimeframeInput"
+                          class="text-xs"
+                        >
+                          Period (hrs)
+                        </label>
+                        <input
+                          x-show="editPriceType =='delta'"
+                          type="text"
+                          id="editTimeframeInput"
+                          x-model.number="editTimeFrame"
+                          size="8"
+                          class="text-black"
+                          style="height: 18px;"
+                          @change="validateInput(editPriceType, editTimeFrame)"
+                        >
+                      </div>
+                      <div class="flex items-center">
+                        <div x-show="$store.AccountAlerts.inputError"x-text="$store.AccountAlerts.errorText">
+                        </div>
+                        <button 
+                          x-show="!$store.AccountAlerts.inputError"
+                          @click="updateAccountAlert(alert, editPriceType, editMetricType, editTriggerValue, editDeltaValue, editTimeFrame); expanded = undefined"
+                          class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
+                        >
+                          Submit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Edit account alert collapsible end -->
+                </template>
+              </div>
+              <!-- Account alerts rows end -->
+              <div>
+                <button 
+                  @click="$store.AccountAlerts.addAccountAlert = !$store.AccountAlerts.addAccountAlert; $nextTick(() => document.getElementById('priceType').focus())"
+                  :aria-expanded="$store.AccountAlerts.addAccountAlert"
+                  class="flex my-1 mx-auto h-6 w-32 justify-center items-center rounded-full bg-bkg-4 text-fgd-1"
+                  >
+                  <span>Add New Alert</span>
+                </button>
+              </div>
+      
+              <!-- New account alert collapsible start -->
+              <div
+                x-show="$store.AccountAlerts.addAccountAlert"
+                @click.outside="$store.AccountAlerts.addAccountAlert = false"
+                class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
+                x-data="NewAccountAlert()"
+              >
+                <div class="w-16 self-start">
+                  <label for="priceType" class="text-xs">Type</label>
+                  <select 
+                    id="priceType" 
+                    class="text-black text-xs h-1.5" 
+                    x-model="$store.NewAccountAlert.priceType"
+                    style="height: 18px;"
+                    @change="validateInput()"
+                  >
+                    <option value="static">Static</option>
+                    <option value="delta">% Change</option>
+                  </select>
+                  <label for="metricType" class="text-xs">Metric</label>
+                  <select 
+                    id="metricType" 
+                    class="text-black text-xs" 
+                    x-model="$store.NewAccountAlert.metricType"
+                    style="height: 18px;"
+                  >
+                    <option value="balance">Balance</option>
+                    <option value="health">Health</option>
+                  </select>
+                </div>
+                
+                <div class="w-32 pl-8">
+                  <label 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    for="trigger" 
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                    class="text-xs"
+                  ></label>
+                  <input 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    type="text" 
+                    id="trigger" 
+                    x-model.number="$store.NewAccountAlert.triggerValue" 
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                  >
+                  <label 
+                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    for="delta"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                    class="text-xs"
+                  ></label>
+                  <input 
+                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    type="text" 
+                    id="delta" 
+                    x-model.number="$store.NewAccountAlert.deltaValue" 
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                  >
+                  <label
+                    x-show="$store.NewAccountAlert.priceType === 'delta'"
+                    for="time-frame"
+                    class="text-xs"
+                  >
+                    Period (hrs)
+                  </label>
+                  <input
+                    x-show="$store.NewAccountAlert.priceType =='delta'"
+                    type="text"
+                    id="time-frame"
+                    x-model.number="$store.NewAccountAlert.timeFrame"
+                    size="8"
+                    class="text-black"
+                    style="height: 18px;"
+                    @change="validateInput()"
+                  >
+      
+                  <div x-show="$store.NewAccountAlert.inputError" x-text="$store.NewAccountAlert.errorText"></div>
+                  <button 
+                    x-show="!$store.NewAccountAlert.inputError"
+                    @click="addAccountAlert($store.AccountPage.selectedAccount); $store.AccountAlerts.addAccountAlert = false"
+                    class="flex mx-2 mt-3 h-6 w-16 justify-center items-center rounded-full bg-bkg-4 text-xs text-fgd-1"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+              <!-- New account alert collapsible end -->
+            </div>
+            <!-- View account details end -->
+        
           </div>
         </div>
-          <!-- ACCOUNT PAGE END -->
-    
+        <!-- ACCOUNT PAGE END -->
+        
       <!-- INFO CONTAINER END -->
 
       <!-- NAV BUTTONS START-->

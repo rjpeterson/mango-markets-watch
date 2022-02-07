@@ -1,5 +1,6 @@
 import { XData } from 'alpinejs';
 import debugCreator from 'debug';
+import { UserDataStoreType } from './UserDataStore';
 
 export interface NewAccountAlertStoreType extends XData {
   priceType: PriceType,
@@ -7,99 +8,70 @@ export interface NewAccountAlertStoreType extends XData {
   triggerValue: number | undefined,
   deltaValue: number | undefined,
   timeFrame: number | undefined,
-  triggerValid: boolean,
-  deltaValid: boolean,
   timeFrameValid: boolean,
   inputError: boolean,
+  errorText: string,
 }
 
 export enum PriceType {
-  Static,
-  Delta
+  Static = 'static',
+  Delta = '% change'
 }
 
 export enum MetricType {
-  Balance,
-  HealthRatio
+  Balance = 'balance',
+  Health = 'health'
 }
 
 const debug = debugCreator('popup:NewAccountAlert')
 
 let NewAccountAlertStore: NewAccountAlertStoreType
+let UserDataStore: UserDataStoreType
 
-export default (address: string): { priceType: "static" | "delta"; metricType: "balance" | "healthRatio"; init(): void; showInputError(): void; validateInput(): void; addAccountAlert(): void; } => ({
-  get priceType() {
-    switch (NewAccountAlertStore.priceType) {
-      case PriceType.Static: return 'static';
-      case PriceType.Delta: return 'delta';
-    }
-  },
-  set priceType(value) {
-    switch (value) {
-      case 'static': NewAccountAlertStore.priceType = PriceType.Static;
-      case 'delta': NewAccountAlertStore.priceType = PriceType.Delta;
-    }
-  },
-  get metricType() {
-    switch (NewAccountAlertStore.metricType) {
-      case MetricType.Balance: return 'balance';
-      case MetricType.HealthRatio: return 'healthRatio';
-    }
-  },
-  set metricType(value) {
-    switch (value) {
-      case 'balance': NewAccountAlertStore.metricType = MetricType.Balance;
-      case 'healthRatio': NewAccountAlertStore.metricType = MetricType.HealthRatio;
-    }
-  },
+export default () => ({
+
   init(): void {
     NewAccountAlertStore = Alpine.store('NewAccountAlert') as NewAccountAlertStoreType
+    UserDataStore = Alpine.store('UserData') as UserDataStoreType
   },
-  showInputError(): void {
-    if (NewAccountAlertStore.priceType === PriceType.Static && !NewAccountAlertStore.triggerValid) {
+  generateId(): number {
+    let last = UserDataStore.accountAlerts.at(-1)
+    debug('last used account alert id: ', last)
+    return last ? last.id + 1 : 0
+  },
+  validateInput(): void {
+    debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore))
+    if (NewAccountAlertStore.priceType === PriceType.Delta && NewAccountAlertStore.timeFrame <= 0) {
       NewAccountAlertStore.inputError = true
-    } else if (NewAccountAlertStore.priceType === PriceType.Delta && (!NewAccountAlertStore.deltaValid || !NewAccountAlertStore.timeFrameValid)) {
-      NewAccountAlertStore.inputError = true
+      NewAccountAlertStore.errorText = 'Period must be positive'
     } else {
       NewAccountAlertStore.inputError = false
+      NewAccountAlertStore.errorText = ''
     }
   },
 
-  validateInput(): void {
-    if (!parseFloat(this.triggerValue) && this.triggerValue !== 0) {
-      NewAccountAlertStore.triggerValid = false
-    } else {
-      NewAccountAlertStore.triggerValid = true;
+  addAccountAlert(address: string): void {
+    const newAlert = {
+      id: this.generateId(),
+      address: address,
+      priceType: NewAccountAlertStore.priceType,
+      metricType: NewAccountAlertStore.metricType,
+      triggerValue: NewAccountAlertStore.triggerValue,
+      deltaValue: NewAccountAlertStore.deltaValue,
+      timeFrame: NewAccountAlertStore.timeFrame
     }
-    if (!parseFloat(this.deltaValue) && this.deltaValue !== 0) {
-      NewAccountAlertStore.deltaValid = false
-    } else {
-      NewAccountAlertStore.deltaValid = true
-    }
-    if (!parseFloat(this.timeFrame) || this.timeFrame < 1) {
-      NewAccountAlertStore.timeFrameValid = false
-    } else {
-      NewAccountAlertStore.timeFrameValid = true
-    }
-    this.showInputError()
-  },
-
-  addAccountAlert(): void {
+    debug('creating new account alert: ', JSON.stringify(newAlert))
     chrome.runtime.sendMessage({
       msg: 'add account alert',
       data: {
-        address: address,
-        priceType: NewAccountAlertStore.priceType,
-        metricType: NewAccountAlertStore.metricType,
-        triggerValue: NewAccountAlertStore.triggerValue,
-        deltaValue: NewAccountAlertStore.deltaValue,
-        timeFrame: NewAccountAlertStore.timeFrame
+        alert: newAlert
       }
     }, function(response) {
       if (!response) {
         debug('could not add account alert')
       } else {
         debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
+        UserDataStore.accountAlerts = response.data
       }
     })
   }

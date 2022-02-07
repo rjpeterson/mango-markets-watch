@@ -18,34 +18,35 @@ interface TokenAlerts {
   [id: string]: {
 		baseSymbol: string,
 		percent: string,
-		side: Side,
-		type: Type
+		side: AlertSide,
+		type: TokenRateType
 	},
 }
 
-export enum Side {
-  Below,
-  Above
+export enum AlertSide {
+  Below = 'below',
+  Above = 'above'
 }
 
-export enum Type {
-  Deposit,
-  Borrow,
-  Funding
+export enum TokenRateType {
+  Deposit = 'deposit',
+  Borrow = 'borrow',
+  Funding = 'funding'
 }
 
 interface Accounts {
   [address: string]: {
 		balance: number,
-		healthRatio: number,
+		health: number,
 		name: string | undefined
 	},
 }
 
-interface AccountAlert {
+export interface AccountAlert {
+  id: number,
   address: string,
   priceType: PriceType,
-  metric: MetricType,
+  metricType: MetricType,
   triggerValue: number,
   deltaValue: number,
   timeFrame: number

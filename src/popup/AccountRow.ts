@@ -1,24 +1,23 @@
-// import debugCreator from 'debug';
+import debugCreator from 'debug';
 
-// const debug = debugCreator('popup:AccountRow')
+import { AccountPageStoreType } from "./AccountPage"
 
-export default (): { expandedEdit: boolean; expandedNewAlert: boolean; expandedShowAlerts: boolean } => ({
+const debug = debugCreator('popup:AccountRow')
+let AccountPageStore: AccountPageStoreType
+export default (): { init(): void; expandedEdit: boolean; highlightTriggeredAccount(address: string): "" | "bg-orange-DEFAULT text-bkg-1"; } => ({
+  init(): void {
+    AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
+  },
   get expandedEdit() {
     return this.editActive === this.address
   },
   set expandedEdit(value) {
     this.editActive = value ? this.address : undefined
   },
-  get expandedNewAlert() {
-    return this.newAlertActive === this.address
-  },
-  set expandedNewAlert(value) {
-    this.newAlertActive = value ? this.address : undefined
-  },
-  get expandedShowAlerts() {
-    return this.showAlertsActive === this.address
-  },
-  set expandedShowAlerts(value) {
-    this.showAlertsActive = value ? this.address : undefined
+  highlightTriggeredAccount(address: string) {
+    const addressAlerts = AccountPageStore.triggered[address]
+    if (!addressAlerts) {return ''}
+    const triggered = Object.values(addressAlerts).includes(true)
+    return triggered ? 'bg-orange-DEFAULT text-bkg-1' : ''
   }
 })

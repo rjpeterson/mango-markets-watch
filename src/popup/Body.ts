@@ -1,35 +1,12 @@
 import debugCreator from 'debug';
-import { AppDataStoreType } from './AppDataStore';
+import { AppDataStoreType, Page } from './AppDataStore';
 import { UserDataStoreType } from './UserDataStore';
-
-export enum Page {
-  Home,
-  Alert,
-  Account,
-  Settings
-}
 
 let AppDataStore: AppDataStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:Body')
 
-export default (): { page: "account" | "alert" | "home" | "settings"; init(): void; } => ({
-  get page() {
-    switch (AppDataStore.page) {
-      case Page.Account: return 'account';
-      case Page.Alert: return 'alert';
-      case Page.Home: return 'home';
-      case Page.Settings: return 'settings'
-    }
-  },
-  set page(value) {
-    switch (value) {
-      case 'account': AppDataStore.page = Page.Account;
-      case 'alert': AppDataStore.page = Page.Alert;
-      case 'home': AppDataStore.page = Page.Home;
-      case 'settings': AppDataStore.page = Page.Settings;
-    }
-  },
+export default (): { init(): void; changeAlertType(): void; getHeaderText(): string; } => ({
   init(): void {
     AppDataStore = Alpine.store('AppData') as AppDataStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -49,32 +26,49 @@ export default (): { page: "account" | "alert" | "home" | "settings"; init(): vo
         UserDataStore.tokenAlerts = response.tokenAlerts
         UserDataStore.accounts = response.accounts
         UserDataStore.accountAlerts = response.accountAlerts
-        UserDataStore.browserNotifs = response.tokenAlertTypes.browser
-        UserDataStore.OSNotifs = response.tokenAlertTypes.os
+        UserDataStore.browserNotifs = response.alertTypes.browser
+        UserDataStore.OSNotifs = response.alertTypes.os
     });
 
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
-        debug(`received message ${request.msg}` )
-        if (request.msg === 'tokensInfo updated') {
-          AppDataStore.tokensInfo = request.data.tokensInfo
-        } else if (request.msg === 'accounts data updated') {
-          UserDataStore.accounts = request.data.accounts
+        // debug(`received message ${request.msg}` )
+        switch (request.msg) {
+          case 'tokensInfo refreshed':{
+            AppDataStore.tokensInfo = request.data.tokensInfo;
+            break
+          }
+          case 'accounts data updated':{
+            UserDataStore.accounts = request.data.accounts;
+            break;
+          } 
+          default: null
         }
       }
     )
 
-    chrome.runtime.sendMessage({
-      msg: 'refresh tokensInfo'
-    }, 
-    function(response) {
-      if (!response) {
-        debug('could not refresh tokensInfo')
+    chrome.runtime.sendMessage({msg: 'refresh tokensInfo'}, 
+      function(response) {
+        if (!response) {
+          debug('could not refresh tokensInfo')
+        }
+        debug(`got response from background script for msg 'refresh tokensInfo': ${
+          JSON.stringify(response)
+        }`)
+          AppDataStore.tokensInfo = response
       }
-      debug(`got response from background script for msg 'refresh tokensInfo': ${
-        JSON.stringify(response)
-      }`)
-        AppDataStore.tokensInfo = response
-    });
+    );
+  },
+  changeAlertType(): void {
+    chrome.runtime.sendMessage({
+      msg: 'change alert type',
+      data: {
+        browser: UserDataStore.browserNotifs,
+        os: UserDataStore.OSNotifs
+      }
+    })
+  },
+  getHeaderText(): string {
+    return AppDataStore.headerTexts[AppDataStore.page]
   }
 })

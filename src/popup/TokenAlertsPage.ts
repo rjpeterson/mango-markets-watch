@@ -1,6 +1,6 @@
 import debugCreator from 'debug';
 import { XData } from 'alpinejs';
-import { Side, Type, UserDataStoreType } from './UserDataStore';
+import { AlertSide, TokenRateType, UserDataStoreType } from './UserDataStore';
 
 export interface TokenAlertsPageStoreType extends XData {
   active: string | undefined,
@@ -13,7 +13,7 @@ let TokenAlertsStore: TokenAlertsPageStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
 
-export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(): void; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: Type, side: Side, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
+export default (): { init(): void; lastAlertKey(): number; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: TokenRateType, side: AlertSide, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
   init(): void {
     TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
@@ -35,15 +35,6 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
       return 0
     }
   },
-  changeTokenAlertType(): void {
-    chrome.runtime.sendMessage({
-      msg: 'change alert type',
-      data: {
-        browser: UserDataStore.browserNotifs,
-        os: UserDataStore.OSNotifs
-      }
-    })
-  },
   checkInput(percent: string, callback: Function): void {
     if (!parseFloat(percent) && percent != '0') {
       this.inputError = true
@@ -58,8 +49,8 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
   },
   createTokenAlert(
     baseSymbol: string, 
-    type: Type, 
-    side: Side, 
+    type: TokenRateType, 
+    side: AlertSide, 
     percent: string, 
     id: number
   ): void {
@@ -73,13 +64,13 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
       percent: percent
     }
     chrome.runtime.sendMessage({
-      msg: 'update tokenAlerts',
+      msg: 'update token alerts',
       data: {
         tokenAlerts: UserDataStore.tokenAlerts
       }
     }, function(response) {
       if (!response) {
-        debug('could not update tokenAlerts')
+        debug('could not update token alerts')
       }
       debug(`tokenAlerts updated: ${JSON.stringify(response)}`)
     })
@@ -88,17 +79,13 @@ export default (): { init(): void; lastAlertKey(): number; changeTokenAlertType(
     delete UserDataStore.tokenAlerts[id];
     chrome.notifications.clear(id.toString());
     chrome.runtime.sendMessage({
-      msg: 'update tokenAlerts',
+      msg: 'update token alerts',
       data: {
         tokenAlerts: UserDataStore.tokenAlerts
       }
     })
   },
   parsePercent(value: string): string {
-    if (parseInt(value) >= 10) {
-      return parseFloat(value).toFixed(1)
-    } else {
-      return parseFloat(value).toFixed(2)
-    }
+    return parseFloat(value).toFixed(parseInt(value) >= 10 ? 1 : 2)
   }
 })
