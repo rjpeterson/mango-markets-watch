@@ -1,8 +1,9 @@
 import debugCreator from 'debug';
-import { AlertTypes } from '.';
+import { AlertTypes, updateBadgeText } from '.';
 import { getTokenInfo_v3, TokensInfo } from './tokenData';
 
 const debug = debugCreator('background:tokenAlerts')
+export let triggeredTokenAlerts = 0
 
 enum TokenRateType {
   Borrow = 'borrow',
@@ -19,6 +20,8 @@ interface TokenAlert {
   side: AlertSide,
   percent: number
 }
+
+//TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
 const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
   if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
@@ -37,8 +40,10 @@ const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: A
   });
 };
 
-const onUntriggered = (tokenAlertId: string) => {
-  chrome.notifications.clear(tokenAlertId);
+const onUntriggered = (tokenAlertId: string, alertTypes: AlertTypes) => {
+  if (alertTypes.os) {
+    chrome.notifications.clear(tokenAlertId);
+  }
   chrome.runtime.sendMessage({
     msg: "tokenAlert untriggered",
     data: {
@@ -52,6 +57,7 @@ export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse
   const tokensInfo = await getTokenInfo_v3()
   chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
     checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes)
+    updateBadgeText()
     sendResponse({ msg: "tokenAlerts updated successfully" });
   })
 }
@@ -61,45 +67,40 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
     // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'alertTypes:', JSON.stringify(response.alertTypes))
     let triggeredAlerts = 0;
     for (const entry in tokenAlerts) {
+      let triggered: boolean
       const tokenAlert : TokenAlert = tokenAlerts[entry];
       tokensInfo
-        .filter((token) => token.baseSymbol === tokenAlert.baseSymbol)
+        .filter((token) => {return token.baseSymbol === tokenAlert.baseSymbol})
         .forEach((token) => {
-          debug(
-            'comparing tokenAlert',
-            JSON.stringify(tokenAlert),
-            'to token data',
-            JSON.stringify(token)
-          );
+          debug('comparing tokenAlert', JSON.stringify(tokenAlert), 'to token data', JSON.stringify(token));
           if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
-            debug(
-              `${tokenAlert.type} rate of ${token.baseSymbol} is not a number`
-            );
+            debug(`${tokenAlert.type} rate of ${token.baseSymbol} is not a number`);
             return;
           }
           if (tokenAlert.side === "above") {
             if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
-              triggeredAlerts += 1;
-              debug(`token notification triggered`);
-              onTriggered(entry, tokenAlert, alertTypes);
+              triggered = true
             } else {
-              onUntriggered(entry);
-              debug("conditions not met");
+              triggered = false
             }
           } else {
             if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
-              triggeredAlerts += 1;
-              debug(`token notification triggered`);
-              onTriggered(entry, tokenAlert, alertTypes);
+              triggered = true
             } else {
-              onUntriggered(entry);
-              debug("conditions not met");
+              triggered = false
             }
           }
         });
+      if (triggered) {
+        debug(`token notification triggered`);
+        onTriggered(entry, tokenAlert, alertTypes);
+        triggeredAlerts += 1;
+      } else {
+        onUntriggered(entry, alertTypes);
+        debug("conditions not met");
+      }
     }
     triggeredAlerts > 0 && alertTypes.browser === true
-      ? chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() })
-      : chrome.browserAction.setBadgeText({ text: undefined });
+      ? triggeredTokenAlerts = triggeredAlerts
+      : triggeredTokenAlerts = 0
 };
-

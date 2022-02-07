@@ -27,6 +27,14 @@ export interface HistoricalEntry {
   timestamp: dayjs.Dayjs,
 }
 
+//TODO pull historical account data from client instead of storing it ourselves
+// const response = await fetch(
+//   `https://mango-transaction-log.herokuapp.com/v3/stats/account-performance?mango-account=${mangoAccountPk}`
+// )
+// const parsedResponse = await response.json()
+// const entries: any = Object.entries(parsedResponse)
+
+
 // takes a single Accounts object, loops through address keys, 
 // gets up to date info of each address and returns a single updated Accounts object
 export async function updateAccountsData(accounts: Accounts, sendResponse?: Function) {

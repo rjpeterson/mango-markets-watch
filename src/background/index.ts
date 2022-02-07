@@ -1,10 +1,10 @@
 import debugCreator from 'debug';
 
-import { addAccountAlert, checkAccountAlerts, updateAccountAlerts } from './accountAlerts';
+import { addAccountAlert, checkAccountAlerts, triggeredAccountAlerts, updateAccountAlerts } from './accountAlerts';
 import { updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import { changeAlertType } from './toggles';
-import { checkTokenAlerts, updateTokenAlerts } from './tokenAlerts';
+import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
 import { refreshTokensInfo } from './tokenData';
 
 export interface AlertTypes {
@@ -14,10 +14,10 @@ export interface AlertTypes {
 
 localStorage.debug = '*';
 const debug = debugCreator('background:index')
+let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts;
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
-
   chrome.storage.local.get(null, (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
@@ -26,9 +26,21 @@ const onPopup = (sendResponse: Function) => {
     debug('onpopup fetched storage: ', JSON.stringify(result))
     checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
+    updateBadgeText();
     sendResponse(result);
   });
 };
+
+export const updateBadgeText = () => {
+  chrome.storage.local.get('alertTypes', (result) => {
+    if (result.alertTypes.browser) {
+      const triggeredAlerts = triggeredTokenAlerts + triggeredAccountAlerts
+      triggeredAlerts > 0 ?
+        chrome.browserAction.setBadgeText({ text: triggeredAlerts.toString() }) :
+        chrome.browserAction.setBadgeText({ text: undefined })
+    }
+  })
+}
 
 //fires on new install or update
 chrome.runtime.onInstalled.addListener(() => { 

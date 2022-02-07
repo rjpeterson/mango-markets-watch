@@ -1,3 +1,5 @@
+import { updateBadgeText } from ".";
+import { checkAccountAlerts } from "./accountAlerts";
 import { checkTokenAlerts } from "./tokenAlerts";
 import { TokensInfo } from "./tokenData";
 
@@ -31,7 +33,9 @@ export const changeAlertType = (browser: boolean, os: boolean): void => {
           os: os,
         },
       });
-      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'alertTypes'], (result) => {
+      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'alertTypes', 'accounts', 'accountAlerts', 'accountsHistory'], (result) => {
         checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes)
+        checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
+        updateBadgeText()
       })
 }

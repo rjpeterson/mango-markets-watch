@@ -1,4 +1,5 @@
 import debugCreator from 'debug';
+import { updateBadgeText } from '.';
 
 import { updateAndStoreAccounts } from './accountData';
 import { refreshTokensInfo } from './tokenData';
@@ -25,6 +26,7 @@ export function setAlarmListener() {
       debug("Refresh alarm triggered");
       refreshTokensInfo(); 
       updateAndStoreAccounts();
+      updateBadgeText()
     }
   });
   
