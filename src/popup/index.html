@@ -55,6 +55,7 @@
               <tbody 
                 class="text-sm"
               >
+              <!-- TODO hightlight data points that trigger token alerts like on the account page -->
                 <!-- TOKEN INFO ROWS START -->
                 <template x-for="(token, index) in filterToggles()" :key="token[0]">
                   <tr :class="rowColors(index)">

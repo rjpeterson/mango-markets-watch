@@ -44,7 +44,7 @@ export async function updateAccountsData(accounts: Accounts, sendResponse?: Func
     debug('updating account', key)
     const accountPK = new PublicKey(key)
     const mangoAccount = await client.getMangoAccount(accountPK, mangoGroup.dexProgramId)
-    const health = mangoAccount.getHealth(mangoGroup, mangoCache, 'Maint').toNumber()
+    const health = mangoAccount.getHealthRatio(mangoGroup, mangoCache, 'Maint').toNumber()
     const balance = mangoAccount.computeValue(mangoGroup, mangoCache).toNumber()
     const name = mangoAccount.name ? mangoAccount.name : undefined
     updatedAccounts[key] = {health: health, balance: balance, name: name}

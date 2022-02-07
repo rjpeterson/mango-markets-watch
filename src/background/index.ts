@@ -18,14 +18,16 @@ let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts;
 
 // ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
-  chrome.storage.local.get(null, (result) => {
+  chrome.storage.local.get(null, async (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
       return
     }
+    refreshTokensInfo()
+    const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result))
     checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
-    checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
+    checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();
     sendResponse(result);
   });
