@@ -36,20 +36,26 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         debug(`received message ${request.msg}` )
-        if (request.msg === 'accountAlert triggered') {
-          const alert: AccountAlert = request.data.alert
-          debug('Account alert triggered: ',JSON.stringify(request.data.alert))
-          debug('Current triggered array: ', JSON.stringify(AccountPageStore.triggered))
-          AccountPageStore.triggered[alert.address] = {
-            [alert.id]: true
-          }
-        } else if (request.msg === 'accountAlert untriggered') {
+        if (request.msg === 'account alerts triggered') {
+          const alerts: [string, AccountAlert][] = request.data.alerts
+          debug('Account alerts triggered: ',JSON.stringify(request.data.alert))
+          alerts.forEach(([accountName, alert]) => {
+            AccountPageStore.triggered[alert.address] = {
+              ...AccountPageStore.triggered[alert.address],
+              [alert.id]: true
+            }
+          })
+          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered))
+        } else if (request.msg === 'account alert untriggered') {
           const alert: AccountAlert = request.data.alert
           debug('Account alert untriggered: ',JSON.stringify(request.data.alert))
-          debug('Current triggered array: ', JSON.stringify(AccountPageStore.triggered))
-          AccountPageStore.triggered[alert.address] = {
-            [alert.id]: false
+          AccountPageStore.triggered = {
+            ...AccountPageStore.triggered,
+            [alert.address]: {
+              [alert.id]: false
+            }
           }
+          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered))
         }
       }
     )

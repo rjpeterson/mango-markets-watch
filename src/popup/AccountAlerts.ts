@@ -8,8 +8,8 @@ const debug = debugCreator('popup:AccountAlerts')
 export interface AccountAlertsStoreType {
   active: number | undefined,
   addAccountAlert: boolean,
-  inputError: string | undefined,
-  errorText: string | undefined
+  inputError: boolean,
+  errorText: string 
 }
 
 let UserDataStore: UserDataStoreType
@@ -54,7 +54,8 @@ export default () => ({
       return undefined
     }
   },
-  getAlertsForAccount(accountAlerts: AccountAlert[]): AccountAlert[] {
+  getAlertsForAccount(): AccountAlert[] {
+    const accountAlerts = UserDataStore.accountAlerts
     debug('filtering alerts: ', JSON.stringify(accountAlerts))
     debug('finding alerts for account: ', AccountPageStore.selectedAccount)
     return accountAlerts.filter((alert) => {

@@ -42,7 +42,7 @@ interface Accounts {
 	},
 }
 
-interface AccountAlert {
+export interface AccountAlert {
   id: number,
   address: string,
   priceType: PriceType,

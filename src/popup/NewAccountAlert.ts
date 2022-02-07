@@ -15,7 +15,7 @@ export interface NewAccountAlertStoreType extends XData {
 
 export enum PriceType {
   Static = 'static',
-  Delta = 'delta'
+  Delta = '% change'
 }
 
 export enum MetricType {
@@ -39,25 +39,15 @@ export default () => ({
     debug('last used account alert id: ', last)
     return last ? last.id + 1 : 0
   },
-  showInputError(): void {
-    if (!NewAccountAlertStore.timeFrameValid) {
-      NewAccountAlertStore.inputError = true
-    } else {
-      NewAccountAlertStore.inputError = false
-    }
-  },
   validateInput(): void {
     debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore))
-
     if (NewAccountAlertStore.priceType === PriceType.Delta && NewAccountAlertStore.timeFrame <= 0) {
-      NewAccountAlertStore.timeFrameValid = false
-      NewAccountAlertStore.errorText = 'TimeFrame must be > 0'
+      NewAccountAlertStore.inputError = true
+      NewAccountAlertStore.errorText = 'Period must be positive'
     } else {
-      NewAccountAlertStore.timeFrameValid = true
+      NewAccountAlertStore.inputError = false
       NewAccountAlertStore.errorText = ''
-
     }
-    this.showInputError()
   },
 
   addAccountAlert(address: string): void {
