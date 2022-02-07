@@ -1,4 +1,6 @@
 import token from "./token";
+const rpcToken = `https://mango.rpcpool.com/${token}`;
+
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
   IDS as IDS_v3,
@@ -8,7 +10,6 @@ import {
 import debugCreator from 'debug';
 
 const debug = debugCreator('background:connection')
-
 
 // export interface Group {
 //   groups?: (GroupsEntity)[] | null;
@@ -48,7 +49,6 @@ export interface Market {
   eventsKey: string;
 }
 
-const rpcToken = `https://mango.rpcpool.com/${token}`;
 
 export async function establishConnection() {
   const cluster = "mainnet";
