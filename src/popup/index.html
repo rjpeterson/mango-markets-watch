@@ -103,8 +103,8 @@
 
         <!-- SETTINGS PAGE START -->
         <div x-show="$store.AppData.page === 'settings'" style="height: 14.7rem">
-          <div class="text-sm text-fgd-1 scroller min-w-full overflow-y-auto py-2" style="max-height: 14.1rem;">
-            <div class="flex justify-center">Notification Options</div>
+          <div class="text-sm text-fgd-1 scroller min-w-full overflow-y-auto py-2 space-y-2" style="max-height: 14.1rem;">
+            <div class="flex justify-center">Notifications</div>
             <div class="flex justify-evenly -mt-1 mb-1">
               <div>
                 <input type="checkbox" id="browser-notif" name="browser-notif" value="true" x-model="$store.UserData.browserNotifs" checked @change="changeAlertType()">
@@ -115,7 +115,7 @@
                 <label for="os-notif">OS Tray</label>
               </div>
             </div>
-            <div class="flex justify-center">Token Options</div>
+            <div class="flex justify-center">Tokens</div>
             <div class="
               grid
               grid-cols-2
