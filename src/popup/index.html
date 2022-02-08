@@ -33,21 +33,21 @@
           x-data="HomePage"
           style="height: 14.7rem"
         >
-          <div class="flex scroller min-w-full overflow-y-auto" style="max-height: 14.1rem;">
+          <div class="flex scroller w-72 overflow-y-auto" style="max-height: 14.1rem;">
             <table class="flex-col flex-grow mx-auto table-auto">
               <thead>
-                <tr class="mb-2 text-xs text-center text-fgd-4">
-                  <th class="flex-auto px-2 font-normal text-left">
+                <tr class="text-xs text-fgd-4">
+                  <th class="flex-auto pl-8 font-normal text-left">
                     Token
                   </th>
                   <th class="flex-auto px-2 font-normal text-right">
                     Deposit
                   </th>
                   <th class="flex-auto font-normal text-right">/</th>
-                  <th class="flex-auto pr-2 font-normal text-right">
+                  <th class="flex-auto px-2 font-normal text-left">
                     Borrow
                   </th>
-                  <th class="flex-auto pr-2 font-normal text-right">
+                  <th class="flex-auto pr-6 font-normal text-right">
                     Funding (APR)
                   </th>
                 </tr>
@@ -64,7 +64,7 @@
                       flex
                       items-end
                       flex-auto
-                      pl-2
+                      pl-8
                       text-left
                       text-fgd-1
                       "
@@ -85,11 +85,11 @@
                     <td class="flex-auto font-normal text-right text-fgd-4">
                       /
                     </td>
-                    <td class="flex-auto pr-2 text-right text-red-dark">
+                    <td class="flex-auto px-2 text-left text-red-dark">
                       <span x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"></span>
                       <span class="text-xs">%</span>
                     </td>
-                    <td class="flex-auto pr-2 text-right text-fgd-1">
+                    <td class="flex-auto pr-8 text-right text-fgd-1">
                       <span x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"></span>
                       <span class="text-xs">%</span>
                     </td>
@@ -217,8 +217,8 @@
 
               <!-- TOKEN ALERTS HEADERS START -->
               <div class="w-full flex flex-row text-xs text-fgd-4 justify-between">
-                <div class="w-10 font-normal flex justify-center">Status</div>
-                <div class="w-12 font-normal flex justify-center">Token</div>
+                <div class="w-8 font-normal flex justify-center">Status</div>
+                <div class="w-16 font-normal flex justify-center">Token</div>
                 <div class="w-12 font-normal flex justify-center">Type</div>
                 <div class="w-12 font-normal flex justify-center">Side</div>
                 <div class="w-12 font-normal flex justify-center">%</div>
@@ -234,7 +234,7 @@
                     x-data="TokenAlertsRow"
                   >
                     <div class="flex flex-row text-sm h-6 justify-between">
-                      <div class="w-10 flex font-normal flex justify-center">
+                      <div class="w-8 flex font-normal flex justify-center">
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
@@ -244,7 +244,7 @@
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
-                      <div class="w-12 flex font-normal flex justify-center">
+                      <div class="w-16 flex font-normal flex justify-center">
                         <img
                           :src="'./icons/'+($store.UserData.tokenAlerts[id].baseSymbol.toLowerCase().replace(/[^\w\s]|_/g, ''))+'.svg'"
                           width="18"
