@@ -56,11 +56,12 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
     debug('account alerts array is empty')
     return;
   }
-  let triggeredAlerts: [string, AccountAlert][] = []
+  let triggeredAlerts: [string, AccountAlert, AccountInfo, AccountInfo][] = []
   for (const alert of accountAlerts) {
     debug('checking account alert:', JSON.stringify(alert))
     let triggered = false
     const matchedAccount = accounts[alert.address]
+    let historicalAccount = undefined
     debug('checking against account:', JSON.stringify(matchedAccount))
     if (!matchedAccount) {
       debug('could not find matching account')
@@ -88,7 +89,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
         debug('not enought historical data for timeframe: ', alert.timeFrame)
         continue;
       };
-      const historicalAccount = historicalDate.accounts[alert.address]
+      historicalAccount = historicalDate.accounts[alert.address]
       if (!historicalAccount) {
         debug('no data for account ', alert.address, ' in compared historical entry')
         continue;
@@ -96,18 +97,22 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
       debug('comparing against historical account: ', JSON.stringify(historicalAccount))
       if (alert.metricType === MetricType.Balance) {
         debug('metric balance')
-        const balanceDiff = Math.abs(matchedAccount.balance/historicalAccount.balance);
+        const balanceDiff = Math.abs(((matchedAccount.balance/historicalAccount.balance) - 1) * 100);
+        debug('balanceDiff: ', balanceDiff)
+        debug('deltaValue: ', alert.deltaValue)
         balanceDiff >= alert.deltaValue ? triggered = true : undefined
       } else {//metricType.health
         debug('metric health')
-        const healthDiff = Math.abs(matchedAccount.health/historicalAccount.health);
+        const healthDiff = Math.abs(((matchedAccount.health/historicalAccount.health) - 1) * 100);
+        debug('healthDiff: ', healthDiff)
+        debug('deltaValue: ', alert.deltaValue)
         healthDiff >= alert.deltaValue ? triggered = true : undefined
       }
     }
     if (triggered) {
       debug('accounts alert triggered')
       const accountName = getAccountName(alert.address, matchedAccount)
-      triggeredAlerts.push([accountName, alert])
+      triggeredAlerts.push([accountName, alert, matchedAccount, historicalAccount])
     } else {
       debug('accounts alert not triggered')
       onUntriggered(alert, alertTypes)
@@ -130,24 +135,26 @@ const getAccountName = (address: string, account: AccountInfo): string => {
   }
 }
 
-const assembleNotificationMessage = (accountName: string | undefined, alert: AccountAlert): string => {
+const assembleNotificationMessage = (accountName: string | undefined, alert: AccountAlert, matchedAccount?: AccountInfo, historicalAccount?: AccountInfo): string => {
   if (alert.priceType === PriceType.Static) {
     return `${accountName} ${alert.metricType} is below ${alert.triggerValue}`
   } else {
-    return `${accountName} ${alert.metricType} has changed more than ${alert.deltaValue}% in the past ${alert.timeFrame} hours`
+    return `${accountName} ${alert.metricType} changed 
+    more than ${alert.deltaValue}% in the past ${alert.timeFrame} hours. 
+    ${alert.metricType === MetricType.Balance ? '$' : ''}${historicalAccount[alert.metricType].toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}${alert.metricType === MetricType.Health ? '%' : ''} -> ${alert.metricType === MetricType.Balance ? '$' : ''}${matchedAccount[alert.metricType].toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}${alert.metricType === MetricType.Health ? '%' : ''}`
   }
 }
 
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-const onTriggered = (triggeredAlerts: [string | undefined, AccountAlert][], alertTypes: AlertTypes): void => {
+const onTriggered = (triggeredAlerts: [string | undefined, AccountAlert, AccountInfo, AccountInfo][], alertTypes: AlertTypes): void => {
   if (alertTypes.os) {
-    triggeredAlerts.forEach(([accountName, alert]) => {
+    triggeredAlerts.forEach(([accountName, alert, matchedAccount, historicalAccount]) => {
       chrome.notifications.create(alert.id.toString(), {
         type: "basic",
-        iconUrl: "dist/icons/mngo.svg",
+        iconUrl: "dist/icons/logo.svg",
         title: `Mango Markets Watch`,
-        message: assembleNotificationMessage(accountName, alert),
+        message: assembleNotificationMessage(accountName, alert, matchedAccount, historicalAccount),
         priority: 2,
       });
     })
