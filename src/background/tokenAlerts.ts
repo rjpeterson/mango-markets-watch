@@ -26,7 +26,7 @@ const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: A
   if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
-      iconUrl: "dist/icons/mngo.svg",
+      iconUrl: "dist/icons/logo.svg",
       title: `Mango Markets Watch`,
       message: `${tokenAlert.baseSymbol} ${tokenAlert.type} rate is ${tokenAlert.side} ${tokenAlert.percent}%`,
       priority: 2,
