@@ -40,7 +40,7 @@ export default () => ({
     return last ? last.id + 1 : 0
   },
   validateInput(): void {
-    debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore))
+    debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore, null, 2))
     if (NewAccountAlertStore.priceType === PriceType.Delta && NewAccountAlertStore.timeFrame <= 0) {
       NewAccountAlertStore.inputError = true
       NewAccountAlertStore.errorText = 'Period must be positive'
@@ -60,7 +60,7 @@ export default () => ({
       deltaValue: NewAccountAlertStore.deltaValue,
       timeFrame: NewAccountAlertStore.timeFrame
     }
-    debug('creating new account alert: ', JSON.stringify(newAlert))
+    debug('creating new account alert: ', JSON.stringify(newAlert, null, 2))
     chrome.runtime.sendMessage({
       msg: 'add account alert',
       data: {
@@ -70,7 +70,7 @@ export default () => ({
       if (!response) {
         debug('could not add account alert')
       } else {
-        debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response)}`)
+        debug(`got response from background script for msg 'add account alert': ${JSON.stringify(response, null, 2)}`)
         UserDataStore.accountAlerts = response.data
       }
     })

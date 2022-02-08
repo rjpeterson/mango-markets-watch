@@ -25,7 +25,7 @@ const onPopup = (sendResponse: Function) => {
     }
     refreshTokensInfo()
     const accounts = await updateAccountsData(result.accounts)
-    debug('onpopup fetched storage: ', JSON.stringify(result))
+    debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
     checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();
@@ -56,7 +56,7 @@ chrome.runtime.onInstalled.addListener(() => {
     "accountsHistory": [],
     "accountAlerts": []
   }, (result) => {
-    debug('got values from storage:', JSON.stringify(result))
+    debug('got values from storage:', JSON.stringify(result, null, 2))
     chrome.storage.local.set(result)
   })
   debug("setting alarm listener...");
@@ -77,7 +77,7 @@ chrome.runtime.onStartup.addListener(() => {
 
 // listen for various messages from popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  debug('background received msg:', request.msg, 'data:', JSON.stringify(request.data));
+  debug('background received msg:', request.msg, 'data:', JSON.stringify(request.data, null, 2));
   switch (request.msg) {
     case "change page":
       chrome.storage.local.set({ page: request.data.page})

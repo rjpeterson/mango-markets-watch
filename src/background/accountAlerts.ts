@@ -58,11 +58,11 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
   }
   let triggeredAlerts: [string, AccountAlert, AccountInfo, AccountInfo][] = []
   for (const alert of accountAlerts) {
-    debug('checking account alert:', JSON.stringify(alert))
+    debug('checking account alert:', JSON.stringify(alert, null, 2))
     let triggered = false
     const matchedAccount = accounts[alert.address]
     let historicalAccount = undefined
-    debug('checking against account:', JSON.stringify(matchedAccount))
+    debug('checking against account:', JSON.stringify(matchedAccount, null, 2))
     if (!matchedAccount) {
       debug('could not find matching account')
       continue
@@ -94,7 +94,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
         debug('no data for account ', alert.address, ' in compared historical entry')
         continue;
       };
-      debug('comparing against historical account: ', JSON.stringify(historicalAccount))
+      debug('comparing against historical account: ', JSON.stringify(historicalAccount, null, 2))
       if (alert.metricType === MetricType.Balance) {
         debug('metric balance')
         const balanceDiff = Math.abs(((matchedAccount.balance/historicalAccount.balance) - 1) * 100);

@@ -72,7 +72,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
       tokensInfo
         .filter((token) => {return token.baseSymbol === tokenAlert.baseSymbol})
         .forEach((token) => {
-          debug('comparing tokenAlert', JSON.stringify(tokenAlert), 'to token data', JSON.stringify(token));
+          debug('comparing tokenAlert', JSON.stringify(tokenAlert, null, 2), 'to token data', JSON.stringify(token, null, 2));
           if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
             debug(`${tokenAlert.type} rate of ${token.baseSymbol} is not a number`);
             return;

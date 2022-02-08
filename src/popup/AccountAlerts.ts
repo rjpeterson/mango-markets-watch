@@ -24,7 +24,7 @@ export default () => ({
     let length;
     let shortAddress;
     selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
-    debug('selected account: ', AccountPageStore.selectedAccount, JSON.stringify(selected))
+    debug('selected account: ', AccountPageStore.selectedAccount, JSON.stringify(selected, null, 2))
     
     if (selected) {
       length = AccountPageStore.selectedAccount.length
@@ -56,7 +56,7 @@ export default () => ({
   },
   getAlertsForAccount(): AccountAlert[] {
     const accountAlerts = UserDataStore.accountAlerts
-    debug('filtering alerts: ', JSON.stringify(accountAlerts))
+    debug('filtering alerts: ', JSON.stringify(accountAlerts, null, 2))
     debug('finding alerts for account: ', AccountPageStore.selectedAccount)
     return accountAlerts.filter((alert) => {
       return alert.address === AccountPageStore.selectedAccount

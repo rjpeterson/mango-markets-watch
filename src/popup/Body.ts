@@ -18,7 +18,7 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
         debug('could not get stored tokensInfo')
       }
       debug(`got response from background script for msg 'onPopup': ${
-        JSON.stringify(response)
+        JSON.stringify(response, null, 2)
       }`)
         AppDataStore.page = response.page ? response.page : Page.Home
         AppDataStore.tokensInfo = response.tokensInfo
@@ -53,7 +53,7 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
           debug('could not refresh tokensInfo')
         }
         debug(`got response from background script for msg 'refresh tokensInfo': ${
-          JSON.stringify(response)
+          JSON.stringify(response, null, 2)
         }`)
           AppDataStore.tokensInfo = response
       }

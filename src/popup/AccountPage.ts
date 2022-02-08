@@ -38,24 +38,24 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
         debug(`received message ${request.msg}` )
         if (request.msg === 'account alerts triggered') {
           const alerts: [string, AccountAlert][] = request.data.alerts
-          debug('Account alerts triggered: ',JSON.stringify(request.data.alert))
+          debug('Account alerts triggered: ',JSON.stringify(request.data.alert, null, 2))
           alerts.forEach(([accountName, alert]) => {
             AccountPageStore.triggered[alert.address] = {
               ...AccountPageStore.triggered[alert.address],
               [alert.id]: true
             }
           })
-          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered))
+          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered, null, 2))
         } else if (request.msg === 'account alert untriggered') {
           const alert: AccountAlert = request.data.alert
-          debug('Account alert untriggered: ',JSON.stringify(request.data.alert))
+          debug('Account alert untriggered: ',JSON.stringify(request.data.alert, null, 2))
           AccountPageStore.triggered = {
             ...AccountPageStore.triggered,
             [alert.address]: {
               [alert.id]: false
             }
           }
-          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered))
+          debug('Current triggered object: ', JSON.stringify(AccountPageStore.triggered, null, 2))
         }
       }
     )
@@ -72,7 +72,7 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
         debug('could not update accounts: ', chrome.runtime.lastError)
       }
       UserDataStore.accounts = response.data.accounts
-      debug(`accounts updated: ${JSON.stringify(response)}`)
+      debug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
   deleteAccount(address: string): void {
@@ -87,7 +87,7 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
         debug('could not delete account')
       }
       UserDataStore.accounts = response.data.accounts
-      debug(`accounts updated: ${JSON.stringify(response)}`)
+      debug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
   healthColor(health: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark" {

@@ -72,7 +72,7 @@ export default (): { init(): void; lastAlertKey(): number; checkInput(percent: s
       if (!response) {
         debug('could not update token alerts')
       }
-      debug(`tokenAlerts updated: ${JSON.stringify(response)}`)
+      debug(`tokenAlerts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
   deleteTokenAlert(id: number): void {
