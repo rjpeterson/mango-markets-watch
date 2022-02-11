@@ -8,17 +8,28 @@ const debug = debugCreator('popup:Body')
 
 export default (): { init(): void; changeAlertType(): void; getHeaderText(): string; } => ({
   init(): void {
+    chrome.storage.local.get(null, (result) => {
+      AppDataStore.page = result.page ? result.page : Page.Home
+      AppDataStore.tokensInfo = result.tokensInfo
+      UserDataStore.toggles = result.toggles
+      UserDataStore.tokenAlerts = result.tokenAlerts
+      UserDataStore.accounts = result.accounts
+      UserDataStore.accountAlerts = result.accountAlerts
+      UserDataStore.browserNotifs = result.alertTypes.browser
+      UserDataStore.OSNotifs = result.alertTypes.os
+    })
     AppDataStore = Alpine.store('AppData') as AppDataStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     chrome.runtime.sendMessage({
       msg: 'onPopup'
     },
     function(response) {
-      if (!response) {
-        debug('could not get stored tokensInfo')
+      if (chrome.runtime.lastError) {
+        debug(chrome.runtime.lastError)
+        return
       }
       debug(`got response from background script for msg 'onPopup': ${
-        JSON.stringify(response)
+        JSON.stringify(response, null, 2)
       }`)
         AppDataStore.page = response.page ? response.page : Page.Home
         AppDataStore.tokensInfo = response.tokensInfo
@@ -53,7 +64,7 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
           debug('could not refresh tokensInfo')
         }
         debug(`got response from background script for msg 'refresh tokensInfo': ${
-          JSON.stringify(response)
+          JSON.stringify(response, null, 2)
         }`)
           AppDataStore.tokensInfo = response
       }

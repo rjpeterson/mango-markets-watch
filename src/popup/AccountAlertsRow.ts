@@ -30,7 +30,7 @@ export default () => ({
   },
   updateAccountAlert(alert: AccountAlert, editPriceType: PriceType, editMetricType: MetricType, editTriggerValue: number, editDeltaValue: number, editTimeFrame: number) {
     let updatedAlerts = UserDataStore.accountAlerts
-    debug('alerts before update: ', JSON.stringify(updatedAlerts))
+    debug('alerts before update: ', JSON.stringify(updatedAlerts, null, 2))
     const indexToUpdate = UserDataStore.accountAlerts.findIndex(element => {
       return element.id === alert.id
     })
@@ -47,7 +47,7 @@ export default () => ({
       deltaValue: editDeltaValue,
       timeFrame: editTimeFrame,
     }
-    debug('alerts after update: ', JSON.stringify(updatedAlerts))
+    debug('alerts after update: ', JSON.stringify(updatedAlerts, null, 2))
     UserDataStore.accountAlerts = updatedAlerts
     this.alert = updatedAlerts[indexToUpdate]
     chrome.runtime.sendMessage({

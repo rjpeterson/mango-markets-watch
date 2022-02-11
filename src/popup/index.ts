@@ -41,7 +41,7 @@ Alpine.store('TokenAlertsPage', {
   active: undefined,
   addTokenAlert: false,
   inputError: false,
-  triggered: [],
+  triggered: {},
 })
 
 Alpine.store('AccountPage', {
