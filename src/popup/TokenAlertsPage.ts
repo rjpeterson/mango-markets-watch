@@ -2,27 +2,54 @@ import debugCreator from 'debug';
 import { XData } from 'alpinejs';
 import { AlertSide, TokenRateType, UserDataStoreType } from './UserDataStore';
 
-export interface TokenAlertsPageStoreType extends XData {
+export interface TokenAlertsStoreType extends XData {
   active: string | undefined,
   addTokenAlert: boolean,
   inputError: boolean,
-  triggered: string[],
+  triggered: TriggeredTokenAlerts,
 }
 
-let TokenAlertsStore: TokenAlertsPageStoreType
+export interface TriggeredTokenAlerts {
+  [id: number]:{
+    [symbol: string]: {
+      [rateType: string]: boolean
+    }
+  } 
+}
+
+let TokenAlertsStore: TokenAlertsStoreType
 let UserDataStore: UserDataStoreType
 const debug = debugCreator('popup:TokenAlertsPage')
 
 export default (): { init(): void; lastAlertKey(): number; checkInput(percent: string, callback: Function): void; createTokenAlert(baseSymbol: string, type: TokenRateType, side: AlertSide, percent: string, id: number): void; deleteTokenAlert(id: number): void; parsePercent(value: string): string; } => ({
   init(): void {
-    TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsPageStoreType
+    TokenAlertsStore = Alpine.store('TokenAlertsPage') as TokenAlertsStoreType
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
         if (request.msg === 'tokenAlert triggered') {
-          TokenAlertsStore.triggered.push(request.data.tokenAlertId)
+          const tokenAlertId = request.data.tokenAlertId
+          const baseSymbol = request.data.tokenAlert.baseSymbol
+          const rateType = request.data.tokenAlert.type
+          TokenAlertsStore.triggered[tokenAlertId] = TokenAlertsStore.triggered[tokenAlertId] ? TokenAlertsStore.triggered[tokenAlertId] : {}
+          TokenAlertsStore.triggered[tokenAlertId] = {
+            ...TokenAlertsStore.triggered[tokenAlertId],
+            [baseSymbol]: {
+              ...TokenAlertsStore.triggered[tokenAlertId][baseSymbol],
+              [rateType]: true
+            }
+          }
         } else if (request.msg === 'tokenAlert untriggered') {
-          TokenAlertsStore.triggered = TokenAlertsStore.triggered.filter((val: string) => val !== request.data.tokenAlertId)
+          const tokenAlertId = request.data.tokenAlertId
+          const baseSymbol = request.data.tokenAlert.baseSymbol
+          const rateType = request.data.tokenAlert.type
+          TokenAlertsStore.triggered[tokenAlertId] = {
+            ...TokenAlertsStore.triggered[tokenAlertId],
+            [baseSymbol]: {
+              ...TokenAlertsStore.triggered[tokenAlertId][baseSymbol],
+              [rateType]: false
+            }
+          }
         }
       }
     )
@@ -77,6 +104,7 @@ export default (): { init(): void; lastAlertKey(): number; checkInput(percent: s
   },
   deleteTokenAlert(id: number): void {
     delete UserDataStore.tokenAlerts[id];
+    delete TokenAlertsStore.triggered[id]
     chrome.notifications.clear(id.toString());
     chrome.runtime.sendMessage({
       msg: 'update token alerts',

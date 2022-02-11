@@ -14,7 +14,7 @@ interface Toggles {
   [token: string]: boolean
 }
 
-interface TokenAlerts {
+export interface TokenAlerts {
   [id: string]: {
 		baseSymbol: string,
 		percent: string,

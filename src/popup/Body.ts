@@ -24,8 +24,9 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
       msg: 'onPopup'
     },
     function(response) {
-      if (!response) {
-        debug('could not get stored tokensInfo')
+      if (chrome.runtime.lastError) {
+        debug(chrome.runtime.lastError)
+        return
       }
       debug(`got response from background script for msg 'onPopup': ${
         JSON.stringify(response, null, 2)

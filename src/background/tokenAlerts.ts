@@ -36,11 +36,12 @@ const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: A
     msg: "tokenAlert triggered",
     data: {
       tokenAlertId: tokenAlertId,
+      tokenAlert: tokenAlert
     },
   });
 };
 
-const onUntriggered = (tokenAlertId: string, alertTypes: AlertTypes) => {
+const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
   if (alertTypes.os) {
     chrome.notifications.clear(tokenAlertId);
   }
@@ -48,6 +49,7 @@ const onUntriggered = (tokenAlertId: string, alertTypes: AlertTypes) => {
     msg: "tokenAlert untriggered",
     data: {
       tokenAlertId: tokenAlertId,
+      tokenAlert: tokenAlert
     },
   });
 };
@@ -96,7 +98,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
         onTriggered(entry, tokenAlert, alertTypes);
         triggeredAlerts += 1;
       } else {
-        onUntriggered(entry, alertTypes);
+        onUntriggered(entry, tokenAlert, alertTypes);
         debug("conditions not met");
       }
     }

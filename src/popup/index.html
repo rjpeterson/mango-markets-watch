@@ -47,7 +47,7 @@
                   <th class="flex-auto px-2 font-normal text-left">
                     Borrow
                   </th>
-                  <th class="flex-auto pr-6 font-normal text-right">
+                  <th class="flex-auto pr-4 font-normal text-right">
                     Funding (APR)
                   </th>
                 </tr>
@@ -58,13 +58,16 @@
               <!-- TODO hightlight data points that trigger token alerts like on the account page -->
                 <!-- TOKEN INFO ROWS START -->
                 <template x-for="(token, index) in filterToggles()" :key="token[0]">
-                  <tr :class="rowColors(index)">
+                  <tr 
+                    :class="rowColors(index)"
+                    x-data="{highlight: []}"  
+                    x-effect="highlight = checkTriggeredTokenData(token[0], $store.TokenAlertsPage.triggered)"
+                  >
                     <td
                       class="
                       flex
                       items-end
-                      flex-auto
-                      pl-8
+                      pl-6
                       text-left
                       text-fgd-1
                       "
@@ -78,20 +81,47 @@
                       />
                       <span x-text="token[0]"></span>
                     </td>
-                    <td class="flex-auto pr-1 text-right text-green-dark">
-                      <span x-text="findToken(token[0]).deposit ? findToken(token[0]).deposit : '——'"></span>
-                      <span class="text-xs">%</span>
+                    <td 
+                      class="pr-1 text-right text-green-dark"
+                    >
+                      <span 
+                        x-text="findToken(token[0]).deposit ? findToken(token[0]).deposit : '——'"
+                        :class="highlight.includes('deposit') ? 'rounded-l-full bg-orange-DEFAULT text-bkg-1 pl-1' : ''"
+                      ></span>
+                      <span 
+                        :class="highlight.includes('deposit') ? 'rounded-r-full bg-orange-DEFAULT text-bkg-1 -ml-1 px-1': ''"
+                      >
+                        %
+                      </span>
                     </td>
-                    <td class="flex-auto font-normal text-right text-fgd-4">
+                    <td class="font-normal text-right text-fgd-4">
                       /
                     </td>
-                    <td class="flex-auto px-2 text-left text-red-dark">
-                      <span x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"></span>
-                      <span class="text-xs">%</span>
+                    <td 
+                      class="pl-1 text-left text-red-dark"
+                    >
+                      <span 
+                        x-text="findToken(token[0]).borrow ? findToken(token[0]).borrow : '——'"
+                        :class="highlight.includes('borrow') ? 'rounded-l-full bg-orange-DEFAULT text-bkg-1 pl-1' : ''"
+                      ></span>
+                      <span 
+                        :class="highlight.includes('borrow') ? 'rounded-r-full bg-orange-DEFAULT text-bkg-1 -ml-1 px-1' : ''"
+                      >
+                        %
+                      </span>
                     </td>
-                    <td class="flex-auto pr-8 text-right text-fgd-1">
-                      <span x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"></span>
-                      <span class="text-xs">%</span>
+                    <td 
+                      class="pr-6 text-right text-fgd-1"
+                    >
+                      <span 
+                        x-text="findToken(token[0]).funding ? findToken(token[0]).funding : '——'"
+                        :class="highlight.includes('funding') ? 'rounded-l-full bg-orange-DEFAULT text-bkg-1 pl-1' : ''"
+                      ></span>
+                      <span 
+                        :class="highlight.includes('funding') ? 'rounded-r-full bg-orange-DEFAULT text-bkg-1 -ml-1 px-1' : ''"
+                      >
+                        %
+                      </span>
                     </td>
                   </tr>
                 </template>
@@ -239,7 +269,9 @@
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
                           viewBox="0 0 20 20"
-                          x-show="$store.TokenAlertsPage.triggered.includes(id)"
+                          x-data="{show: false}"
+                          x-show="show"
+                          x-effect="show = checkTriggeredTokenAlert(id)"
                           >
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
@@ -326,6 +358,8 @@
                             class="bg-green-dark rounded-full mx-2 px-2 py-1 text-center align-center flex justify-around" 
                             @click="
                               checkInput(editPercent, () => {
+                                delete $store.UserData.tokenAlerts[id]
+                                delete $store.TokenAlertsPage.triggered[id]
                                 createTokenAlert(editBaseSymbol, editType, editSide, editPercent, id)
                                 expanded = !expanded
                               })
@@ -644,7 +678,7 @@
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
                           viewBox="0 0 20 20"
-                          x-show="checkTriggeredForId(alert)"
+                          x-show="checkTriggeredAccountAlert(alert)"
                         >
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>

@@ -62,7 +62,7 @@ export default () => ({
       return alert.address === AccountPageStore.selectedAccount
     })
   },
-  checkTriggeredForId(alert: AccountAlert): boolean {
+  checkTriggeredAccountAlert(alert: AccountAlert): boolean {
     const triggeredAddress = AccountPageStore.triggered[alert.address]
     if (!triggeredAddress) {return false}
     if (!triggeredAddress[alert.id]) {return false}
