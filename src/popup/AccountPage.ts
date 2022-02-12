@@ -35,7 +35,6 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
     // debug('UserDataStore: ', JSON.stringify(UserDataStore))
     chrome.runtime.onMessage.addListener(
       function(request, sender, sendResponse) {
-        debug(`received message ${request.msg}` )
         if (request.msg === 'account alerts triggered') {
           const alerts: [string, AccountAlert][] = request.data.alerts
           debug('Account alerts triggered: ',JSON.stringify(request.data.alert, null, 2))

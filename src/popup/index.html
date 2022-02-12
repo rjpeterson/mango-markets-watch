@@ -655,7 +655,11 @@
                 </div>
               </div>
               <!-- Account alerts rows start -->
-              <div class="flex flex-col">
+              <div 
+                class="flex flex-col"
+                x-data="{accountAlerts: []}"
+                x-effect="accountAlerts = getAlertsForAccount($store.UserData.accountAlerts)"
+              >
                 <div class="flex flex-row justify-between">
                   <div class="w-10 flex justify-center">Status</div>
                   <div class="w-12">Type</div>
@@ -665,7 +669,7 @@
                   <div class="w-12"></div>
                 </div>
                 <template 
-                  x-for="alert in getAlertsForAccount()"
+                  x-for="alert in accountAlerts"
                   :key="alert.id"
                 >
                   <div
