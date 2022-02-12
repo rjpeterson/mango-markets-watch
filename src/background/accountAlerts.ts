@@ -51,70 +51,74 @@ export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function):
 // loop through alerts and check if triggered
 // if triggered, send message to popup
 export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAlert[], accountsHistory: HistoricalEntry[], alertTypes: AlertTypes) : void {
-  debug('checking account alerts')
+  const funcDebug = debugCreator('background:accountAlerts:getAccountName')
+  funcDebug('checking account alerts')
   if (!accountAlerts) {
-    debug('account alerts array is empty')
+    funcDebug('account alerts array is empty')
     return;
   }
   let triggeredAlerts: [string, AccountAlert, AccountInfo, AccountInfo][] = []
   for (const alert of accountAlerts) {
-    debug('checking account alert:', JSON.stringify(alert, null, 2))
+    funcDebug('checking account alert:', JSON.stringify(alert, null, 2))
     let triggered = false
     const matchedAccount = accounts[alert.address]
     let historicalAccount = undefined
-    debug('checking against account:', JSON.stringify(matchedAccount, null, 2))
+    funcDebug('checking against account:', JSON.stringify(matchedAccount, null, 2))
     if (!matchedAccount) {
-      debug('could not find matching account')
+      funcDebug('could not find matching account')
       continue
     }
     if (alert.priceType === PriceType.Static) {
-      debug('priceType static')
+      funcDebug('priceType static')
       if (alert.metricType === MetricType.Balance) {
-        debug('metric balance')
-        debug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
+        funcDebug('metric balance')
+        funcDebug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
         matchedAccount.balance <= alert.triggerValue ? triggered = true : undefined
       } else { //metricType.health
-        debug('metric health')
-        debug('comparing:', matchedAccount.health, 'less than or equal to', alert.triggerValue)
+        funcDebug('metric health')
+        funcDebug('comparing:', matchedAccount.health, 'less than or equal to', alert.triggerValue)
         matchedAccount.health <= alert.triggerValue ? triggered = true : undefined
       }
     } else {//priceType.delta
-      debug('priceType delta: ', alert.timeFrame)
+      funcDebug('priceType delta: ', alert.timeFrame, 'hr, delta: ', alert.deltaValue)
       // find first timestamp that is longer ago than alert.timeFrame and return matching account data
-      const historicalDate = accountsHistory 
+      funcDebug('timeslot to find: ', dayjs().subtract(alert.timeFrame, 'hour').toString())
+      const historicalData = accountsHistory 
         .find(slot => {
           return dayjs(slot.timestamp).isSameOrBefore(dayjs().subtract(alert.timeFrame, 'hour'))
         })
-      if (!historicalDate) {
-        debug('not enought historical data for timeframe: ', alert.timeFrame)
+      if (!historicalData) {
+        funcDebug('not enough historical data for timeframe: ', alert.timeFrame)
         continue;
       };
-      historicalAccount = historicalDate.accounts[alert.address]
+      const historicalTimestamp = historicalData.timestamp
+      historicalAccount = historicalData.accounts[alert.address]
+      funcDebug('historical timestamp: ', dayjs(historicalTimestamp).toString())
+      funcDebug('historical account: ', JSON.stringify(historicalAccount, null, 2))
       if (!historicalAccount) {
-        debug('no data for account ', alert.address, ' in compared historical entry')
+        funcDebug('no data for account ', alert.address, ' in compared historical entry')
         continue;
       };
-      debug('comparing against historical account: ', JSON.stringify(historicalAccount, null, 2))
       if (alert.metricType === MetricType.Balance) {
-        debug('metric balance')
+        funcDebug('metric balance')
         const balanceDiff = Math.abs(((matchedAccount.balance/historicalAccount.balance) - 1) * 100);
-        debug('balanceDiff: ', balanceDiff)
-        debug('deltaValue: ', alert.deltaValue)
+        funcDebug('balanceDiff: ', balanceDiff)
+        funcDebug('deltaValue: ', alert.deltaValue)
         balanceDiff >= alert.deltaValue ? triggered = true : undefined
       } else {//metricType.health
-        debug('metric health')
+        funcDebug('metric health')
         const healthDiff = Math.abs(((matchedAccount.health/historicalAccount.health) - 1) * 100);
-        debug('healthDiff: ', healthDiff)
-        debug('deltaValue: ', alert.deltaValue)
+        funcDebug('healthDiff: ', healthDiff)
+        funcDebug('deltaValue: ', alert.deltaValue)
         healthDiff >= alert.deltaValue ? triggered = true : undefined
       }
     }
     if (triggered) {
-      debug('accounts alert triggered')
+      funcDebug('accounts alert triggered')
       const accountName = getAccountName(alert.address, matchedAccount)
       triggeredAlerts.push([accountName, alert, matchedAccount, historicalAccount])
     } else {
-      debug('accounts alert not triggered')
+      funcDebug('accounts alert not triggered')
       onUntriggered(alert, alertTypes)
     }
   }
@@ -125,7 +129,8 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
 }
 
 const getAccountName = (address: string, account: AccountInfo): string => {
-  debug('getting name for address: ', address, ' and account: ', account)
+  const funcDebug = debugCreator('background:accountAlerts:getAccountName')
+  funcDebug('getting name for address: ', address, ' and account: ', account)
   const addressLength = address.length
   const shortAddress = address.substring(0, 4) + '...' + address.substring(addressLength - 4)
   if (account.name) {
