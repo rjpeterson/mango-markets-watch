@@ -1,7 +1,7 @@
 import debugCreator from 'debug';
 
 import { addAccountAlert, checkAccountAlerts, triggeredAccountAlerts, updateAccountAlerts } from './accountAlerts';
-import { updateAccountsData, updateAndStoreAccounts } from './accountData';
+import { storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import { changeAlertType } from './toggles';
 import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
@@ -26,6 +26,7 @@ const onPopup = (sendResponse: Function) => {
     refreshTokensInfo()
     const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
+    storeHistoricalData(accounts)
     checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();

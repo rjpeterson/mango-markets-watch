@@ -24,7 +24,7 @@ export interface Accounts {
 
 export interface HistoricalEntry {
   accounts: Accounts
-  timestamp: dayjs.Dayjs,
+  timestamp: string,
 }
 
 //TODO pull historical account data from client instead of storing it ourselves
@@ -68,11 +68,10 @@ export async function updateAccountsData(accounts: Accounts, sendResponse?: Func
 // If too long, remove one from end
 // Push new data onto front of array
 // check alerts against historical data if passed 'true' as 2nd arg
-function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
-  const now = dayjs();
+export function storeHistoricalData(accounts: Accounts, checkAlerts? : boolean) {
   let entry: HistoricalEntry;
   entry = {
-    timestamp: now,
+    timestamp: dayjs().toJSON(),
     accounts: accounts
   }
   debug('storing fetch data in history')
