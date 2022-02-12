@@ -54,8 +54,7 @@ export default () => ({
       return undefined
     }
   },
-  getAlertsForAccount(): AccountAlert[] {
-    const accountAlerts = UserDataStore.accountAlerts
+  getAlertsForAccount(accountAlerts: AccountAlert[]): AccountAlert[] {
     debug('filtering alerts: ', JSON.stringify(accountAlerts, null, 2))
     debug('finding alerts for account: ', AccountPageStore.selectedAccount)
     return accountAlerts.filter((alert) => {
@@ -66,7 +65,7 @@ export default () => ({
     const triggeredAddress = AccountPageStore.triggered[alert.address]
     if (!triggeredAddress) {return false}
     if (!triggeredAddress[alert.id]) {return false}
-    return AccountPageStore.triggered[alert.address][alert.id]
+    return triggeredAddress[alert.id]
   },
   formatForDisplay(value: string): string {
     // insert a space before all caps
@@ -75,21 +74,23 @@ export default () => ({
     .replace(/^./, function(str){ return str.toUpperCase(); })
   },
   deleteAccountAlert(deleted: AccountAlert) {
+    const copy = UserDataStore.accountAlerts
     let filteredAlerts: AccountAlert[]
     filteredAlerts = UserDataStore.accountAlerts.filter((alert) => {
       return alert.id !== deleted.id
     });
+    UserDataStore.accountAlerts = filteredAlerts
     chrome.notifications.clear(deleted.id.toString());
     chrome.runtime.sendMessage({
       msg: 'update account alerts',
       data: {
-        alerts : filteredAlerts
+        alerts : UserDataStore.accountAlerts
       }
     }, (response) => {
       if (chrome.runtime.lastError) {
         debug('could not delete account alert: ', chrome.runtime.lastError)
+        UserDataStore.accountAlerts = copy
       }
-      UserDataStore.accountAlerts = response.accountAlerts
     })
   }
 })
