@@ -74,9 +74,9 @@ export default () => ({
     .replace(/^./, function(str){ return str.toUpperCase(); })
   },
   deleteAccountAlert(deleted: AccountAlert) {
+    delete AccountPageStore.triggered[deleted.address][deleted.id]
     const copy = UserDataStore.accountAlerts
-    let filteredAlerts: AccountAlert[]
-    filteredAlerts = UserDataStore.accountAlerts.filter((alert) => {
+    let filteredAlerts = UserDataStore.accountAlerts.filter((alert) => {
       return alert.id !== deleted.id
     });
     UserDataStore.accountAlerts = filteredAlerts
