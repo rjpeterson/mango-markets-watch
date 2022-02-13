@@ -15,15 +15,21 @@ export interface AccountAlertsStoreType {
 let UserDataStore: UserDataStoreType
 let AccountPageStore: AccountPageStoreType
 let selected: { name?: string; balance?: number; health?: number; }
+
 export default () => ({
   init(): void {
     UserDataStore = Alpine.store('UserData') as UserDataStoreType
     AccountPageStore = Alpine.store('AccountPage') as AccountPageStoreType
   },
-  getAccountName(): string {
+  getAccountLink(selectedAccount: string): string {
+    // const selectedAccount = AccountPageStore.selectedAccount
+    return 'https://trade.mango.markets/account?pubkey=' + selectedAccount
+  },
+  getAccountName(selectedAccount: string): string {
     let length;
     let shortAddress;
-    selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+    // selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+    selected = UserDataStore.accounts[selectedAccount]
     debug('selected account: ', AccountPageStore.selectedAccount, JSON.stringify(selected, null, 2))
     
     if (selected) {
@@ -38,16 +44,18 @@ export default () => ({
       return undefined
     }
   },
-  getAccountHealth(): number | ">100" {
-    selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+  getAccountHealth(selectedAccount: string): number | ">100" {
+    // selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+    selected = UserDataStore.accounts[selectedAccount]
     if (selected) {
       return parseHealth(selected.health)
     } else {
       return undefined
     }
   },
-  getAccountBalance(): string {
-    selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+  getAccountBalance(selectedAccount: string): string {
+    // selected = UserDataStore.accounts[AccountPageStore.selectedAccount]
+    selected = UserDataStore.accounts[selectedAccount]
     if (selected) {
       return parseBalance(selected.balance)
     } else {

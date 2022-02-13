@@ -89,8 +89,8 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
       debug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
-  healthColor(health: number): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark" {
-    if (health > 20) {
+  healthColor(health: number | ">100"): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark" {
+    if (health > 20 || health === ">100") {
       return 'text-green-dark'
     } else if (health > 10) {
       return 'text-yellow-dark'

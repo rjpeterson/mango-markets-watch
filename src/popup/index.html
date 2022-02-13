@@ -643,15 +643,35 @@
               </button>
               <div 
                 class="flex flex-col w-64 mx-auto"
+                x-data="{
+                  name: '',
+                  link: '',
+                  health: 0,
+                  balance: ''
+                }"
+                x-effect="
+                  name = getAccountName($store.AccountPage.selectedAccount)
+                  link = getAccountLink($store.AccountPage.selectedAccount)
+                  health = getAccountHealth($store.AccountPage.selectedAccount)
+                  balance = getAccountBalance($store.AccountPage.selectedAccount)
+                "
               >
-                <div class="flex flex-row justify-around">
-                  <div x-text="getAccountName()"></div>
+                <div class="flex flex-row justify-around -mt-2 mb-2 text-base">
+                  <a
+                    class="underline"
+                    x-bind:href="link"
+                    target="_blank"
+                    x-text="name">
+                  </a>
                 </div>
                 <div class="flex flex-row justify-around">
                   <div>Balance</div>
-                  <div x-text="getAccountBalance()"></div>
+                  <div x-text="balance"></div>
                   <div>Health</div>
-                  <div x-text="getAccountHealth()"></div>
+                  <div :class="healthColor(health)">
+                    <span x-text="health"></span>
+                    <span>%</span>
+                  </div>
                 </div>
               </div>
               <!-- Account alerts rows start -->
@@ -660,12 +680,12 @@
                 x-data="{accountAlerts: []}"
                 x-effect="accountAlerts = getAlertsForAccount($store.UserData.accountAlerts)"
               >
-                <div class="flex flex-row justify-between">
+                <div class="flex flex-row justify-between text-fgd-4">
                   <div class="w-10 flex justify-center">Status</div>
                   <div class="w-12">Type</div>
                   <div class="w-12">Metric</div>
                   <div class="w-20">$ / %</div>
-                  <div class="w-10">Period</div>
+                  <div class="w-12">Period</div>
                   <div class="w-12"></div>
                 </div>
                 <template 
@@ -694,7 +714,7 @@
                         <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
                         <span x-text="alert.priceType === 'static' ? '' : '%'"></span>
                       </div>
-                      <div class="w-10">
+                      <div class="w-12">
                         <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
                         <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
                       </div>
@@ -724,7 +744,7 @@
                         editTimeFrame: alert.timeFrame
                       }"
                     >
-                      <div class="w-16 self-start">
+                      <div class="w-32 flex flex-col px-6 self-start">
                         <label for="editPriceTypeInput" class="text-xs">Type</label>
                         <select 
                           id="editPriceTypeInput" 
@@ -748,11 +768,11 @@
                         </select>
                       </div>
                       
-                      <div class="w-32 pl-8">
+                      <div class="w-32 pl-6">
                         <label 
                           for="editTriggerInput" 
                           x-show="editPriceType === 'static'" 
-                          x-text="editMetricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                          x-text="editMetricType === 'balance' ? 'Balance < X' : 'Health < X'"
                           class="text-xs"
                         ></label>
                         <input 
@@ -767,7 +787,7 @@
                         <label 
                           x-show="editPriceType === 'delta'" 
                           for="editDeltaInput"
-                          x-text="editMetricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                          x-text="editMetricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
                           class="text-xs"
                         ></label>
                         <input 
@@ -831,7 +851,7 @@
                 class="flex flex-row justify-center bg-bkg-1 text-fgd-1 rounded-lg py-2 px-4 items-center"
                 x-data="NewAccountAlert()"
               >
-                <div class="w-16 self-start">
+                <div class="w-32 flex flex-col px-6 self-start">
                   <label for="priceType" class="text-xs">Type</label>
                   <select 
                     id="priceType" 
@@ -855,11 +875,11 @@
                   </select>
                 </div>
                 
-                <div class="w-32 pl-8">
+                <div class="w-32 pl-6">
                   <label 
                     x-show="$store.NewAccountAlert.priceType === 'static'" 
                     for="trigger" 
-                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Trigger Balance' : 'Trigger Health'"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance < X' : 'Health < X'"
                     class="text-xs"
                   ></label>
                   <input 
@@ -874,7 +894,7 @@
                   <label 
                     x-show="$store.NewAccountAlert.priceType === 'delta'" 
                     for="delta"
-                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Delta' : 'Health Delta'"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
                     class="text-xs"
                   ></label>
                   <input 

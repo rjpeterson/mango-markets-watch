@@ -1,6 +1,6 @@
 {
     "name": "mango-markets-watch",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "scripts": {
         "watch:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css -w",
         "dev:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
