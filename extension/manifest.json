@@ -24,5 +24,9 @@
     "background": {
         "scripts": ["dist/background.dist.js"],
         "persistent": false
+    },
+    "icons": {
+        "16": "dist/icons/icon-16.png",
+        "128": "dist/icons/logo.png"
     }
 }
