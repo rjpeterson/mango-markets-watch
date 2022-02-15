@@ -35,11 +35,13 @@ export enum TokenRateType {
 }
 
 interface Accounts {
-  [address: string]: {
-		balance: number,
-		health: number,
-		name: string | undefined
-	},
+  [address: string]: AccountData,
+}
+
+export interface AccountData {
+  balance: number,
+	health: number,
+	name: string | undefined
 }
 
 export interface AccountAlert {

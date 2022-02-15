@@ -1,7 +1,7 @@
 import { XData } from 'alpinejs';
 import debugCreator from 'debug';
 import { MetricType, PriceType } from './NewAccountAlert';
-import { UserDataStoreType } from './UserDataStore';
+import { AccountData, UserDataStoreType } from './UserDataStore';
 
 const debug = debugCreator('popup:AccountPage')
 
@@ -60,22 +60,30 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
     )
   },
   addNewAccount(address: string): void {
-    UserDataStore.accounts[address] = {health:  0, balance: 0, name: undefined};
+    const funcDebug = debugCreator('popup:AccountPage:addNewAccount')
+    const defaultAccount: AccountData = {health:  0, balance: 0, name: undefined}
+    const newAccountsObj = {
+      ...UserDataStore.accounts,
+      [address]: defaultAccount
+    }
+    // UserDataStore.accounts[address] = {health:  0, balance: 0, name: undefined};
     chrome.runtime.sendMessage({
       msg: 'update accounts',
       data: {
-        accounts: UserDataStore.accounts
+        accounts: newAccountsObj
       }
     }, function(response) {
       if (chrome.runtime.lastError) {
-        debug('could not update accounts: ', chrome.runtime.lastError)
+        funcDebug('could not update accounts: ', chrome.runtime.lastError)
       }
       UserDataStore.accounts = response.data.accounts
-      debug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
+      funcDebug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
   deleteAccount(address: string): void {
+    const funcDebug = debugCreator('popup:AccountPage:deleteAccount')
     delete UserDataStore.accounts[address];
+    delete AccountPageStore.triggered[address]
     chrome.runtime.sendMessage({
       msg: 'update accounts',
       data: {
@@ -83,10 +91,10 @@ export default (): { init(): void; addNewAccount(address: string): void; deleteA
       }
     }, function(response) {
       if (!response) {
-        debug('could not delete account')
+        funcDebug('could not delete account')
       }
       UserDataStore.accounts = response.data.accounts
-      debug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
+      funcDebug(`accounts updated: ${JSON.stringify(response, null, 2)}`)
     })
   },
   healthColor(health: number | ">100"): "text-green-dark" | "text-yellow-dark" | "text-orange-DEFAULT" | "text-red-dark" {

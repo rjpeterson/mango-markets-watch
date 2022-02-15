@@ -297,10 +297,57 @@
                           <img src="./icons/pencil.svg" width="18" height="18">
                           </button>
                         </div>
-                        <div class="w-6 font-normal flex justify-center">
-                          <button @click="deleteTokenAlert(id)">
-                          <img src="./icons/delete.svg" width="18" height="18">
+                        <div 
+                          class="w-6 font-normal flex justify-center"
+                          x-data="{modal: false}"  
+                        >
+                          <button @click="modal = true">
+                            <img src="./icons/delete.svg" width="18" height="18">
                           </button>
+
+                          <!-- Modal start -->
+                          <div
+                            x-show="modal"
+                            style="display: none"
+                            x-on:keydown.escape.prevent.stop="open = false"
+                            role="dialog"
+                            aria-modal="true"
+                            x-id="['delete-token-alert']"
+                            :aria-labelledby="$id('delete-token-alert')"
+                            class="fixed inset-0 overflow-y-auto"
+                          >
+                            <!-- Overlay -->
+                            <div x-show="modal" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
+
+                            <!-- Panel start -->
+                            <div
+                              x-show="modal" x-transition
+                              x-on:click="modal = false"
+                              class="relative min-h-screen flex items-center justify-center p-4"
+                            >
+                              <div
+                                x-on:click.stop
+                                x-trap.noscroll.inert="modal"
+                                class="relative w-2/3 bg-bkg-2 rounded-lg border border-black px-8 py-4 overflow-y-auto"
+                              >
+                                <!-- Title -->
+                                <h2 class="text-xl font-medium text-fgd-1" :id="$id('delete-token-alert')">Confirm</h2>
+                                <!-- Content -->
+                                <p class="mt-2 text-fgd-2">Are you sure you want to delete this token alert?</p>
+                                <!-- Buttons -->
+                                <div class="mt-4 flex space-x-4">
+                                  <button type="button" x-on:click="deleteTokenAlert(id); modal = false" class="text-fgd-2 bg-red-dark rounded-lg px-4 py-2">
+                                      Delete
+                                  </button>
+                                  <button type="button" x-on:click="modal = false" class="text-fgd-2 bg-bkg-4 rounded-lg px-4 py-2">
+                                      Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- Panel end -->
+                          </div>
+                          <!-- Modal end -->
                         </div>
                       </div>
                     </div>
@@ -487,6 +534,8 @@
             <div 
               class="text-fgd-1 flex flex-col overflow-hidden space-y-2 px-2"
               x-show="$store.AccountPage.selectedAccount === undefined"
+              x-data="{accounts: {}}"
+              x-effect="accounts = $store.UserData.accounts"
             >
               <div class="w-60 flex flex-row text-xs text-fgd-4 justify-between">
                 <div class="flex flex-row ">
@@ -500,7 +549,7 @@
 
               <!-- ACCOUNT ROWS START --> 
               <template 
-                x-for="address in Object.keys($store.UserData.accounts)" 
+                x-for="[address, addressData] in Object.entries(accounts)" 
                 :key="address">
                 <div 
                   class="w-full text-sm flex flex-col space-y-2"
@@ -528,19 +577,19 @@
                       <div 
                         :class="highlightTriggeredAccount(address)"
                         class="w-20 font-normal flex justify-center rounded-full" 
-                        x-text="$store.UserData.accounts[address].name ? $store.UserData.accounts[address].name : address.substring(0, 5)"
+                        x-text="addressData.name ? addressData.name : address.substring(0, 5)"
                       ></div>
                       <div 
                         class="w-20 font-normal flex justify-center"
                       >
                         <span>$</span>
-                        <span x-text="parseBalance($store.UserData.accounts[address].balance)"></span>
+                        <span x-text="parseBalance(addressData.balance)"></span>
                       </div>
                       <div 
                         class="w-16 font-normal flex justify-center"
-                        :class="healthColor($store.UserData.accounts[address].health)"
+                        :class="healthColor(addressData.health)"
                       >
-                        <span x-text="parseHealth($store.UserData.accounts[address].health)"></span>
+                        <span x-text="parseHealth(addressData.health)"></span>
                         <span>%</span>
                       </div>
                     </div>
@@ -577,10 +626,56 @@
                           <img src="./icons/pencil.svg" width="18" height="18">
                         </button>
                       </div>
-                      <div class="w-6 font-normal flex justify-center ">
-                        <button @click="deleteAccount(address)">
+                      <div 
+                        class="w-6 font-normal flex justify-center"
+                        x-data="{modal: false}"  
+                      >
+                        <button @click="modal = true">
                           <img src="./icons/delete.svg" width="18" height="18">
                         </button>
+                        <!-- Modal start -->
+                        <div
+                          x-show="modal"
+                          style="display: none"
+                          x-on:keydown.escape.prevent.stop="open = false"
+                          role="dialog"
+                          aria-modal="true"
+                          x-id="['delete-account']"
+                          :aria-labelledby="$id('delete-account')"
+                          class="fixed inset-0 overflow-y-auto"
+                        >
+                          <!-- Overlay -->
+                          <div x-show="modal" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
+
+                          <!-- Panel start -->
+                          <div
+                            x-show="modal" x-transition
+                            x-on:click="modal = false"
+                            class="relative min-h-screen flex items-center justify-center p-4"
+                          >
+                            <div
+                              x-on:click.stop
+                              x-trap.noscroll.inert="modal"
+                              class="relative w-2/3 bg-bkg-2 rounded-lg border border-black px-8 py-4 overflow-y-auto"
+                            >
+                              <!-- Title -->
+                              <h2 class="text-xl font-medium text-fgd-1" :id="$id('delete-account')">Confirm</h2>
+                              <!-- Content -->
+                              <p class="mt-2 text-fgd-2">Are you sure you want to delete this account?</p>
+                              <!-- Buttons -->
+                              <div class="mt-4 flex space-x-4">
+                                <button type="button" x-on:click="deleteAccount(address); modal = false" class="text-fgd-2 bg-red-dark rounded-lg px-4 py-2">
+                                    Delete
+                                </button>
+                                <button type="button" x-on:click="modal = false" class="text-fgd-2 bg-bkg-4 rounded-lg px-4 py-2">
+                                    Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Panel end -->
+                        </div>
+                      <!-- Modal end -->
                       </div>
                     </div>
                     <!-- ACCOUNT BUTTONS END -->
@@ -724,10 +819,57 @@
                           <img src="./icons/pencil.svg" width="18" height="18">
                           </button>
                         </div>
-                        <div class="w-6 font-normal flex justify-center">
-                          <button @click="deleteAccountAlert(alert)">
-                          <img src="./icons/delete.svg" width="18" height="18">
+                        <div 
+                          class="w-6 font-normal flex justify-center"
+                          x-data="{modal: false}"  
+                        >
+                          <button @click="modal = true">
+                            <img src="./icons/delete.svg" width="18" height="18">
                           </button>
+
+                          <!-- Modal start -->
+                          <div
+                            x-show="modal"
+                            style="display: none"
+                            x-on:keydown.escape.prevent.stop="open = false"
+                            role="dialog"
+                            aria-modal="true"
+                            x-id="['delete-account-alert']"
+                            :aria-labelledby="$id('delete-account-alert')"
+                            class="fixed inset-0 overflow-y-auto"
+                          >
+                            <!-- Overlay -->
+                            <div x-show="modal" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
+
+                            <!-- Panel start -->
+                            <div
+                              x-show="modal" x-transition
+                              x-on:click="modal = false"
+                              class="relative min-h-screen flex items-center justify-center p-4"
+                            >
+                              <div
+                                x-on:click.stop
+                                x-trap.noscroll.inert="modal"
+                                class="relative w-2/3 bg-bkg-2 rounded-lg border border-black px-8 py-4 overflow-y-auto"
+                              >
+                                <!-- Title -->
+                                <h2 class="text-xl font-medium text-fgd-1" :id="$id('delete-account-alert')">Confirm</h2>
+                                <!-- Content -->
+                                <p class="mt-2 text-fgd-2">Are you sure you want to delete this account alert?</p>
+                                <!-- Buttons -->
+                                <div class="mt-4 flex space-x-4">
+                                  <button type="button" x-on:click="deleteAccountAlert(alert); modal = false" class="text-fgd-2 bg-red-dark rounded-lg px-4 py-2">
+                                      Delete
+                                  </button>
+                                  <button type="button" x-on:click="modal = false" class="text-fgd-2 bg-bkg-4 rounded-lg px-4 py-2">
+                                      Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- Panel end -->
+                          </div>
+                          <!-- Modal end -->
                         </div>
                       </div>
                     </div>
