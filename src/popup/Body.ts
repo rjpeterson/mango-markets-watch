@@ -28,9 +28,7 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
         debug(chrome.runtime.lastError)
         return
       }
-      debug(`got response from background script for msg 'onPopup': ${
-        JSON.stringify(response, null, 2)
-      }`)
+      // debug(`got response from background script for msg 'onPopup': ${JSON.stringify(response, null, 2)}`)
         AppDataStore.page = response.page ? response.page : Page.Home
         AppDataStore.tokensInfo = response.tokensInfo
         UserDataStore.toggles = response.toggles
@@ -63,9 +61,7 @@ export default (): { init(): void; changeAlertType(): void; getHeaderText(): str
         if (!response) {
           debug('could not refresh tokensInfo')
         }
-        debug(`got response from background script for msg 'refresh tokensInfo': ${
-          JSON.stringify(response, null, 2)
-        }`)
+        // debug(`got response from background script for msg 'refresh tokensInfo': ${JSON.stringify(response, null, 2)}`)
           AppDataStore.tokensInfo = response
       }
     );
