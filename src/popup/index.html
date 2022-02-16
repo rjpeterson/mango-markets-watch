@@ -903,8 +903,8 @@
                           style="height: 18px;"
                           @change="validateInput()""
                         >
-                          <option value="Static">Static</option>
-                          <option value="Change %">Change %</option>
+                          <option value="static">Static</option>
+                          <option value="change %">Change %</option>
                         </select>
                         <label for="editMetricTypeInput" class="text-xs">Metric</label>
                         <select 
@@ -913,35 +913,35 @@
                           x-model="editMetricType"
                           style="height: 18px;"
                         >
-                          <option value="Balance">Balance</option>
-                          <option value="Health">Health</option>
+                          <option value="balance">Balance</option>
+                          <option value="health">Health</option>
                         </select>
                       </div>
                       
                       <div class="w-32 pl-6">
                         <label 
                           for="editTriggerInput" 
-                          x-show="editPriceType === 'Static'" 
-                          x-text="editMetricType === 'Balance' ? 'Balance < X' : 'Health < X'"
+                          x-show="editPriceType === 'static'" 
+                          x-text="editMetricType === 'balance' ? 'Balance < X' : 'Health < X'"
                           class="text-xs"
                         ></label>
                         <input 
                           id="editTriggerInput" 
                           type="text" 
-                          x-show="editPriceType === 'Static'" 
+                          x-show="editPriceType === 'static'" 
                           x-model.number="editTriggerValue" 
                           size="8"
                           class="text-black"
                           style="height: 18px;"
                         >
                         <label 
-                          x-show="editPriceType === 'Change %'" 
+                          x-show="editPriceType === 'change %'" 
                           for="editDeltaInput"
-                          x-text="editMetricType === 'Balance' ? 'Balance Change %' : 'Health Change %'"
+                          x-text="editMetricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
                           class="text-xs"
                         ></label>
                         <input 
-                          x-show="editPriceType === 'Change %'" 
+                          x-show="editPriceType === 'change %'" 
                           type="text" 
                           id="editDeltaInput" 
                           x-model.number="editDeltaValue" 
@@ -950,14 +950,14 @@
                           style="height: 18px;"
                         >
                         <label
-                          x-show="editPriceType === 'Change %'"
+                          x-show="editPriceType === 'change %'"
                           for="editTimeframeInput"
                           class="text-xs"
                         >
                           Period (hrs)
                         </label>
                         <input
-                          x-show="editPriceType =='Change %'"
+                          x-show="editPriceType =='change %'"
                           type="text"
                           id="editTimeframeInput"
                           x-model.number="editTimeFrame"
@@ -1010,8 +1010,8 @@
                     style="height: 18px;"
                     @change="validateInput()"
                   >
-                    <option value="Static">Static</option>
-                    <option value="Change %">Change %</option>
+                    <option value="static">Static</option>
+                    <option value="change %">Change %</option>
                   </select>
                   <label for="metricType" class="text-xs">Metric</label>
                   <select 
@@ -1020,20 +1020,20 @@
                     x-model="$store.NewAccountAlert.metricType"
                     style="height: 18px;"
                   >
-                    <option value="Balance">Balance</option>
-                    <option value="Health">Health</option>
+                    <option value="balance">Balance</option>
+                    <option value="health">Health</option>
                   </select>
                 </div>
                 
                 <div class="w-32 pl-6">
                   <label 
-                    x-show="$store.NewAccountAlert.priceType === 'Static'" 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
                     for="trigger" 
-                    x-text="$store.NewAccountAlert.metricType === 'Balance' ? 'Balance < X' : 'Health < X'"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance < X' : 'Health < X'"
                     class="text-xs"
                   ></label>
                   <input 
-                    x-show="$store.NewAccountAlert.priceType === 'Static'" 
+                    x-show="$store.NewAccountAlert.priceType === 'static'" 
                     type="text" 
                     id="trigger" 
                     x-model.number="$store.NewAccountAlert.triggerValue" 
@@ -1042,13 +1042,13 @@
                     style="height: 18px;"
                   >
                   <label 
-                    x-show="$store.NewAccountAlert.priceType === 'Change %'" 
+                    x-show="$store.NewAccountAlert.priceType === 'change %'" 
                     for="delta"
-                    x-text="$store.NewAccountAlert.metricType === 'Balance' ? 'Balance Change %' : 'Health Change %'"
+                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
                     class="text-xs"
                   ></label>
                   <input 
-                    x-show="$store.NewAccountAlert.priceType === 'Change %'" 
+                    x-show="$store.NewAccountAlert.priceType === 'change %'" 
                     type="text" 
                     id="delta" 
                     x-model.number="$store.NewAccountAlert.deltaValue" 
@@ -1057,14 +1057,14 @@
                     style="height: 18px;"
                   >
                   <label
-                    x-show="$store.NewAccountAlert.priceType === 'Change %'"
+                    x-show="$store.NewAccountAlert.priceType === 'change %'"
                     for="time-frame"
                     class="text-xs"
                   >
                     Period (hrs)
                   </label>
                   <input
-                    x-show="$store.NewAccountAlert.priceType =='Change %'"
+                    x-show="$store.NewAccountAlert.priceType =='change %'"
                     type="text"
                     id="time-frame"
                     x-model.number="$store.NewAccountAlert.timeFrame"

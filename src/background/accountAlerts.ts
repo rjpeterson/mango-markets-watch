@@ -24,13 +24,13 @@ export interface AccountAlert {
 }
 
 enum PriceType {
-  Static = 'Static',
-  Delta = 'Change %'
+  Static = 'static',
+  Delta = 'change %'
 }
 
 enum MetricType {
-  Balance = 'Balance',
-  Health = 'Health'
+  Balance = 'balance',
+  Health = 'health'
 }
 
 export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function): void => {
