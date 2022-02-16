@@ -24,13 +24,13 @@ export interface AccountAlert {
 }
 
 enum PriceType {
-  Static = 'static',
-  Delta = '% change'
+  Static = 'Static',
+  Delta = 'Change %'
 }
 
 enum MetricType {
-  Balance = 'balance',
-  Health = 'health'
+  Balance = 'Balance',
+  Health = 'Health'
 }
 
 export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function): void => {
@@ -69,9 +69,9 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
       continue
     }
     if (alert.priceType === PriceType.Static) {
-      funcDebug('priceType static')
+      funcDebug('priceType Static')
       if (alert.metricType === MetricType.Balance) {
-        funcDebug('metric balance')
+        funcDebug('metric Balance')
         funcDebug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
         matchedAccount.balance <= alert.triggerValue ? triggered = true : undefined
       } else { //metricType.health
@@ -100,7 +100,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
         continue;
       };
       if (alert.metricType === MetricType.Balance) {
-        funcDebug('metric balance')
+        funcDebug('metric Balance')
         const balanceDiff = Math.abs(((matchedAccount.balance/historicalAccount.balance) - 1) * 100);
         funcDebug('balanceDiff: ', balanceDiff)
         funcDebug('deltaValue: ', alert.deltaValue)

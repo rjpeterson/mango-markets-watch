@@ -6,13 +6,15 @@ import { AccountData, UserDataStoreType } from './UserDataStore';
 const debug = debugCreator('popup:AccountPage')
 
 export interface AccountPageStoreType extends XData {
-  triggered: {
-    [address: string]: {
-      [id: number]: boolean
-    }
-  },
+  triggered: TriggeredAccountAlerts,
   addingAccount: boolean,
   selectedAccount: string | undefined
+}
+
+export interface TriggeredAccountAlerts {
+  [address: string]: {
+    [id: number]: boolean
+  }
 }
 
 interface AccountAlert {
