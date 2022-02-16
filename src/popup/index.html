@@ -55,7 +55,6 @@
               <tbody 
                 class="text-sm"
               >
-              <!-- TODO hightlight data points that trigger token alerts like on the account page -->
                 <!-- TOKEN INFO ROWS START -->
                 <template x-for="(token, index) in filterToggles()" :key="token[0]">
                   <tr 
@@ -776,11 +775,11 @@
                 x-effect="accountAlerts = getAlertsForAccount($store.UserData.accountAlerts)"
               >
                 <div class="flex flex-row justify-between text-fgd-4">
-                  <div class="w-10 flex justify-center">Status</div>
-                  <div class="w-12">Type</div>
+                  <div class="w-8 flex justify-center">Status</div>
+                  <div class="w-16">Type</div>
                   <div class="w-12">Metric</div>
-                  <div class="w-20">$ / %</div>
-                  <div class="w-12">Period</div>
+                  <div class="w-16">$ / %</div>
+                  <div class="w-10">Period</div>
                   <div class="w-12"></div>
                 </div>
                 <template 
@@ -788,31 +787,40 @@
                   :key="alert.id"
                 >
                   <div
-                    x-data="AccountAlertsRow"
                     class="space-y-2"
+                    x-data="AccountAlertsRow"
                   >
-                    <div class="flex flex-row justify-between">
-                      <div class="w-10 flex justify-center">
+                    <div 
+                      class="flex flex-row justify-between"
+                      x-data="{
+                        triggered: false,
+                        priceType: '',
+                        metricType: '',
+                        triggerValue: '',
+                        deltaValue: ''
+                      }"
+                      x-effect="
+                        triggered = checkTriggeredAccountAlert(alert, $store.AccountPage.triggered);
+                        priceType = formatForDisplay(alert.priceType);
+                        metricType = formatForDisplay(alert.metricType);
+                        triggerValue = formatTriggerValueForDisplay(alert);
+                        deltaValue = formatDeltaValueForDisplay(alert);
+                      "  
+                    >
+                      <div class="w-8 flex justify-center">
                         <svg 
                           xmlns="http://www.w3.org/2000/svg" 
                           class="h-5 w-5 fill-current text-green-dark" 
                           viewBox="0 0 20 20"
-                          x-show="checkTriggeredAccountAlert(alert)"
+                          x-show="triggered"
                         >
                           <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293a1 1 0 0 0-1.414-1.414L9 10.586 7.707 9.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                       </div>
-                      <div x-text="formatForDisplay(alert.priceType)" class="w-12"></div>
-                      <div x-text="formatForDisplay(alert.metricType)" class="w-12"></div>
-                      <div class="w-20">
-                        <span x-text="alert.priceType === 'static' ? '$' : ''"></span>
-                        <span x-text="alert.priceType === 'static' ? alert.triggerValue : alert.deltaValue"></span>
-                        <span x-text="alert.priceType === 'static' ? '' : '%'"></span>
-                      </div>
-                      <div class="w-12">
-                        <span x-text="alert.priceType === 'delta' ? alert.timeFrame : 'n/a'"></span>
-                        <span x-text="alert.priceType === 'delta' ? 'hrs' : ''"></span>
-                      </div>
+                      <div x-text="priceType" class="w-16"></div>
+                      <div x-text="metricType" class="w-12"></div>
+                      <div x-text="triggerValue" class="w-16"></div>
+                      <div x-text="deltaValue" class="w-10"></div>
                       <div class="w-12 flex flex-row space-x-2">
                         <div class="w-6 font-normal flex justify-center">
                           <button @click="expanded = !expanded; $store.AccountAlerts.addAccountAlert = false; $nextTick(() => document.getElementById('editPriceTypeInput').focus())" :aria-expanded="expanded">
@@ -895,8 +903,8 @@
                           style="height: 18px;"
                           @change="validateInput()""
                         >
-                          <option value="static">Static</option>
-                          <option value="delta">% Change</option>
+                          <option value="Static">Static</option>
+                          <option value="Change %">Change %</option>
                         </select>
                         <label for="editMetricTypeInput" class="text-xs">Metric</label>
                         <select 
@@ -905,35 +913,35 @@
                           x-model="editMetricType"
                           style="height: 18px;"
                         >
-                          <option value="balance">Balance</option>
-                          <option value="health">Health</option>
+                          <option value="Balance">Balance</option>
+                          <option value="Health">Health</option>
                         </select>
                       </div>
                       
                       <div class="w-32 pl-6">
                         <label 
                           for="editTriggerInput" 
-                          x-show="editPriceType === 'static'" 
-                          x-text="editMetricType === 'balance' ? 'Balance < X' : 'Health < X'"
+                          x-show="editPriceType === 'Static'" 
+                          x-text="editMetricType === 'Balance' ? 'Balance < X' : 'Health < X'"
                           class="text-xs"
                         ></label>
                         <input 
                           id="editTriggerInput" 
                           type="text" 
-                          x-show="editPriceType === 'static'" 
+                          x-show="editPriceType === 'Static'" 
                           x-model.number="editTriggerValue" 
                           size="8"
                           class="text-black"
                           style="height: 18px;"
                         >
                         <label 
-                          x-show="editPriceType === 'delta'" 
+                          x-show="editPriceType === 'Change %'" 
                           for="editDeltaInput"
-                          x-text="editMetricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
+                          x-text="editMetricType === 'Balance' ? 'Balance Change %' : 'Health Change %'"
                           class="text-xs"
                         ></label>
                         <input 
-                          x-show="editPriceType === 'delta'" 
+                          x-show="editPriceType === 'Change %'" 
                           type="text" 
                           id="editDeltaInput" 
                           x-model.number="editDeltaValue" 
@@ -942,14 +950,14 @@
                           style="height: 18px;"
                         >
                         <label
-                          x-show="editPriceType === 'delta'"
+                          x-show="editPriceType === 'Change %'"
                           for="editTimeframeInput"
                           class="text-xs"
                         >
                           Period (hrs)
                         </label>
                         <input
-                          x-show="editPriceType =='delta'"
+                          x-show="editPriceType =='Change %'"
                           type="text"
                           id="editTimeframeInput"
                           x-model.number="editTimeFrame"
@@ -1002,8 +1010,8 @@
                     style="height: 18px;"
                     @change="validateInput()"
                   >
-                    <option value="static">Static</option>
-                    <option value="delta">% Change</option>
+                    <option value="Static">Static</option>
+                    <option value="Change %">Change %</option>
                   </select>
                   <label for="metricType" class="text-xs">Metric</label>
                   <select 
@@ -1012,20 +1020,20 @@
                     x-model="$store.NewAccountAlert.metricType"
                     style="height: 18px;"
                   >
-                    <option value="balance">Balance</option>
-                    <option value="health">Health</option>
+                    <option value="Balance">Balance</option>
+                    <option value="Health">Health</option>
                   </select>
                 </div>
                 
                 <div class="w-32 pl-6">
                   <label 
-                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    x-show="$store.NewAccountAlert.priceType === 'Static'" 
                     for="trigger" 
-                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance < X' : 'Health < X'"
+                    x-text="$store.NewAccountAlert.metricType === 'Balance' ? 'Balance < X' : 'Health < X'"
                     class="text-xs"
                   ></label>
                   <input 
-                    x-show="$store.NewAccountAlert.priceType === 'static'" 
+                    x-show="$store.NewAccountAlert.priceType === 'Static'" 
                     type="text" 
                     id="trigger" 
                     x-model.number="$store.NewAccountAlert.triggerValue" 
@@ -1034,13 +1042,13 @@
                     style="height: 18px;"
                   >
                   <label 
-                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    x-show="$store.NewAccountAlert.priceType === 'Change %'" 
                     for="delta"
-                    x-text="$store.NewAccountAlert.metricType === 'balance' ? 'Balance Change %' : 'Health Change %'"
+                    x-text="$store.NewAccountAlert.metricType === 'Balance' ? 'Balance Change %' : 'Health Change %'"
                     class="text-xs"
                   ></label>
                   <input 
-                    x-show="$store.NewAccountAlert.priceType === 'delta'" 
+                    x-show="$store.NewAccountAlert.priceType === 'Change %'" 
                     type="text" 
                     id="delta" 
                     x-model.number="$store.NewAccountAlert.deltaValue" 
@@ -1049,14 +1057,14 @@
                     style="height: 18px;"
                   >
                   <label
-                    x-show="$store.NewAccountAlert.priceType === 'delta'"
+                    x-show="$store.NewAccountAlert.priceType === 'Change %'"
                     for="time-frame"
                     class="text-xs"
                   >
                     Period (hrs)
                   </label>
                   <input
-                    x-show="$store.NewAccountAlert.priceType =='delta'"
+                    x-show="$store.NewAccountAlert.priceType =='Change %'"
                     type="text"
                     id="time-frame"
                     x-model.number="$store.NewAccountAlert.timeFrame"

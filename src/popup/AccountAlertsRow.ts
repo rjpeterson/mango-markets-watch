@@ -29,35 +29,33 @@ export default () => ({
     }
   },
   updateAccountAlert(alert: AccountAlert, editPriceType: PriceType, editMetricType: MetricType, editTriggerValue: number, editDeltaValue: number, editTimeFrame: number) {
-    let updatedAlerts = UserDataStore.accountAlerts
-    debug('alerts before update: ', JSON.stringify(updatedAlerts, null, 2))
-    const indexToUpdate = UserDataStore.accountAlerts.findIndex(element => {
-      return element.id === alert.id
+    debug('alerts before update: ', JSON.stringify(UserDataStore.accountAlerts, null, 2))
+    const filtered = UserDataStore.accountAlerts.filter(element => {
+      return element.id !== alert.id
     })
-    if (indexToUpdate === -1) {
-      debug('index of alert to update not found')
-      return
-    }
-    debug('index to update: ', indexToUpdate)
-    updatedAlerts[indexToUpdate] = {
-      ...UserDataStore.accountAlerts[indexToUpdate],
+    const updatedAlert: AccountAlert = {
+      id: alert.id,
+      address: alert.address,
       priceType: editPriceType,
       metricType: editMetricType,
       triggerValue: editTriggerValue,
       deltaValue: editDeltaValue,
       timeFrame: editTimeFrame,
     }
-    debug('alerts after update: ', JSON.stringify(updatedAlerts, null, 2))
-    UserDataStore.accountAlerts = updatedAlerts
-    this.alert = updatedAlerts[indexToUpdate]
+    filtered.push(updatedAlert)
+
+    debug('alerts after update: ', JSON.stringify(filtered, null, 2))
+    // this.alert = updatedAlerts[updatedAlerts.length - 1]
     chrome.runtime.sendMessage({
       msg: 'update account alerts',
       data: {
-        alerts : updatedAlerts
+        alerts : filtered
       }
     }, (response) => {
       if (chrome.runtime.lastError) {
         debug('could not update account alerts: ', chrome.runtime.lastError)
+      } else {
+        UserDataStore.accountAlerts = filtered
       }
     })
   }
