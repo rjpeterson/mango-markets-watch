@@ -58,8 +58,8 @@ Alpine.store('AccountAlerts', {
 })
 
 Alpine.store('NewAccountAlert', {
-  priceType: 'static',
-  metricType: 'balance',
+  priceType: 'Static',
+  metricType: 'Balance',
   triggerValue: 0,
   deltaValue: 0,
   timeFrame: 1,

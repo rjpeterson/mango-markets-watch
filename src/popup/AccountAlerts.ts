@@ -1,6 +1,7 @@
 import debugCreator from 'debug';
 import { AccountAlert } from '../background/accountAlerts';
-import { AccountPageStoreType, parseHealth, parseBalance } from './AccountPage';
+import { AccountPageStoreType, parseHealth, parseBalance, TriggeredAccountAlerts } from './AccountPage';
+import { PriceType } from './NewAccountAlert';
 import { UserDataStoreType } from "./UserDataStore"
 
 const debug = debugCreator('popup:AccountAlerts')
@@ -69,8 +70,8 @@ export default () => ({
       return alert.address === AccountPageStore.selectedAccount
     })
   },
-  checkTriggeredAccountAlert(alert: AccountAlert): boolean {
-    const triggeredAddress = AccountPageStore.triggered[alert.address]
+  checkTriggeredAccountAlert(alert: AccountAlert, triggered: TriggeredAccountAlerts): boolean {
+    const triggeredAddress = triggered[alert.address]
     if (!triggeredAddress) {return false}
     if (!triggeredAddress[alert.id]) {return false}
     return triggeredAddress[alert.id]
@@ -80,6 +81,12 @@ export default () => ({
     return value.replace(/([A-Z])/g, ' $1')
     // uppercase the first character
     .replace(/^./, function(str){ return str.toUpperCase(); })
+  },
+  formatTriggerValueForDisplay(alert: AccountAlert) {
+    return alert.priceType === PriceType.Static ? `$${alert.triggerValue}` : `${alert.deltaValue}%`
+  },
+  formatDeltaValueForDisplay(alert: AccountAlert) {
+    return alert.priceType === PriceType.Delta ? `${alert.timeFrame} hrs` : 'n/a'
   },
   deleteAccountAlert(deleted: AccountAlert) {
     delete AccountPageStore.triggered[deleted.address][deleted.id]
