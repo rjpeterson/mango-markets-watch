@@ -1,7 +1,7 @@
 import debugCreator from 'debug';
 
 import { addAccountAlert, checkAccountAlerts, triggeredAccountAlerts, updateAccountAlerts } from './accountAlerts';
-import { storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from './accountData';
+import { Accounts, storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import { changeAlertType } from './toggles';
 import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
@@ -45,27 +45,76 @@ export const updateBadgeText = () => {
   })
 }
 
+export interface OldSchemaAccountInfo {
+  equity: string,
+  healthRatio: string,
+  name: string,
+}
+
+export interface OldSchemaAccounts {
+  [address: string]: OldSchemaAccountInfo,
+}
+
+const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
+  if (!accounts) {return {}}
+  const accountsSchema1: Accounts = {};
+  for (const [address, data] of Object.entries(accounts)) {
+    accountsSchema1[address] = {
+      name: data.name,
+      balance: parseFloat(data.equity),
+      health: parseFloat(data.healthRatio)
+    }
+  }
+  return accountsSchema1;
+}
+
+const updateLocalStorageSchema = (callback: Function) => {
+  debug('checking storage schema...')
+  // Convert old storage to Schema1
+  // "alerts" -> "tokenAlerts"
+  // accounts[address].equity: string -> accounts[address].balance: number
+  // accounts[address].healthRatio: string -> accounts[address].health: number
+  chrome.storage.local.get(['storageSchema', 'tokenAlerts', 'alerts', 'accounts'], (result) => {
+    if(!result.storageSchema || result.storageSchema !== 1) {
+      debug('updating to storage schema1')
+      chrome.storage.local.set({
+        "storageSchema": 1,
+        "tokenAlerts": result.alerts || {},
+        "accounts": convertAccountsToSchema1(result.accounts || undefined),
+      }, () => {
+        chrome.storage.local.remove('alerts')
+        callback()
+      })
+    } else {
+      callback()
+    }
+  }) 
+}
+
 //fires on new install or update
 chrome.runtime.onInstalled.addListener(() => { 
   debug("onInstalled...");
-  chrome.storage.local.get({
-    "tokensInfo": [], 
-    "toggles": {},
-    "tokenAlerts": {},
-    "alertTypes": {browser: true, os: true},
-    "accounts": {},
-    "accountsHistory": [],
-    "accountAlerts": []
-  }, (result) => {
-    debug('got values from storage:', JSON.stringify(result, null, 2))
-    chrome.storage.local.set(result)
+  updateLocalStorageSchema(() => {
+    chrome.storage.local.get({
+      "storageSchema": 1,
+      "tokensInfo": [], 
+      "toggles": {},
+      "tokenAlerts": {},
+      "alertTypes": {browser: true, os: true},
+      "accounts": {},
+      "accountsHistory": [],
+      "accountAlerts": []
+    }, (result) => {
+      debug('got values from storage:', JSON.stringify(result, null, 2))
+      chrome.storage.local.set(result)
+    })
+    debug("setting alarm listener...");
+    setAlarmListener();
+    debug("setting fetch alarm...");
+    setFetchAlarm();
+    debug("refreshing tokens info...");
+    refreshTokensInfo();
   })
-  debug("setting alarm listener...");
-  setAlarmListener();
-  debug("setting fetch alarm...");
-  setFetchAlarm();
-  debug("refreshing tokens info...");
-  refreshTokensInfo();
 });
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
