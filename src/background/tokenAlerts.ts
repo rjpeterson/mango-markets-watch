@@ -22,13 +22,13 @@ interface TokenAlert {
 }
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
+const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes, rate: number) => {
   if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
       iconUrl: "dist/icons/logo.svg",
       title: `Mango Markets Watch`,
-      message: `${tokenAlert.baseSymbol} ${tokenAlert.type} rate is ${tokenAlert.side} ${tokenAlert.percent}%`,
+      message: `${tokenAlert.baseSymbol} ${tokenAlert.type} rate is ${tokenAlert.side} ${tokenAlert.percent}% (${rate.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%)`,
       priority: 2,
     });
   }
@@ -70,6 +70,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
     let triggeredAlerts = 0;
     for (const entry in tokenAlerts) {
       let triggered: boolean
+      let rate: number
       const tokenAlert : TokenAlert = tokenAlerts[entry];
       tokensInfo
         .filter((token) => {return token.baseSymbol === tokenAlert.baseSymbol})
@@ -82,12 +83,14 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
           if (tokenAlert.side === "above") {
             if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
               triggered = true
+              rate = parseFloat(token[tokenAlert.type])
             } else {
               triggered = false
             }
           } else {
             if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
               triggered = true
+              rate = parseFloat(token[tokenAlert.type])
             } else {
               triggered = false
             }
@@ -95,7 +98,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
         });
       if (triggered) {
         debug(`token notification triggered`);
-        onTriggered(entry, tokenAlert, alertTypes);
+        onTriggered(entry, tokenAlert, alertTypes, rate);
         triggeredAlerts += 1;
       } else {
         onUntriggered(entry, tokenAlert, alertTypes);

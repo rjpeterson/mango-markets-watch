@@ -142,7 +142,8 @@ const getAccountName = (address: string, account: AccountInfo): string => {
 
 const assembleNotificationMessage = (accountName: string | undefined, alert: AccountAlert, matchedAccount?: AccountInfo, historicalAccount?: AccountInfo): string => {
   if (alert.priceType === PriceType.Static) {
-    return `${accountName} ${alert.metricType} is below ${alert.triggerValue}`
+    return `${accountName} ${alert.metricType} is below ${alert.triggerValue}
+    (${alert.metricType === MetricType.Health ? '' : '$'}${matchedAccount[alert.metricType].toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}${alert.metricType === MetricType.Health ? '%' : ''})`
   } else {
     return `${accountName} ${alert.metricType} changed 
     more than ${alert.deltaValue}% in the past ${alert.timeFrame} hours. 
