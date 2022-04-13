@@ -10,17 +10,23 @@
     style="width:24rem" 
     x-data="Body()"
   >
+    <div class="relative">
+      <div class="absolute top-0 right-0 text-white p-1" x-data="TPS">
+        <span>TPS:</span>
+        <span x-text="$store.TPS.tps"></span>
+      </div>
+    </div>
     <header class="
-        flex
-        justify-center
-        pt-4
-        mx-auto
-        text-base
-        font-medium
-        text-orange-DEFAULT
-        ">
-        <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
-        <span x-text="getHeaderText()"></span>
+      flex
+      justify-center
+      pt-4
+      mx-auto
+      text-base
+      font-medium
+      text-orange-DEFAULT
+    ">
+      <img src="./icons/logo.svg" height="24" width="24" class="mr-1" />
+      <span x-text="getHeaderText()"></span>
     </header>
 
     <div class="justify-between px-4 py-2 flex flex-col">

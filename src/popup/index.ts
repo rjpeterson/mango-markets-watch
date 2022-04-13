@@ -14,8 +14,13 @@ import TokenAlertsRow from './TokenAlertsRow';
 import AccountAlerts from './AccountAlerts';
 import { Page } from './AppDataStore';
 import AccountAlertsRow from './AccountAlertsRow';
+import TPS from './TPS';
 
 const debug = debugCreator('popup')
+
+Alpine.store('TPS', {
+  tps: 0
+})
 
 Alpine.store('UserData', {
   toggles: {},
@@ -97,6 +102,7 @@ Alpine.data('AccountRow', AccountRow)
 Alpine.data('AccountAlertsRow', AccountAlertsRow)
 Alpine.data('AccountAlerts', AccountAlerts)
 Alpine.data('NewAccountAlert', NewAccountAlert)
+Alpine.data('TPS', TPS)
 
 Alpine.plugin(collapse)
 Alpine.plugin(focus)
