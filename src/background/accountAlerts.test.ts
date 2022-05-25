@@ -15,7 +15,7 @@ describe('accountAlerts', () => {
     const mockAccountAlert: accountAlerts.AccountAlert = {
       id: 1,
       address: '0x123',
-      priceType: accountAlerts.PriceType.Static,
+      triggerType: accountAlerts.TriggerType.Static,
       metricType: accountAlerts.MetricType.Balance,
       triggerValue: 0,
       deltaValue: 0,
@@ -80,13 +80,13 @@ describe('accountAlerts', () => {
       expect(result).toBeUndefined()
     })
     
-    describe('static priceType alerts', () => {
+    describe('static triggerType alerts', () => {
       it('triggers an alarm when balance is below trigger value', () => {
         const mockAccountAlerts: accountAlerts.AccountAlert[] = [
           {
             id: 1,
             address: '0x123',
-            priceType: accountAlerts.PriceType.Static,
+            triggerType: accountAlerts.TriggerType.Static,
             metricType: accountAlerts.MetricType.Balance,
             triggerValue: 100,
             deltaValue: 0,
@@ -105,7 +105,7 @@ describe('accountAlerts', () => {
           {
             id: 1,
             address: '0x123',
-            priceType: accountAlerts.PriceType.Static,
+            triggerType: accountAlerts.TriggerType.Static,
             metricType: accountAlerts.MetricType.Health,
             triggerValue: 100,
             deltaValue: 0,
@@ -121,7 +121,7 @@ describe('accountAlerts', () => {
 
     })
 
-    describe('delta priceType alerts', () => {
+    describe('delta triggerType alerts', () => {
       
     })
   })

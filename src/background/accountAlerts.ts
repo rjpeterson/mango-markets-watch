@@ -16,14 +16,14 @@ export let triggeredAccountAlerts = 0;
 export interface AccountAlert {
   id: number,
   address: string,
-  priceType: PriceType,
+  triggerType: TriggerType,
   metricType: MetricType,
   triggerValue: number,
   deltaValue: number,
   timeFrame: number
 }
 
-export enum PriceType {
+export enum TriggerType {
   Static = 'static',
   Delta = 'change %'
 }
@@ -68,8 +68,8 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
       funcDebug('could not find matching account')
       continue
     }
-    if (alert.priceType === PriceType.Static) {
-      funcDebug('priceType Static')
+    if (alert.triggerType === TriggerType.Static) {
+      funcDebug('triggerType Static')
       if (alert.metricType === MetricType.Balance) {
         funcDebug('metric Balance')
         funcDebug('comparing:', matchedAccount.balance, 'less than or equal to', alert.triggerValue)
@@ -79,8 +79,8 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
         funcDebug('comparing:', matchedAccount.health, 'less than or equal to', alert.triggerValue)
         matchedAccount.health <= alert.triggerValue ? triggered = true : undefined
       }
-    } else {//priceType.delta
-      funcDebug('priceType delta: ', alert.timeFrame, 'hr, delta: ', alert.deltaValue)
+    } else {//triggerType.delta
+      funcDebug('triggerType delta: ', alert.timeFrame, 'hr, delta: ', alert.deltaValue)
       // find first timestamp that is longer ago than alert.timeFrame and return matching account data
       funcDebug('timeslot to find: ', dayjs().subtract(alert.timeFrame, 'hour').toString())
       const historicalData = accountsHistory 
@@ -141,7 +141,7 @@ export const getAccountName = (address: string, account: AccountInfo): string =>
 }
 
 const assembleNotificationMessage = (accountName: string | undefined, alert: AccountAlert, matchedAccount?: AccountInfo, historicalAccount?: AccountInfo): string => {
-  if (alert.priceType === PriceType.Static) {
+  if (alert.triggerType === TriggerType.Static) {
     return `${accountName} ${alert.metricType} is below ${alert.triggerValue}
     (${alert.metricType === MetricType.Health ? '' : '$'}${matchedAccount[alert.metricType].toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}${alert.metricType === MetricType.Health ? '%' : ''})`
   } else {
