@@ -1,6 +1,6 @@
 import debugCreator from 'debug';
 import { AccountAlertsStoreType } from './AccountAlerts';
-import { MetricType, PriceType } from './NewAccountAlert';
+import { MetricType, TriggerType } from './NewAccountAlert';
 import { AccountAlert, UserDataStoreType } from './UserDataStore';
 
 let AccountAlertsStore: AccountAlertsStoreType
@@ -19,8 +19,8 @@ export default () => ({
     AccountAlertsStore.active = value ? this.alert.id : undefined
     AccountAlertsStore.addAccountAlert = false
   },
-  validateInput(priceType: PriceType, timeFrame: number): void {
-    if(priceType === PriceType.Delta && timeFrame <= 0) {
+  validateInput(triggerType: TriggerType, timeFrame: number): void {
+    if(triggerType === TriggerType.Delta && timeFrame <= 0) {
       AccountAlertsStore.inputError = true
       AccountAlertsStore.errorText = 'Period must be positive'
     } else {
@@ -28,7 +28,7 @@ export default () => ({
       AccountAlertsStore.errorText = ''
     }
   },
-  updateAccountAlert(alert: AccountAlert, editPriceType: PriceType, editMetricType: MetricType, editTriggerValue: number, editDeltaValue: number, editTimeFrame: number) {
+  updateAccountAlert(alert: AccountAlert, editTriggerType: TriggerType, editMetricType: MetricType, editTriggerValue: number, editDeltaValue: number, editTimeFrame: number) {
     debug('alerts before update: ', JSON.stringify(UserDataStore.accountAlerts, null, 2))
     const filtered = UserDataStore.accountAlerts.filter(element => {
       return element.id !== alert.id
@@ -36,7 +36,7 @@ export default () => ({
     const updatedAlert: AccountAlert = {
       id: alert.id,
       address: alert.address,
-      priceType: editPriceType,
+      triggerType: editTriggerType,
       metricType: editMetricType,
       triggerValue: editTriggerValue,
       deltaValue: editDeltaValue,
