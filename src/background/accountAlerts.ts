@@ -23,12 +23,12 @@ export interface AccountAlert {
   timeFrame: number
 }
 
-enum PriceType {
+export enum PriceType {
   Static = 'static',
   Delta = 'change %'
 }
 
-enum MetricType {
+export enum MetricType {
   Balance = 'balance',
   Health = 'health'
 }
@@ -53,7 +53,7 @@ export const addAccountAlert = (newAlert: AccountAlert, sendResponse: Function):
 export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAlert[], accountsHistory: HistoricalEntry[], alertTypes: AlertTypes) : void {
   const funcDebug = debugCreator('background:accountAlerts:getAccountName')
   funcDebug('checking account alerts')
-  if (!accountAlerts) {
+  if (accountAlerts.length === 0) {
     funcDebug('account alerts array is empty')
     return;
   }
@@ -128,7 +128,7 @@ export function checkAccountAlerts(accounts: Accounts, accountAlerts: AccountAle
     : triggeredAccountAlerts = 0
 }
 
-const getAccountName = (address: string, account: AccountInfo): string => {
+export const getAccountName = (address: string, account: AccountInfo): string => {
   const funcDebug = debugCreator('background:accountAlerts:getAccountName')
   funcDebug('getting name for address: ', address, ' and account: ', account)
   const addressLength = address.length
@@ -153,7 +153,7 @@ const assembleNotificationMessage = (accountName: string | undefined, alert: Acc
 
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-const onTriggered = (triggeredAlerts: [string | undefined, AccountAlert, AccountInfo, AccountInfo][], alertTypes: AlertTypes): void => {
+export const onTriggered = (triggeredAlerts: [string | undefined, AccountAlert, AccountInfo, AccountInfo][], alertTypes: AlertTypes): void => {
   if (alertTypes.os) {
     triggeredAlerts.forEach(([accountName, alert, matchedAccount, historicalAccount]) => {
       chrome.notifications.create(alert.id.toString(), {
