@@ -1,6 +1,6 @@
 import { XData } from 'alpinejs';
 import debugCreator from 'debug';
-import { MetricType, PriceType } from './NewAccountAlert';
+import { MetricType, TriggerType } from './NewAccountAlert';
 import { AccountData, UserDataStoreType } from './UserDataStore';
 
 const debug = debugCreator('popup:AccountPage')
@@ -20,7 +20,7 @@ export interface TriggeredAccountAlerts {
 interface AccountAlert {
   id: number,
   address: string,
-  priceType: PriceType,
+  triggerType: TriggerType,
   metricType: MetricType,
   triggerValue: number,
   deltaValue: number,

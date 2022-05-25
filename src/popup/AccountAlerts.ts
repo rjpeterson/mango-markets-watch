@@ -1,7 +1,7 @@
 import debugCreator from 'debug';
 import { AccountAlert } from '../background/accountAlerts';
 import { AccountPageStoreType, parseHealth, parseBalance, TriggeredAccountAlerts } from './AccountPage';
-import { PriceType } from './NewAccountAlert';
+import { TriggerType } from './NewAccountAlert';
 import { UserDataStoreType } from "./UserDataStore"
 
 const debug = debugCreator('popup:AccountAlerts')
@@ -83,10 +83,10 @@ export default () => ({
     .replace(/^./, function(str){ return str.toUpperCase(); })
   },
   formatTriggerValueForDisplay(alert: AccountAlert) {
-    return alert.priceType === PriceType.Static ? `$${alert.triggerValue}` : `${alert.deltaValue}%`
+    return alert.triggerType === TriggerType.Static ? `$${alert.triggerValue}` : `${alert.deltaValue}%`
   },
   formatDeltaValueForDisplay(alert: AccountAlert) {
-    return alert.priceType === PriceType.Delta ? `${alert.timeFrame} hrs` : 'n/a'
+    return alert.triggerType === TriggerType.Delta ? `${alert.timeFrame} hrs` : 'n/a'
   },
   deleteAccountAlert(deleted: AccountAlert) {
     delete AccountPageStore.triggered[deleted.address][deleted.id]
