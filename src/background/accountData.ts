@@ -107,7 +107,7 @@ export const storeHistoricalData = (
         checkAccountAlerts(
           result.accounts,
           result.accountAlerts,
-          result.accountsHistory,
+          accountsHistory,
           result.alertTypes
         );
       }
