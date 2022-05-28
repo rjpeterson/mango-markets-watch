@@ -9,7 +9,6 @@ import * as main from ".";
 import * as accountData from "./accountData";
 
 import { chrome } from "jest-chrome";
-import { after, before } from "lodash";
 
 describe("accountAlerts", () => {
   describe("addAccountAlert", () => {
