@@ -2,7 +2,12 @@ import token from "./token";
 const rpcToken = `https://mango.rpcpool.com/${token}`;
 
 import { Connection, PublicKey } from "@solana/web3.js";
-import { IDS, MangoClient, Config, Cluster } from "@blockworks-foundation/mango-client-v3";
+import {
+  IDS,
+  MangoClient,
+  Config,
+  Cluster,
+} from "@blockworks-foundation/mango-client-v3";
 import debugCreator from "debug";
 
 const debug = debugCreator("background:connection");
@@ -46,7 +51,6 @@ export interface Market {
 }
 
 export async function establishConnection(cluster: Cluster, group: string) {
-
   const clusterData = IDS.groups.find((g: ClusterData) => {
     return g.name === group && g.cluster === cluster;
   });
