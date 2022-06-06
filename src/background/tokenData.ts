@@ -10,6 +10,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { ClusterData, establishConnection, Market } from './connection';
 import { checkTokenAlerts } from './tokenAlerts';
 import { checkToggles } from './toggles';
+import { settings } from "./settings";
 
 const debug = debugCreator('background:tokenData')
 
@@ -124,7 +125,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
 
 export async function getTokenInfo_v3(): Promise<TokensInfo> {
   debug(`getting v3 token info...`);
-  const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection();    
+  const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection(settings.cluster, settings.group);    
 
   const interestRates = await getInterestRates(
     mangoGroup,
