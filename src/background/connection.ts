@@ -2,11 +2,7 @@ import token from "./token";
 const rpcToken = `https://mango.rpcpool.com/${token}`;
 
 import { Connection, PublicKey } from "@solana/web3.js";
-import {
-  IDS as IDS_v3,
-  MangoClient as MangoClient_v3,
-  Config as Config_v3,
-} from "@blockworks-foundation/mango-client-v3";
+import { IDS, MangoClient, Config, Cluster } from "@blockworks-foundation/mango-client-v3";
 import debugCreator from "debug";
 
 const debug = debugCreator("background:connection");
@@ -49,16 +45,14 @@ export interface Market {
   eventsKey: string;
 }
 
-export async function establishConnection() {
-  const cluster = "mainnet";
-  const group = "mainnet.1";
+export async function establishConnection(cluster: Cluster, group: string) {
 
-  const clusterData = IDS_v3.groups.find((g: ClusterData) => {
+  const clusterData = IDS.groups.find((g: ClusterData) => {
     return g.name === group && g.cluster === cluster;
   });
   const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
 
-  const config = new Config_v3(IDS_v3);
+  const config = new Config(IDS);
   const groupConfig = config.getGroup(cluster, group);
   if (!groupConfig) {
     throw new Error("unable to get mango group config");
@@ -71,7 +65,7 @@ export async function establishConnection() {
   } catch (error) {
     throw new Error("could not establish v3 connection");
   }
-  const client = new MangoClient_v3(connection, mangoProgramIdPk);
+  const client = new MangoClient(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);
   const mangoCache = await mangoGroup.loadCache(connection);
 
