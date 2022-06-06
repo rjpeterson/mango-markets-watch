@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { checkAccountAlerts } from "./accountAlerts";
 import { refreshAlarmPeriod } from "./alarms";
 import { establishConnection } from "./connection";
+import { settings } from "./settings";
 
 const debug = debugCreator("background:accountData");
 
@@ -41,7 +42,7 @@ export const updateAccountsData = async (
   sendResponse?: Function
 ) => {
   const updatedAccounts: Accounts = {};
-  const { mangoGroup, client, mangoCache } = await establishConnection();
+  const { mangoGroup, client, mangoCache } = await establishConnection(settings.cluster, settings.group);
   for (const key of Object.keys(accounts)) {
     debug("updating account", key);
     const accountPK = new PublicKey(key);
