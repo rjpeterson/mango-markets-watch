@@ -19,8 +19,9 @@
   },
   "devDependencies": {
     "@alpinejs/collapse": "^3.5.1",
-    "@types/chrome": "^0.0.176",
+    "@types/chrome": "^0.0.188",
     "@types/debug": "^4.1.7",
+    "@types/jest": "^28.1.1",
     "alpinejs": "^3.2.4",
     "autoprefixer": "^9.7.4",
     "concurrently": "^5.1.0",
@@ -39,7 +40,6 @@
     "webpack": "4.41.5",
     "webpack-cli": "3.3.10",
     "webpack-extension-reloader": "^1.1.4",
-    "@types/jest": "^27.5.1",
     "jest": "^28.1.0",
     "jest-chrome": "^0.7.2",
     "ts-jest": "^28.0.3",
