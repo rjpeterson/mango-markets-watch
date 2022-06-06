@@ -10,7 +10,11 @@
       "baseUrl": "types",
       "paths": {
         "alpinejs": ["./alpinejs"],
-      }
+      },
+      "types": [
+        "jest",
+        "chrome",
+      ]
   },
   "include": [
     "./src/**/*", 
