@@ -23,11 +23,6 @@ describe("alarms", () => {
     jest.spyOn(accountData, "updateAndStoreAccounts").mockImplementation();
     jest.spyOn(main, "updateBadgeText").mockImplementation();
     jest.spyOn(chrome.alarms, "create").mockImplementation();
-    jest
-    .spyOn(chrome.alarms.onAlarm, "addListener")
-    .mockImplementation((callback) => {
-      callback({ name: "refresh", scheduledTime: Date.now() });
-    });
   });
 
   describe("setFetchAlarm", () => {
@@ -40,27 +35,29 @@ describe("alarms", () => {
   });
 
   describe("setAlarmListener", () => {
+    beforeEach(() => {
+      chrome.runtime.onMessage.clearListeners();
+    })
+
     it("should set an alarm listener", () => {
       alarms.setAlarmListener();
-      expect(chrome.alarms.onAlarm.addListener).toHaveBeenCalled();
+      expect(chrome.alarms.onAlarm.hasListeners()).toBe(true);
     });
 
     it('should trigger refresh actions on "refresh" alarm', () => {
+      let test = false;
       alarms.setFetchAlarm();
       alarms.setAlarmListener();
+      chrome.alarms.onAlarm.callListeners({ name: "refresh", scheduledTime: Date.now() });
       expect(tokenData.refreshTokensInfo).toHaveBeenCalled();
       expect(accountData.updateAndStoreAccounts).toHaveBeenCalled();
       expect(main.updateBadgeText).toHaveBeenCalled();
     });
 
     it('should not trigger refresh actions on "other" alarm', () => {
-      jest
-      .spyOn(chrome.alarms.onAlarm, "addListener")
-      .mockImplementation((callback) => {
-        callback({ name: "other", scheduledTime: Date.now() });
-      });
       alarms.setFetchAlarm();
       alarms.setAlarmListener();
+      chrome.alarms.onAlarm.callListeners({ name: "other", scheduledTime: Date.now() });
       expect(tokenData.refreshTokensInfo).not.toHaveBeenCalled();
       expect(accountData.updateAndStoreAccounts).not.toHaveBeenCalled();
       expect(main.updateBadgeText).not.toHaveBeenCalled();
