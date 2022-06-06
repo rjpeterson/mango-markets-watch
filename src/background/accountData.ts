@@ -6,7 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { checkAccountAlerts } from "./accountAlerts";
 import { refreshAlarmPeriod } from "./alarms";
 import { establishConnection } from "./connection";
-import { settings } from "./settings";
+import settings from "./settings";
 
 const debug = debugCreator("background:accountData");
 

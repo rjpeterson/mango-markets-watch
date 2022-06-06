@@ -10,7 +10,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { ClusterData, establishConnection, Market } from './connection';
 import { checkTokenAlerts } from './tokenAlerts';
 import { checkToggles } from './toggles';
-import { settings } from "./settings";
+import settings from "./settings";
 
 const debug = debugCreator('background:tokenData')
 
