@@ -1,20 +1,20 @@
 import debugCreator from 'debug';
 import { AlertTypes, updateBadgeText } from '.';
-import { getTokenInfo_v3, TokensInfo } from './tokenData';
+import { getTokenInfo, TokensInfo } from './tokenData';
 
 const debug = debugCreator('background:tokenAlerts')
 export let triggeredTokenAlerts = 0
 
-enum TokenRateType {
+export enum TokenRateType {
   Borrow = 'borrow',
   Deposit = 'deposit',
   Funding = 'funding'
 }
-enum AlertSide {
+export enum AlertSide {
   Above = 'above',
   Below = 'below'
 }
-interface TokenAlert {
+export interface TokenAlert {
   baseSymbol: string,
   type: TokenRateType,
   side: AlertSide,
@@ -22,7 +22,7 @@ interface TokenAlert {
 }
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes, rate: number) => {
+export const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes, rate: number) => {
   if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
@@ -41,7 +41,7 @@ const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: A
   });
 };
 
-const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
+export const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
   if (alertTypes.os) {
     chrome.notifications.clear(tokenAlertId);
   }
@@ -56,9 +56,9 @@ const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes:
 
 export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function): Promise<void> => {
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
-  const tokensInfo = await getTokenInfo_v3()
-  chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
-    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes)
+  const tokensInfo = await getTokenInfo()
+  chrome.storage.local.get(['alertTypes'], (result) => {
+    checkTokenAlerts(tokensInfo, tokenAlerts, result.alertTypes)
     updateBadgeText()
     sendResponse({ msg: "tokenAlerts updated successfully" });
   })
