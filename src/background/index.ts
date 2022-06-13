@@ -14,10 +14,13 @@ export interface AlertTypes {
 
 localStorage.debug = '*';
 const debug = debugCreator('background:index')
-let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts;
+let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts; //TODO this doesn't work in manifest v3. vars should be store in local storage instead
 
-// ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, send to storage, send response, display fresh data
-const onPopup = (sendResponse: Function) => {
+// ONPOPUP: send message 'onPopup', 
+// get all versions from storage, send response, 
+// display version from storage, send refresh version message, 
+// send to storage, send response, display fresh data
+export const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(null, async (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
@@ -34,6 +37,8 @@ const onPopup = (sendResponse: Function) => {
   });
 };
 
+// updates badge text with number of activated alerts 
+// if browser notifications are enabled
 export const updateBadgeText = () => {
   chrome.storage.local.get('alertTypes', (result) => {
     if (result.alertTypes.browser) {
@@ -55,7 +60,11 @@ export interface OldSchemaAccounts {
   [address: string]: OldSchemaAccountInfo,
 }
 
-const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
+  // Convert old storage to Schema1
+  // "alerts" -> "tokenAlerts"
+  // accounts[address].equity: string -> accounts[address].balance: number
+  // accounts[address].healthRatio: string -> accounts[address].health: number
+export const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
   if (!accounts) {return {}}
   const accountsSchema1: Accounts = {};
   for (const [address, data] of Object.entries(accounts)) {
@@ -68,12 +77,8 @@ const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
   return accountsSchema1;
 }
 
-const updateLocalStorageSchema = (callback: Function) => {
+export const updateLocalStorageSchema = (callback: Function) => {
   debug('checking storage schema...')
-  // Convert old storage to Schema1
-  // "alerts" -> "tokenAlerts"
-  // accounts[address].equity: string -> accounts[address].balance: number
-  // accounts[address].healthRatio: string -> accounts[address].health: number
   chrome.storage.local.get(['storageSchema', 'tokenAlerts', 'alerts', 'accounts'], (result) => {
     if(!result.storageSchema || result.storageSchema !== 1) {
       debug('updating to storage schema1')

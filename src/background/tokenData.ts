@@ -123,7 +123,7 @@ async function getInterestRates(mangoGroup: MangoGroup, connection: Connection, 
   }
 }
 
-export async function getTokenInfo_v3(): Promise<TokensInfo> {
+export async function getTokenInfo(): Promise<TokensInfo> {
   debug(`getting v3 token info...`);
   const {mangoGroup, connection, groupConfig, clusterData, client} = await establishConnection(settings.cluster, settings.group);    
 
@@ -154,7 +154,7 @@ export async function getTokenInfo_v3(): Promise<TokensInfo> {
 // ONSTARTUP: get token info & send to storage
 // ONALARM: get token info, send to storage, send to popup
 export const refreshTokensInfo = async (sendResponse?: Function) => {
-  const tokensInfo = await getTokenInfo_v3();
+  const tokensInfo = await getTokenInfo();
   chrome.storage.local.set({ tokensInfo: tokensInfo });
   chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
     checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes);
