@@ -1,6 +1,6 @@
 {
     "name": "mango-markets-watch",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "scripts": {
         "watch:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css -w",
         "dev:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
@@ -26,9 +26,12 @@
         "copy-webpack-plugin": "^5.1.1",
         "cross-env": "^7.0.0",
         "debug": "^4.3.3",
+        "husky": "^8.0.1",
+        "lint-staged": "^13.0.1",
         "loader-utils": "^2.0.0",
         "postcss-cli": "^7.1.0",
         "postcss-loader": "^3.0.0",
+        "prettier": "^2.6.2",
         "tailwindcss": "^1.1.4",
         "ts-loader": "~8.2.0",
         "typescript": "^4.5.5",
