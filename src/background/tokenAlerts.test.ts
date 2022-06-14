@@ -102,8 +102,10 @@ describe("tokenAlerts", () => {
   });
   describe("updateTokenAlerts", () => {
     let mockTokenAlerts: tokenAlerts.TokenAlert[];
+    let mockCheckTokenAlerts: jest.SpyInstance
     let spy = jest.fn();
     beforeAll(() => {
+      mockCheckTokenAlerts = jest.spyOn(tokenAlerts, 'checkTokenAlerts').mockImplementation(() => {});
       mockTokenAlerts = [
         {
           baseSymbol: "BTC",
@@ -114,7 +116,13 @@ describe("tokenAlerts", () => {
       ];
     })
     beforeEach(() => {
+      chrome.storage.local.get.mockImplementation((keys, callback) => {
+        callback({});
+      });
       spy.mockReset();
+    })
+    afterAll(() => {
+      mockCheckTokenAlerts.mockRestore();
     })
     it("sets tokenAlerts in storage", () => {
       tokenAlerts.updateTokenAlerts(mockTokenAlerts, spy);
@@ -126,9 +134,12 @@ describe("tokenAlerts", () => {
       tokenAlerts.updateTokenAlerts(mockTokenAlerts, spy);
       expect(getTokenInfo).toHaveBeenCalled();
     })
-    it("gets localStorage, checks token alerts, updates badge, and sends response", () => {
+    it("gets localStorage, checks token alerts, updates badge, and sends response", async () => {
+      let getSpy = jest.spyOn(chrome.storage.local, 'get')
       tokenAlerts.updateTokenAlerts(mockTokenAlerts, spy);
-      expect(chrome.storage.local.get).toHaveBeenCalledWith(["tokenAlerts"], expect.any(Function));
+      await new Promise(process.nextTick);
+      expect(getSpy).toHaveBeenCalledWith(["alertTypes"], expect.any(Function));
+      expect(mockCheckTokenAlerts).toHaveBeenCalled();
       expect(updateBadgeText).toHaveBeenCalled();
       expect(spy).toHaveBeenCalledWith({msg: "tokenAlerts updated successfully"});
     })
@@ -144,7 +155,7 @@ describe("tokenAlerts", () => {
         {
           baseSymbol: "BTC",
           type: tokenAlerts.TokenRateType.Borrow,
-          side: tokenAlerts.AlertSide.Above,
+          side: tokenAlerts.AlertSide.Below,
           percent: 50,
         }
       ];
@@ -154,6 +165,10 @@ describe("tokenAlerts", () => {
       }
       onTriggeredSpy = jest.spyOn(tokenAlerts, "onTriggered").mockImplementation(() => {});
       onUntriggeredSpy = jest.spyOn(tokenAlerts, "onUntriggered").mockImplementation(() => {});
+    })
+    afterAll(() => {
+      onTriggeredSpy.mockRestore();
+      onUntriggeredSpy.mockRestore();
     })
     it("calls onTriggered when alert is triggered", () => {
       mockTokensInfo = [
@@ -165,6 +180,7 @@ describe("tokenAlerts", () => {
         }
       ]
       tokenAlerts.checkTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
+      expect(onUntriggeredSpy).not.toHaveBeenCalled();
       expect(onTriggeredSpy).toHaveBeenCalled();
     })
     it("calls onUntriggered when alert is not triggered", () => {
@@ -177,6 +193,7 @@ describe("tokenAlerts", () => {
         }
       ]
       tokenAlerts.checkTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
+      expect(onTriggeredSpy).not.toHaveBeenCalled();
       expect(onUntriggeredSpy).toHaveBeenCalled();
     })
   });
