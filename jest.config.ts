@@ -4,10 +4,18 @@
  */
 
 export default {
-  setupFilesAfterEnv: ['./jest.setup.js'],
+  globals: {
+    "ts-jest": {
+      "compiler": "ttypescript"
+    }
+  },
+  transform: {
+    ".(ts|tsx)": "ts-jest"
+  },
+  setupFilesAfterEnv: ['./jest.setup.ts'],
   preset: 'ts-jest',
   // All imported modules in your tests should be mocked automatically
-  // automock: false,
+  automock: false,
 
   // Stop running tests after `n` failures
   // bail: 0,
