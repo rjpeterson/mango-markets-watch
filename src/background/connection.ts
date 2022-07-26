@@ -67,7 +67,7 @@ export async function establishConnection(cluster: Cluster, group: string) {
   try {
     connection = new Connection(rpcToken, "singleGossip");
   } catch (error) {
-    throw new Error("could not establish v3 connection");
+    throw new Error("could not establish connection");
   }
   const client = new MangoClient(connection, mangoProgramIdPk);
   const mangoGroup = await client.getMangoGroup(mangoGroupKey);

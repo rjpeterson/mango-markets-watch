@@ -3,6 +3,7 @@ import debugCreator from 'debug';
 import { addAccountAlert, checkAccountAlerts, triggeredAccountAlerts, updateAccountAlerts } from './accountAlerts';
 import { Accounts, storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
+import settings from './settings';
 import { changeAlertType } from './toggles';
 import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
 import { refreshTokensInfo } from './tokenData';
@@ -20,13 +21,13 @@ let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts; //TODO this
 // get all versions from storage, send response, 
 // display version from storage, send refresh version message, 
 // send to storage, send response, display fresh data
-export const onPopup = (sendResponse: Function) => {
+const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(null, async (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
       return
     }
-    refreshTokensInfo()
+    refreshTokensInfo(settings.cluster, settings.group)
     const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
     storeHistoricalData(accounts)
@@ -64,7 +65,7 @@ export interface OldSchemaAccounts {
   // "alerts" -> "tokenAlerts"
   // accounts[address].equity: string -> accounts[address].balance: number
   // accounts[address].healthRatio: string -> accounts[address].health: number
-export const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
+const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
   if (!accounts) {return {}}
   const accountsSchema1: Accounts = {};
   for (const [address, data] of Object.entries(accounts)) {
@@ -77,7 +78,7 @@ export const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
   return accountsSchema1;
 }
 
-export const updateLocalStorageSchema = (callback: Function) => {
+const updateLocalStorageSchema = (callback: Function) => {
   debug('checking storage schema...')
   chrome.storage.local.get(['storageSchema', 'tokenAlerts', 'alerts', 'accounts'], (result) => {
     if(!result.storageSchema || result.storageSchema !== 1) {
@@ -118,7 +119,7 @@ chrome.runtime.onInstalled.addListener(() => {
     debug("setting fetch alarm...");
     setFetchAlarm();
     debug("refreshing tokens info...");
-    refreshTokensInfo();
+    refreshTokensInfo(settings.cluster, settings.group);
   })
 });
 
@@ -126,7 +127,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onStartup.addListener(() => {
   debug("onStartup....");
   debug("refreshing tokens info...");
-  refreshTokensInfo();
+  refreshTokensInfo(settings.cluster, settings.group);
   updateAndStoreAccounts();
 });
 
@@ -141,7 +142,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       onPopup(sendResponse);
       break;
     case "refresh tokensInfo":
-      refreshTokensInfo(sendResponse);
+      refreshTokensInfo(settings.cluster, settings.group, sendResponse);
       break;
     case "tokensInfo refreshed":
       return false;
@@ -171,3 +172,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
   return true;
 });
+
+export const forTestingOnly = {
+  onPopup,
+  convertAccountsToSchema1,
+  updateLocalStorageSchema,
+}

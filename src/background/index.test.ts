@@ -51,11 +51,11 @@ describe("index", () => {
       chrome.storage.local.get.mockRestore();
     })
     it("gets local storage", () => {
-      index.onPopup(spyCallback);
+      index.forTestingOnly.onPopup(spyCallback);
       expect(chrome.storage.local.get).toHaveBeenCalled();
     });
     it("stores data, checks alerts, updates badge text, and sends a response", async () => {
-      index.onPopup(spyCallback);
+      index.forTestingOnly.onPopup(spyCallback);
       await new Promise(process.nextTick)
       expect(refreshTokensInfo).toHaveBeenCalled();
       expect(updateAccountsData).toHaveBeenCalledWith(mockResult.accounts);
@@ -94,7 +94,7 @@ describe("index", () => {
       const oldSchema = {
         "12345": oldAccount,
       }
-      const schema1 = index.convertAccountsToSchema1(oldSchema);
+      const schema1 = index.forTestingOnly.convertAccountsToSchema1(oldSchema);
       expect(schema1).toEqual({
         "12345": {
           name: "Test Account",
@@ -118,7 +118,7 @@ describe("index", () => {
       chrome.storage.local.set.mockImplementation((data, callback) => {
         callback()
       })
-      spy = jest.spyOn(index, 'convertAccountsToSchema1').mockImplementation(() => { 
+      spy = jest.spyOn(index.forTestingOnly, 'convertAccountsToSchema1').mockImplementation(() => { 
         return mockUpdatedAccounts
       });
     })
@@ -135,7 +135,7 @@ describe("index", () => {
         callback({alerts: "test alert", accounts: {}});
       })
 
-      index.updateLocalStorageSchema(mockCallback);
+      index.forTestingOnly.updateLocalStorageSchema(mockCallback);
       expect(chrome.storage.local.get).toHaveBeenCalled();
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         "storageSchema": 1,
@@ -150,8 +150,8 @@ describe("index", () => {
         callback({storageSchema: 1, alerts: "test alert", accounts: {}});
       })
 
-      index.updateLocalStorageSchema(mockCallback);
-      expect(index.convertAccountsToSchema1).not.toHaveBeenCalled();
+      index.forTestingOnly.updateLocalStorageSchema(mockCallback);
+      expect(index.forTestingOnly.convertAccountsToSchema1).not.toHaveBeenCalled();
       expect(mockCallback).toHaveBeenCalled();
     })
   });

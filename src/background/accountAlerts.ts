@@ -191,7 +191,7 @@ export const checkAccountAlerts = (
     : (triggeredAccountAlerts = 0);
 }
 
-export const getAccountName = (
+const getAccountName = (
   address: string,
   account: AccountInfo
 ): string => {
@@ -207,7 +207,7 @@ export const getAccountName = (
   }
 };
 
-export const assembleNotificationMessage = (
+const assembleNotificationMessage = (
   accountName: string | undefined,
   alert: AccountAlert,
   matchedAccount: AccountInfo,
@@ -239,7 +239,7 @@ export const assembleNotificationMessage = (
 };
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-export const onTriggered = (
+const onTriggered = (
   triggeredAlerts: [
     string | undefined,
     AccountAlert,
@@ -274,7 +274,7 @@ export const onTriggered = (
   });
 };
 
-export const onUntriggered = (
+const onUntriggered = (
   alert: AccountAlert,
   alertTypes: AlertTypes
 ): void => {
@@ -313,3 +313,10 @@ export const updateAccountAlerts = (
     }
   );
 };
+
+export const forTestingOnly = {
+  getAccountName,
+  assembleNotificationMessage,
+  onTriggered,
+  onUntriggered,
+}

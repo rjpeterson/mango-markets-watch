@@ -33,7 +33,7 @@ describe("tokenAlerts", () => {
       mockRate = 12;
     });
     it("creates a new os notification", () => {
-      tokenAlerts.onTriggered(
+      tokenAlerts.forTestingOnly.onTriggered(
         mockTokenAlertId,
         mockTokenAlert,
         mockAlertTypes,
@@ -45,7 +45,7 @@ describe("tokenAlerts", () => {
       );
     });
     it("sends an alert triggered message", () => {
-      tokenAlerts.onTriggered(
+      tokenAlerts.forTestingOnly.onTriggered(
         mockTokenAlertId,
         mockTokenAlert,
         mockAlertTypes,
@@ -78,7 +78,7 @@ describe("tokenAlerts", () => {
       };
     });
     it("clears an os notification", () => {
-      tokenAlerts.onUntriggered(
+      tokenAlerts.forTestingOnly.onUntriggered(
         mockTokenAlertId,
         mockTokenAlert,
         mockAlertTypes
@@ -86,7 +86,7 @@ describe("tokenAlerts", () => {
       expect(chrome.notifications.clear).toHaveBeenCalledWith(mockTokenAlertId);
     });
     it("sends an alert untriggered message", () => {
-      tokenAlerts.onUntriggered(
+      tokenAlerts.forTestingOnly.onUntriggered(
         mockTokenAlertId,
         mockTokenAlert,
         mockAlertTypes,
@@ -163,8 +163,8 @@ describe("tokenAlerts", () => {
         browser: true,
         os: true,
       }
-      onTriggeredSpy = jest.spyOn(tokenAlerts, "onTriggered").mockImplementation(() => {});
-      onUntriggeredSpy = jest.spyOn(tokenAlerts, "onUntriggered").mockImplementation(() => {});
+      onTriggeredSpy = jest.spyOn(tokenAlerts.forTestingOnly, "onTriggered").mockImplementation(() => {});
+      onUntriggeredSpy = jest.spyOn(tokenAlerts.forTestingOnly, "onUntriggered").mockImplementation(() => {});
     })
     afterAll(() => {
       onTriggeredSpy.mockRestore();
