@@ -1,5 +1,6 @@
 import debugCreator from 'debug';
 import { AlertTypes, updateBadgeText } from '.';
+import settings from './settings';
 import { getTokenInfo, TokensInfo } from './tokenData';
 
 const debug = debugCreator('background:tokenAlerts')
@@ -22,7 +23,7 @@ export interface TokenAlert {
 }
 
 //TODO create custom html OS alerts using https://groups.google.com/a/chromium.org/g/chromium-extensions/c/nhIz8U96udY
-export const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes, rate: number) => {
+const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes, rate: number) => {
   if (alertTypes.os) {
     chrome.notifications.create(tokenAlertId, {
       type: "basic",
@@ -41,7 +42,7 @@ export const onTriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertT
   });
 };
 
-export const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
+const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, alertTypes: AlertTypes) => {
   if (alertTypes.os) {
     chrome.notifications.clear(tokenAlertId);
   }
@@ -56,7 +57,7 @@ export const onUntriggered = (tokenAlertId: string, tokenAlert: TokenAlert, aler
 
 export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse: Function): Promise<void> => {
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
-  const tokensInfo = await getTokenInfo()
+  const tokensInfo = await getTokenInfo(settings.cluster, settings.group)
   chrome.storage.local.get(['alertTypes'], (result) => {
     checkTokenAlerts(tokensInfo, tokenAlerts, result.alertTypes)
     updateBadgeText()
@@ -109,3 +110,8 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
       ? triggeredTokenAlerts = triggeredAlerts
       : triggeredTokenAlerts = 0
 };
+
+export const forTestingOnly = {
+  onTriggered,
+  onUntriggered
+}

@@ -2,6 +2,7 @@ import debugCreator from "debug";
 import { updateBadgeText } from ".";
 
 import { updateAndStoreAccounts } from "./accountData";
+import settings from "./settings";
 import { refreshTokensInfo } from "./tokenData";
 
 const debug = debugCreator("background:alarms");
@@ -24,7 +25,7 @@ export function setAlarmListener() {
     if (alarm.name === "refresh") {
       //if refresh alarm triggered, start a new request
       debug("Refresh alarm triggered");
-      refreshTokensInfo();
+      refreshTokensInfo(settings.cluster, settings.group);
       updateAndStoreAccounts();
       updateBadgeText();
     }

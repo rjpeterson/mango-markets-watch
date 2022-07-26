@@ -87,13 +87,13 @@ describe("accountAlerts", () => {
 
     beforeAll(() => {
       mockOnTriggered = jest
-        .spyOn(accountAlerts, "onTriggered")
+        .spyOn(accountAlerts.forTestingOnly, "onTriggered")
         .mockImplementation(() => {});
       mockOnUntriggered = jest
-        .spyOn(accountAlerts, "onUntriggered")
+        .spyOn(accountAlerts.forTestingOnly, "onUntriggered")
         .mockImplementation(() => {});
       mockGetAccountName = jest
-        .spyOn(accountAlerts, "getAccountName")
+        .spyOn(accountAlerts.forTestingOnly, "getAccountName")
         .mockImplementation(() => {
           return "test";
         });
@@ -527,7 +527,7 @@ describe("accountAlerts", () => {
           name: "test",
         },
       };
-      const mockAccountName = accountAlerts.getAccountName(
+      const mockAccountName = accountAlerts.forTestingOnly.getAccountName(
         "0x123456789",
         mockAccounts["0x123456789"]
       );
@@ -542,7 +542,7 @@ describe("accountAlerts", () => {
           name: "",
         },
       };
-      const mockAccountName = accountAlerts.getAccountName(
+      const mockAccountName = accountAlerts.forTestingOnly.getAccountName(
         "0x123456789",
         mockAccounts["0x123456789"]
       );
@@ -566,7 +566,7 @@ describe("accountAlerts", () => {
         balance: 50,
         name: "test",
       };
-      const mockMessage = accountAlerts.assembleNotificationMessage(
+      const mockMessage = accountAlerts.forTestingOnly.assembleNotificationMessage(
         mockAccount.name,
         mockAccountAlert,
         mockAccount
@@ -595,7 +595,7 @@ describe("accountAlerts", () => {
         balance: 160,
         name: "test",
       };
-      const mockMessage = accountAlerts.assembleNotificationMessage(
+      const mockMessage = accountAlerts.forTestingOnly.assembleNotificationMessage(
         mockAccount.name,
         mockAccountAlert,
         mockAccount,
@@ -628,9 +628,9 @@ describe("accountAlerts", () => {
         .mockImplementation(() => {});
       mockSendMessage = jest
         .spyOn(chrome.runtime, "sendMessage")
-        .mockImplementation(() => {});
+        .mockImplementation(() => Promise.resolve());
       mockAssembleNotificationMessage = jest
-        .spyOn(accountAlerts, "assembleNotificationMessage")
+        .spyOn(accountAlerts.forTestingOnly, "assembleNotificationMessage")
         .mockImplementation(() => "");
       mockAccountAlerts = [
         {
@@ -675,7 +675,7 @@ describe("accountAlerts", () => {
 
     it("sends an os notification when enabled", () => {
       mockAlertTypes = { browser: true, os: true };
-      accountAlerts.onTriggered(triggeredAlerts, mockAlertTypes);
+      accountAlerts.forTestingOnly.onTriggered(triggeredAlerts, mockAlertTypes);
       expect(mockCreateAlert).toHaveBeenCalledWith(
         mockAccountAlerts[0].id.toString(),
         {
@@ -697,7 +697,7 @@ describe("accountAlerts", () => {
 
     it("doesnt send an os notification when disabled", () => {
       mockAlertTypes = { browser: true, os: false };
-      accountAlerts.onTriggered(triggeredAlerts, mockAlertTypes);
+      accountAlerts.forTestingOnly.onTriggered(triggeredAlerts, mockAlertTypes);
       expect(mockCreateAlert).not.toHaveBeenCalled();
       expect(mockSendMessage).toHaveBeenCalledWith({
         msg: "account alerts triggered",
@@ -720,7 +720,7 @@ describe("accountAlerts", () => {
         .mockImplementation(() => {});
       mockSendMessage = jest
         .spyOn(chrome.runtime, "sendMessage")
-        .mockImplementation(() => {});
+        .mockImplementation(() => Promise.resolve());
       mockAccountAlert = {
         id: 1,
         address: "0x123",
@@ -739,7 +739,7 @@ describe("accountAlerts", () => {
     });
 
     it("clears an os notification when enabled", () => {
-      accountAlerts.onUntriggered(mockAccountAlert, mockAlertTypes);
+      accountAlerts.forTestingOnly.onUntriggered(mockAccountAlert, mockAlertTypes);
       expect(mockClearAlert).toHaveBeenCalledWith(
         mockAccountAlert.id.toString()
       );
@@ -753,7 +753,7 @@ describe("accountAlerts", () => {
 
     it("doesnt send a clear os notification when disabled", () => {
       mockAlertTypes = { browser: true, os: false };
-      accountAlerts.onUntriggered(mockAccountAlert, mockAlertTypes);
+      accountAlerts.forTestingOnly.onUntriggered(mockAccountAlert, mockAlertTypes);
       expect(mockClearAlert).not.toHaveBeenCalled();
       expect(mockSendMessage).toHaveBeenCalledWith({
         msg: "account alert untriggered",
