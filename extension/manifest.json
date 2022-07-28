@@ -1,6 +1,6 @@
 {
     "name": "Mango Markets Watch",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Keep an eye on your account status, as well as set alerts for interest rates on Mango Markets",
     "permissions": [
         "storage",
