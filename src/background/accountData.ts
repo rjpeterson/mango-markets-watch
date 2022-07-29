@@ -10,7 +10,7 @@ import { establishConnection } from './connection';
 const debug = debugCreator('background:accountData')
 
 //alarm period * number of records to keep
-const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 * 7 //7 days with 5 mins refresh period
+const historicalDataPeriod = refreshAlarmPeriod * 12 * 24 * 14 //14 days with 5 mins refresh period
 
 export interface AccountInfo {
   health: number,
