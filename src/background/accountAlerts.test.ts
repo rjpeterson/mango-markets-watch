@@ -22,6 +22,15 @@ describe("accountAlerts", () => {
     let mockUpdateAndStoreAccounts: jest.SpyInstance;
     let mockUpdateBadgeText: jest.SpyInstance;
 
+    // lastError setup
+    const lastErrorMessage = 'this is an error'
+    const lastErrorGetter = jest.fn(() => lastErrorMessage)
+    const lastError = {
+      get message() {
+        return lastErrorGetter()
+      },
+    }
+
     beforeAll(() => {
       mockAccountAlert = {
         id: 1,
@@ -57,17 +66,13 @@ describe("accountAlerts", () => {
       });
     });
 
-    it("should call updateAndStoreAccounts", () => {
+    it("should call update store accounts and badge text", () => {
       accountAlerts.addAccountAlert(mockAccountAlert, () => {});
       expect(mockUpdateAndStoreAccounts).toHaveBeenCalled();
-    });
-
-    it("should call updateBadgeText", () => {
-      accountAlerts.addAccountAlert(mockAccountAlert, () => {});
       expect(mockUpdateBadgeText).toHaveBeenCalled();
     });
 
-    it("should send a response", () => {
+    it("responds with account alerts on success", () => {
       accountAlerts.addAccountAlert(
         mockAccountAlert,
         (response: responseType) => {
@@ -76,55 +81,50 @@ describe("accountAlerts", () => {
         }
       );
     });
+
+    it("responds with an error message on failure", () => {
+      mockGetLocalStorage = jest
+        .spyOn(chrome.storage.local, "get")
+        .mockImplementation((key: Object | string[], callback: Function) => {
+          chrome.runtime.lastError = lastError;
+          callback();
+          // lastError is undefined outside of a callback
+          delete chrome.runtime.lastError
+        });
+        
+      accountAlerts.addAccountAlert(
+        mockAccountAlert,
+        (response: responseType) => {
+          expect(response.msg).toBe("Could not add account alert");
+          expect(response.data).toBe("this is an error");
+        }
+      );
+    });
   });
 
   describe("checkAccountAlerts", () => {
-    let mockOnTriggered: jest.SpyInstance;
-    let mockOnUntriggered: jest.SpyInstance;
-    let mockGetAccountName: jest.SpyInstance;
     let mockAlertTypes: main.AlertTypes;
-    let mockAccountsHistory: accountData.HistoricalEntry[] = [];
+    let mockAccountsHistory: accountData.HistoricalEntry[];
+    let mockSendMessage: jest.SpyInstance;
+    let mockCreateNotification: jest.SpyInstance;
 
     beforeAll(() => {
-      mockOnTriggered = jest
-        .spyOn(accountAlerts.forTestingOnly, "onTriggered")
-        .mockImplementation(() => {});
-      mockOnUntriggered = jest
-        .spyOn(accountAlerts.forTestingOnly, "onUntriggered")
-        .mockImplementation(() => {});
-      mockGetAccountName = jest
-        .spyOn(accountAlerts.forTestingOnly, "getAccountName")
-        .mockImplementation(() => {
-          return "test";
-        });
+      mockAccountsHistory = [];
       mockAlertTypes = { browser: true, os: true };
+      mockSendMessage = jest
+        .spyOn(chrome.runtime, "sendMessage")
+        .mockImplementation();
+      mockCreateNotification = jest
+        .spyOn(chrome.notifications, "create")
+        .mockImplementation();
     });
 
-    afterAll(() => {
-      mockGetAccountName.mockRestore();
-      mockOnTriggered.mockRestore();
-      mockOnUntriggered.mockRestore();
-    });
-
-    it("returns undefined when given an empty alerts array", () => {
-      const mockAccounts: accountData.Accounts = {
-        "0x123": {
-          health: 50,
-          balance: 50,
-          name: "test",
-        },
-      };
-      const result = accountAlerts.checkAccountAlerts(
-        mockAccounts,
-        [],
-        mockAccountsHistory,
-        mockAlertTypes
-      );
-      expect(result).toBeUndefined();
-    });
-
-    describe("static triggerType alerts", () => {
-      it("triggers an alarm when balance is below trigger value", () => {
+    beforeEach(() => {
+      jest.resetAllMocks();
+    })
+    
+    describe("it receives an empty alerts array", () => {
+      it("returns undefined", () => {
         const mockAccounts: accountData.Accounts = {
           "0x123": {
             health: 50,
@@ -132,143 +132,18 @@ describe("accountAlerts", () => {
             name: "test",
           },
         };
-        const mockAccountAlerts: accountAlerts.AccountAlert[] = [
-          {
-            id: 1,
-            address: "0x123",
-            triggerType: accountAlerts.TriggerType.Static,
-            metricType: accountAlerts.MetricType.Balance,
-            triggerValue: 100,
-            deltaValue: 0,
-            timeFrame: 0,
-          },
-        ];
-
-        accountAlerts.checkAccountAlerts(
+        const result = accountAlerts.checkAccountAlerts(
           mockAccounts,
-          mockAccountAlerts,
+          [],
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).toHaveBeenCalledWith(
-          "0x123",
-          mockAccounts["0x123"]
-        );
-        expect(mockOnTriggered).toHaveBeenCalledWith(
-          [["test", mockAccountAlerts[0], mockAccounts["0x123"], undefined]],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
+        expect(result).toBeUndefined();
       });
+    })
 
-      it("doesnt trigger an alarm when balance is above trigger value", () => {
-        const mockAccounts: accountData.Accounts = {
-          "0x123": {
-            health: 50,
-            balance: 50,
-            name: "test",
-          },
-        };
-        const mockAccountAlerts: accountAlerts.AccountAlert[] = [
-          {
-            id: 1,
-            address: "0x123",
-            triggerType: accountAlerts.TriggerType.Static,
-            metricType: accountAlerts.MetricType.Balance,
-            triggerValue: 30,
-            deltaValue: 0,
-            timeFrame: 0,
-          },
-        ];
-
-        accountAlerts.checkAccountAlerts(
-          mockAccounts,
-          mockAccountAlerts,
-          mockAccountsHistory,
-          mockAlertTypes
-        );
-        expect(mockGetAccountName).not.toHaveBeenCalled();
-        expect(mockOnTriggered).toHaveBeenCalledWith([], mockAlertTypes);
-        expect(mockOnUntriggered).toHaveBeenCalledWith(
-          mockAccountAlerts[0],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
-      });
-
-      it("triggers an alarm when health is below trigger value", () => {
-        const mockAccounts: accountData.Accounts = {
-          "0x123": {
-            health: 50,
-            balance: 50,
-            name: "test",
-          },
-        };
-        const mockAccountAlerts: accountAlerts.AccountAlert[] = [
-          {
-            id: 1,
-            address: "0x123",
-            triggerType: accountAlerts.TriggerType.Static,
-            metricType: accountAlerts.MetricType.Health,
-            triggerValue: 100,
-            deltaValue: 0,
-            timeFrame: 0,
-          },
-        ];
-
-        accountAlerts.checkAccountAlerts(
-          mockAccounts,
-          mockAccountAlerts,
-          mockAccountsHistory,
-          mockAlertTypes
-        );
-        expect(mockGetAccountName).toHaveBeenCalledWith(
-          "0x123",
-          mockAccounts["0x123"]
-        );
-        expect(mockOnTriggered).toHaveBeenCalledWith(
-          [["test", mockAccountAlerts[0], mockAccounts["0x123"], undefined]],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
-      });
-
-      it("doesnt trigger an alarm when health is above trigger value", () => {
-        const mockAccounts: accountData.Accounts = {
-          "0x123": {
-            health: 50,
-            balance: 50,
-            name: "test",
-          },
-        };
-        const mockAccountAlerts: accountAlerts.AccountAlert[] = [
-          {
-            id: 1,
-            address: "0x123",
-            triggerType: accountAlerts.TriggerType.Static,
-            metricType: accountAlerts.MetricType.Balance,
-            triggerValue: 30,
-            deltaValue: 0,
-            timeFrame: 0,
-          },
-        ];
-
-        accountAlerts.checkAccountAlerts(
-          mockAccounts,
-          mockAccountAlerts,
-          mockAccountsHistory,
-          mockAlertTypes
-        );
-        expect(mockGetAccountName).not.toHaveBeenCalled();
-        expect(mockOnTriggered).toHaveBeenCalledWith([], mockAlertTypes);
-        expect(mockOnUntriggered).toHaveBeenCalledWith(
-          mockAccountAlerts[0],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
-      });
-
-      it("doesnt trigger an alarm when the address doesnt match", () => {
+    describe("no alarm addresses match the account addresses", () => {
+      it("doesnt trigger an alarm", () => {
         const mockAccounts: accountData.Accounts = {
           "0x123": {
             health: 50,
@@ -287,18 +162,175 @@ describe("accountAlerts", () => {
             timeFrame: 0,
           },
         ];
-
+  
         accountAlerts.checkAccountAlerts(
           mockAccounts,
           mockAccountAlerts,
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).not.toHaveBeenCalled();
-        expect(mockOnTriggered).toHaveBeenCalledWith([], mockAlertTypes);
-        expect(mockOnUntriggered).not.toHaveBeenCalled();
-        // TODO check that triggeredAccountAlerts is updated
+        expect(mockSendMessage).toBeCalledWith({
+          msg: "alert exists that doesnt match any account",
+        })
       });
+
+    });
+
+    describe("static triggerType alerts", () => {
+      describe("balance metricType alerts", () => {
+        it("triggers an alarm when balance is below trigger value", () => {
+          const mockAccounts: accountData.Accounts = {
+            "0x123": {
+              health: 50,
+              balance: 50,
+              name: "test",
+            },
+          };
+          const mockAccountAlerts: accountAlerts.AccountAlert[] = [
+            {
+              id: 1,
+              address: "0x123",
+              triggerType: accountAlerts.TriggerType.Static,
+              metricType: accountAlerts.MetricType.Balance,
+              triggerValue: 100,
+              deltaValue: 0,
+              timeFrame: 0,
+            },
+          ];
+  
+          accountAlerts.checkAccountAlerts(
+            mockAccounts,
+            mockAccountAlerts,
+            mockAccountsHistory,
+            mockAlertTypes
+          );
+          
+          expect(mockSendMessage).toHaveBeenCalledWith({
+            msg: "account alerts triggered",
+            data: {
+              alerts: [[
+                "test - 0x12...x123",
+                mockAccountAlerts[0],
+                mockAccounts["0x123"],
+                undefined
+              ]]
+            }
+          })
+          expect(mockCreateNotification).toHaveBeenCalled();
+        });
+  
+        it("doesnt trigger an alarm when balance is above trigger value", () => {
+          const mockAccounts: accountData.Accounts = {
+            "0x123": {
+              health: 50,
+              balance: 50,
+              name: "test",
+            },
+          };
+          const mockAccountAlerts: accountAlerts.AccountAlert[] = [
+            {
+              id: 1,
+              address: "0x123",
+              triggerType: accountAlerts.TriggerType.Static,
+              metricType: accountAlerts.MetricType.Balance,
+              triggerValue: 30,
+              deltaValue: 0,
+              timeFrame: 0,
+            },
+          ];
+  
+          accountAlerts.checkAccountAlerts(
+            mockAccounts,
+            mockAccountAlerts,
+            mockAccountsHistory,
+            mockAlertTypes
+          );
+          expect(mockSendMessage).toHaveBeenCalledWith({
+            msg: "account alert untriggered",
+            data: {
+              alert: mockAccountAlerts[0]
+            }
+          })
+          expect(mockCreateNotification).not.toHaveBeenCalled();
+        });
+      })
+
+      describe("health metricType alerts", () => {
+        it("triggers an alarm when health is below trigger value", () => {
+          const mockAccounts: accountData.Accounts = {
+            "0x123": {
+              health: 50,
+              balance: 50,
+              name: "test",
+            },
+          };
+          const mockAccountAlerts: accountAlerts.AccountAlert[] = [
+            {
+              id: 1,
+              address: "0x123",
+              triggerType: accountAlerts.TriggerType.Static,
+              metricType: accountAlerts.MetricType.Health,
+              triggerValue: 100,
+              deltaValue: 0,
+              timeFrame: 0,
+            },
+          ];
+  
+          accountAlerts.checkAccountAlerts(
+            mockAccounts,
+            mockAccountAlerts,
+            mockAccountsHistory,
+            mockAlertTypes
+          );
+          expect(mockSendMessage).toHaveBeenCalledWith({
+            msg: "account alerts triggered",
+            data: {
+              alerts: [[
+                "test - 0x12...x123",
+                mockAccountAlerts[0],
+                mockAccounts["0x123"],
+                undefined
+              ]]
+            }
+          })
+          expect(mockCreateNotification).toHaveBeenCalled();
+        });
+  
+        it("doesnt trigger an alarm when health is above trigger value", () => {
+          const mockAccounts: accountData.Accounts = {
+            "0x123": {
+              health: 50,
+              balance: 50,
+              name: "test",
+            },
+          };
+          const mockAccountAlerts: accountAlerts.AccountAlert[] = [
+            {
+              id: 1,
+              address: "0x123",
+              triggerType: accountAlerts.TriggerType.Static,
+              metricType: accountAlerts.MetricType.Balance,
+              triggerValue: 30,
+              deltaValue: 0,
+              timeFrame: 0,
+            },
+          ];
+  
+          accountAlerts.checkAccountAlerts(
+            mockAccounts,
+            mockAccountAlerts,
+            mockAccountsHistory,
+            mockAlertTypes
+          );
+          expect(mockSendMessage).toHaveBeenCalledWith({
+            msg: "account alert untriggered",
+            data: {
+              alert: mockAccountAlerts[0]
+            }
+          })
+          expect(mockCreateNotification).not.toHaveBeenCalled();
+        });
+      })
     });
 
     describe("delta triggerType alerts", () => {
@@ -341,22 +373,18 @@ describe("accountAlerts", () => {
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).toHaveBeenCalledWith(
-          "0x123",
-          mockAccounts["0x123"]
-        );
-        expect(mockOnTriggered).toHaveBeenCalledWith(
-          [
-            [
-              "test",
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alerts triggered",
+          data: {
+            alerts: [[
+              "test - 0x12...x123",
               mockAccountAlerts[0],
               mockAccounts["0x123"],
-              mockHistoricalAccount["0x123"],
-            ],
-          ],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
+              mockHistoricalAccount["0x123"]
+            ]]
+          }
+        })
+        expect(mockCreateNotification).toHaveBeenCalled();
         mockAccountsHistory = [];
       });
 
@@ -399,13 +427,13 @@ describe("accountAlerts", () => {
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).not.toHaveBeenCalled();
-        expect(mockOnTriggered).toHaveBeenCalledWith([], mockAlertTypes);
-        expect(mockOnUntriggered).toHaveBeenCalledWith(
-          mockAccountAlerts[0],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alert untriggered",
+          data: {
+            alert: mockAccountAlerts[0]
+          }
+        })
+        expect(mockCreateNotification).not.toHaveBeenCalled();
         mockAccountsHistory = [];
       });
 
@@ -448,22 +476,18 @@ describe("accountAlerts", () => {
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).toHaveBeenCalledWith(
-          "0x123",
-          mockAccounts["0x123"]
-        );
-        expect(mockOnTriggered).toHaveBeenCalledWith(
-          [
-            [
-              "test",
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alerts triggered",
+          data: {
+            alerts: [[
+              "test - 0x12...x123",
               mockAccountAlerts[0],
               mockAccounts["0x123"],
-              mockHistoricalAccount["0x123"],
-            ],
-          ],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
+              mockHistoricalAccount["0x123"]
+            ]]
+          }
+        })
+        expect(mockCreateNotification).toHaveBeenCalled();
         mockAccountsHistory = [];
       });
 
@@ -506,262 +530,97 @@ describe("accountAlerts", () => {
           mockAccountsHistory,
           mockAlertTypes
         );
-        expect(mockGetAccountName).not.toHaveBeenCalled();
-        expect(mockOnTriggered).toHaveBeenCalledWith([], mockAlertTypes);
-        expect(mockOnUntriggered).toHaveBeenCalledWith(
-          mockAccountAlerts[0],
-          mockAlertTypes
-        );
-        // TODO check that triggeredAccountAlerts is updated
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alert untriggered",
+          data: {
+            alert: mockAccountAlerts[0]
+          }
+        })
+        expect(mockCreateNotification).not.toHaveBeenCalled();
         mockAccountsHistory = [];
       });
     });
-  });
 
-  describe("getAccountName", () => {
-    it("returns the formatted name and substring of the account", () => {
-      const mockAccounts: accountData.Accounts = {
-        "0x123456789": {
-          health: 50,
-          balance: 50,
-          name: "test",
-        },
-      };
-      const mockAccountName = accountAlerts.forTestingOnly.getAccountName(
-        "0x123456789",
-        mockAccounts["0x123456789"]
-      );
-      expect(mockAccountName).toEqual("test - 0x12...6789");
-    });
+    describe("multiple alerts types and accounts", () => {
+      it("triggers only one of the alerts", () => {
+        const mockAccounts: accountData.Accounts = {
+          "0x123": {
+            health: 50,
+            balance: 50,
+            name: "shouldTrigger",
+          },
+          "0x456": {
+            health: 10,
+            balance: 10,
+            name: "shouldntTrigger"
+          }
+        };
+        const mockAccountAlerts: accountAlerts.AccountAlert[] = [
+          {
+            id: 1,
+            address: "0x123",
+            triggerType: accountAlerts.TriggerType.Delta,
+            metricType: accountAlerts.MetricType.Health,
+            triggerValue: 0,
+            deltaValue: 50,
+            timeFrame: 10,
+          },
+          {
+            id: 2,
+            address: "0x456",
+            triggerType: accountAlerts.TriggerType.Static,
+            metricType: accountAlerts.MetricType.Balance,
+            triggerValue: 5,
+            deltaValue: 0,
+            timeFrame: 0,
+          },
+        ];
+        const mockHistoricalAccounts: accountData.Accounts = {
+          "0x123": {
+            health: 100,
+            balance: 160,
+            name: "shouldTrigger",
+          },
+          "0x456": {
+            health: 100,
+            balance: 160,
+            name: "shouldntTrigger",
+          },
+        };
+        mockAccountsHistory = [
+          {
+            timestamp: dayjs().subtract(10, "hour").toJSON(),
+            accounts: mockHistoricalAccounts
+          },
+        ];
 
-    it("returns the substring if no name is found", () => {
-      const mockAccounts: accountData.Accounts = {
-        "0x123456789": {
-          health: 50,
-          balance: 50,
-          name: "",
-        },
-      };
-      const mockAccountName = accountAlerts.forTestingOnly.getAccountName(
-        "0x123456789",
-        mockAccounts["0x123456789"]
-      );
-      expect(mockAccountName).toEqual("0x12...6789");
-    });
-  });
-
-  describe("assembleNotificationMessage", () => {
-    it("returns the correct message for a static trigger", () => {
-      const mockAccountAlert: accountAlerts.AccountAlert = {
-        id: 1,
-        address: "0x123",
-        triggerType: accountAlerts.TriggerType.Static,
-        metricType: accountAlerts.MetricType.Health,
-        triggerValue: 75,
-        deltaValue: 50,
-        timeFrame: 10,
-      };
-      const mockAccount: accountData.AccountInfo = {
-        health: 50,
-        balance: 50,
-        name: "test",
-      };
-      const mockMessage = accountAlerts.forTestingOnly.assembleNotificationMessage(
-        mockAccount.name,
-        mockAccountAlert,
-        mockAccount
-      );
-      expect(mockMessage).toEqual(`test health is below 75
-    (50.00%)`);
-    });
-
-    it("returns the correct message for a delta trigger", () => {
-      const mockAccountAlert: accountAlerts.AccountAlert = {
-        id: 1,
-        address: "0x123",
-        triggerType: accountAlerts.TriggerType.Delta,
-        metricType: accountAlerts.MetricType.Balance,
-        triggerValue: 0,
-        deltaValue: 50,
-        timeFrame: 10,
-      };
-      const mockAccount: accountData.AccountInfo = {
-        health: 50,
-        balance: 50,
-        name: "test",
-      };
-      const mockHistoricalAccount: accountData.AccountInfo = {
-        health: 100,
-        balance: 160,
-        name: "test",
-      };
-      const mockMessage = accountAlerts.forTestingOnly.assembleNotificationMessage(
-        mockAccount.name,
-        mockAccountAlert,
-        mockAccount,
-        mockHistoricalAccount
-      );
-      expect(mockMessage).toEqual(`test balance changed 
-    more than 50% in the past 10 hours. 
-    $160.00 -> $50.00`);
-    });
-  });
-
-  describe("onTriggered", () => {
-    let mockCreateAlert: jest.SpyInstance;
-    let mockSendMessage: jest.SpyInstance;
-    let mockAssembleNotificationMessage: jest.SpyInstance;
-    let triggeredAlerts: [
-      string | undefined,
-      accountAlerts.AccountAlert,
-      accountData.AccountInfo,
-      accountData.AccountInfo
-    ][];
-    let mockAccountAlerts: accountAlerts.AccountAlert[];
-    let mockAccounts: accountData.Accounts;
-    let mockHistoricalAccount: accountData.Accounts;
-    let mockAlertTypes: main.AlertTypes;
-
-    beforeAll(() => {
-      mockCreateAlert = jest
-        .spyOn(chrome.notifications, "create")
-        .mockImplementation(() => {});
-      mockSendMessage = jest
-        .spyOn(chrome.runtime, "sendMessage")
-        .mockImplementation(() => Promise.resolve());
-      mockAssembleNotificationMessage = jest
-        .spyOn(accountAlerts.forTestingOnly, "assembleNotificationMessage")
-        .mockImplementation(() => "");
-      mockAccountAlerts = [
-        {
-          id: 1,
-          address: "0x123",
-          triggerType: accountAlerts.TriggerType.Static,
-          metricType: accountAlerts.MetricType.Balance,
-          triggerValue: 100,
-          deltaValue: 0,
-          timeFrame: 0,
-        },
-      ];
-      mockAccounts = {
-        "0x123": {
-          health: 50,
-          balance: 50,
-          name: "test",
-        },
-      };
-      mockHistoricalAccount = {
-        "0x123": {
-          health: 50,
-          balance: 100,
-          name: "test",
-        },
-      };
-      triggeredAlerts = [
-        [
-          "test",
-          mockAccountAlerts[0],
-          mockAccounts["0x123"],
-          mockHistoricalAccount["0x123"],
-        ],
-      ];
-    });
-
-    afterAll(() => {
-      mockCreateAlert.mockRestore();
-      mockSendMessage.mockRestore();
-      mockAssembleNotificationMessage.mockRestore();
-    });
-
-    it("sends an os notification when enabled", () => {
-      mockAlertTypes = { browser: true, os: true };
-      accountAlerts.forTestingOnly.onTriggered(triggeredAlerts, mockAlertTypes);
-      expect(mockCreateAlert).toHaveBeenCalledWith(
-        mockAccountAlerts[0].id.toString(),
-        {
-          type: "basic",
-          iconUrl: "dist/icons/logo.svg",
-          title: "Mango Markets Watch",
-          message: "",
-          priority: 2,
-        }
-      );
-      expect(mockAssembleNotificationMessage).toHaveBeenCalled();
-      expect(mockSendMessage).toHaveBeenCalledWith({
-        msg: "account alerts triggered",
-        data: {
-          alerts: triggeredAlerts,
-        },
-      });
-    });
-
-    it("doesnt send an os notification when disabled", () => {
-      mockAlertTypes = { browser: true, os: false };
-      accountAlerts.forTestingOnly.onTriggered(triggeredAlerts, mockAlertTypes);
-      expect(mockCreateAlert).not.toHaveBeenCalled();
-      expect(mockSendMessage).toHaveBeenCalledWith({
-        msg: "account alerts triggered",
-        data: {
-          alerts: triggeredAlerts,
-        },
-      });
-    });
-  });
-
-  describe("onUntriggered", () => {
-    let mockClearAlert: jest.SpyInstance;
-    let mockSendMessage: jest.SpyInstance;
-    let mockAccountAlert: accountAlerts.AccountAlert;
-    let mockAlertTypes: main.AlertTypes;
-
-    beforeAll(() => {
-      mockClearAlert = jest
-        .spyOn(chrome.notifications, "clear")
-        .mockImplementation(() => {});
-      mockSendMessage = jest
-        .spyOn(chrome.runtime, "sendMessage")
-        .mockImplementation(() => Promise.resolve());
-      mockAccountAlert = {
-        id: 1,
-        address: "0x123",
-        triggerType: accountAlerts.TriggerType.Static,
-        metricType: accountAlerts.MetricType.Balance,
-        triggerValue: 100,
-        deltaValue: 0,
-        timeFrame: 0,
-      };
-      mockAlertTypes = { browser: true, os: true };
-    });
-
-    afterAll(() => {
-      mockClearAlert.mockRestore();
-      mockSendMessage.mockRestore();
-    });
-
-    it("clears an os notification when enabled", () => {
-      accountAlerts.forTestingOnly.onUntriggered(mockAccountAlert, mockAlertTypes);
-      expect(mockClearAlert).toHaveBeenCalledWith(
-        mockAccountAlert.id.toString()
-      );
-      expect(mockSendMessage).toHaveBeenCalledWith({
-        msg: "account alert untriggered",
-        data: {
-          alert: mockAccountAlert,
-        },
-      });
-    });
-
-    it("doesnt send a clear os notification when disabled", () => {
-      mockAlertTypes = { browser: true, os: false };
-      accountAlerts.forTestingOnly.onUntriggered(mockAccountAlert, mockAlertTypes);
-      expect(mockClearAlert).not.toHaveBeenCalled();
-      expect(mockSendMessage).toHaveBeenCalledWith({
-        msg: "account alert untriggered",
-        data: {
-          alert: mockAccountAlert,
-        },
-      });
-    });
+        accountAlerts.checkAccountAlerts(
+          mockAccounts,
+          mockAccountAlerts,
+          mockAccountsHistory,
+          mockAlertTypes
+        );
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alerts triggered",
+          data: {
+            alerts: [[
+              "shouldTrigger - 0x12...x123",
+              mockAccountAlerts[0],
+              mockAccounts["0x123"],
+              mockHistoricalAccounts["0x123"]
+            ]]
+          }
+        });
+        expect(mockSendMessage).toHaveBeenCalledWith({
+          msg: "account alert untriggered",
+          data: {
+            alert: mockAccountAlerts[1]
+          }
+        })
+        expect(mockCreateNotification).toHaveBeenCalledTimes(1);
+        mockAccountsHistory = [];
+      })
+    })
   });
 
   describe("updateAccountAlerts", () => {
