@@ -81,7 +81,7 @@ describe("tokenData", () => {
       it.only('returns the token info', async () => {
         // fetchMock.mockResponseOnce(JSON.stringify({mockStat}));
 
-        jest.spyOn(connection, 'establishConnection').mockResolvedValue(true);
+        // jest.spyOn(connection, 'establishConnection').mockResolvedValue();
         const result = await getTokenInfo("devnet" as Cluster, "devnet.2");
         expect(result.findIndex(token => token.baseSymbol === 'SOL')).toBeGreaterThan(-1);
         expect(result.find(token => token.baseSymbol === 'BTC').borrow).toBeTruthy();
