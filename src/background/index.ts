@@ -51,13 +51,13 @@ export const updateBadgeText = () => {
   })
 }
 
-export interface OldSchemaAccountInfo {
+interface OldSchemaAccountInfo {
   equity: string,
   healthRatio: string,
   name: string,
 }
 
-export interface OldSchemaAccounts {
+interface OldSchemaAccounts {
   [address: string]: OldSchemaAccountInfo,
 }
 
@@ -98,7 +98,8 @@ const updateLocalStorageSchema = (callback: Function) => {
 }
 
 //fires on new install or update
-chrome.runtime.onInstalled.addListener(() => { 
+//TODO use reason to only check schema updates if version # lower than latest schema
+export const onInstalled = (reason?: chrome.runtime.InstalledDetails) => {
   debug("onInstalled...");
   updateLocalStorageSchema(() => {
     chrome.storage.local.get({
@@ -121,18 +122,18 @@ chrome.runtime.onInstalled.addListener(() => {
     debug("refreshing tokens info...");
     refreshTokensInfo(settings.cluster, settings.group);
   })
-});
+}
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
-chrome.runtime.onStartup.addListener(() => {
+export const onStartup = () => {
   debug("onStartup....");
   debug("refreshing tokens info...");
   refreshTokensInfo(settings.cluster, settings.group);
   updateAndStoreAccounts();
-});
+}
 
 // listen for various messages from popup
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+export const onMessage = (request: any, sender: chrome.runtime.MessageSender, sendResponse: Function) => {
   debug('background received msg:', request.msg, 'data:', JSON.stringify(request.data, null, 2));
   switch (request.msg) {
     case "change page":
@@ -171,10 +172,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       throw new Error(`unfamiliar message received: ${request.msg}`);
   }
   return true;
-});
-
-export const forTestingOnly = {
-  onPopup,
-  convertAccountsToSchema1,
-  updateLocalStorageSchema,
 }
+
+chrome.runtime.onInstalled.addListener((reason) => onInstalled(reason));
+chrome.runtime.onStartup.addListener(() => onStartup());
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => onMessage(request, sender, sendResponse));
