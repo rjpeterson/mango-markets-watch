@@ -1,75 +1,39 @@
 import * as index from ".";
 import { refreshTokensInfo } from "./tokenData";
-import { storeHistoricalData, updateAccountsData, Accounts } from "./accountData";
-import { checkTokenAlerts, triggeredTokenAlerts } from "./tokenAlerts";
-import { checkAccountAlerts, triggeredAccountAlerts } from "./accountAlerts";
+import { updateAndStoreAccounts } from "./accountData";
+import { triggeredTokenAlerts } from "./tokenAlerts";
+import { triggeredAccountAlerts } from "./accountAlerts";
+import settings from './settings';
 import { chrome } from "jest-chrome";
 
 const localstorage = {}
 jest.mock("./tokenData", () => ({
   __esModule: true,
-  refreshTokensInfo: jest.fn().mockImplementation(() => {}),
+  refreshTokensInfo: jest.fn(() => {}),
 }));
 jest.mock("./accountData", () => ({
   __esModule: true,
-  storeHistoricalData: jest.fn().mockImplementation(() => {}),
-  updateAccountsData: jest.fn().mockImplementation((accounts) => accounts),
+  storeHistoricalData: jest.fn(() => {}),
+  updateAccountsData: jest.fn((accounts) => accounts),
+  updateAndStoreAccounts: jest.fn(() => {})
 }));
-jest.mock("./tokenAlerts", () => ({
-  __esModule: true,
-  checkTokenAlerts: jest.fn().mockImplementation(() => {}),
-  triggeredTokenAlerts: 5
-}));
-jest.mock("./accountAlerts", () => ({
-  __esModule: true,
-  checkAccountAlerts: jest.fn().mockImplementation(() => {}),
-  triggeredAccountAlerts: 3
-}));
+// jest.mock("./tokenAlerts", () => ({
+//   __esModule: true,
+//   checkTokenAlerts: jest.fn(() => {}),
+//   triggeredTokenAlerts: 5
+// }));
+// jest.mock("./accountAlerts", () => ({
+//   __esModule: true,
+//   checkAccountAlerts: jest.fn(() => {}),
+//   triggeredAccountAlerts: 3
+// }));
 
 describe("index", () => {
-  describe("onPopup", () => {
-    let spyCallback = jest.fn();
-    let mockResult: any;
-    let badgeTextSpy: jest.SpyInstance;
-    beforeAll(() => {
-      mockResult = {
-        accounts: {},
-        tokenAlerts: {},
-        accountAlerts: {},
-        accountsHistory: {},
-        alertTypes: {},
-        tokensInfo: {},
-      };
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback(mockResult);
-      });
-      badgeTextSpy = jest.spyOn(index, 'updateBadgeText');
-      badgeTextSpy.mockImplementation(() => {});
-    });
-    afterAll(() => {
-      badgeTextSpy.mockRestore();
-      chrome.storage.local.get.mockRestore();
-    })
-    it("gets local storage", () => {
-      index.forTestingOnly.onPopup(spyCallback);
-      expect(chrome.storage.local.get).toHaveBeenCalled();
-    });
-    it("stores data, checks alerts, updates badge text, and sends a response", async () => {
-      index.forTestingOnly.onPopup(spyCallback);
-      await new Promise(process.nextTick)
-      expect(refreshTokensInfo).toHaveBeenCalled();
-      expect(updateAccountsData).toHaveBeenCalledWith(mockResult.accounts);
-      expect(storeHistoricalData).toHaveBeenCalledWith(mockResult.accounts);
-      expect(checkTokenAlerts).toHaveBeenCalledWith(mockResult.tokensInfo, mockResult.tokenAlerts, mockResult.alertTypes);
-      expect(checkAccountAlerts).toHaveBeenCalledWith(mockResult.accounts, mockResult.accountAlerts, mockResult.accountsHistory, mockResult.alertTypes);
-      expect(badgeTextSpy).toHaveBeenCalled();
-      expect(spyCallback).toHaveBeenCalledWith(mockResult);
-    })
-  });
   describe("updateBadgeText", () => {
     beforeAll(() => {
-      // triggeredTokenAlerts = 5
-      // triggeredAccountAlerts = 3
+      // TODO use localstorage instead
+      triggeredTokenAlerts = 5
+      triggeredAccountAlerts = 3
       const result = {
         alertTypes: {
           browser: true
@@ -84,75 +48,129 @@ describe("index", () => {
       expect(chrome.browserAction.setBadgeText).toHaveBeenCalledWith({ text: "8" });
     });
   });
-  describe("convertAccountsToSchema1", () => {
-    it("converts the original schema to schema1", () => {
-      const oldAccount = {
-        equity: "100",
-        healthRatio: "50",
-        name: "Test Account",
-      }
-      const oldSchema = {
-        "12345": oldAccount,
-      }
-      const schema1 = index.forTestingOnly.convertAccountsToSchema1(oldSchema);
-      expect(schema1).toEqual({
-        "12345": {
-          name: "Test Account",
-          balance: parseFloat(oldAccount.equity),
-          health: parseFloat(oldAccount.healthRatio),
+
+  describe.only("runtime listeners", () => {
+    describe("onInstalled", () => {
+      it("converts the original schema to schema1", () => {
+        const inputSchema = {
+          storageSchema: 0, 
+          alerts: {"Account1": "Alert1"}, 
+          accounts: {
+            "address1": {
+              name: "one", 
+              equity: "100", 
+              healthRatio: "100"
+            }
+          }
         }
-      });
-    })
-  });
-  describe("updateLocalStorageSchema", () => {
-    let spy: jest.SpyInstance;
-    let mockCallback = jest.fn();
-    const mockUpdatedAccounts = {
-      "12345": {
-        name: "Test Account",
-        balance: parseFloat("100"),
-        health: parseFloat("100"),
-      }
-    }
-    beforeAll(() => {
-      chrome.storage.local.set.mockImplementation((data, callback) => {
-        callback()
+        const expectedSchema = {
+          storageSchema: 1,
+          tokenAlerts: {"Account1": "Alert1"},
+          accounts: {
+            "address1": {
+              name: "one", 
+              balance: 100, 
+              health: 100
+            }
+          },
+        }
+  
+        chrome.storage.local.set(inputSchema)
+        chrome.runtime.onInstalled.addListener(() => index.onInstalled());
+        chrome.runtime.onInstalled.callListeners({reason: "install"});
+  
+        chrome.storage.local.get(["storageSchema", "tokenAlerts", "accounts"], (result) => {
+          expect(result).toEqual(expectedSchema)
+        })
       })
-      spy = jest.spyOn(index.forTestingOnly, 'convertAccountsToSchema1').mockImplementation(() => { 
-        return mockUpdatedAccounts
-      });
     })
-    afterAll(() => {
-      spy.mockRestore();
-      chrome.storage.local.get.mockRestore();
+
+    describe("onStartup", () => {
+      it("refreshes token info and updates accounts", () => {
+        chrome.runtime.onStartup.addListener(() => index.onStartup());
+        chrome.runtime.onStartup.callListeners();
+  
+        expect(refreshTokensInfo).toHaveBeenCalledWith(settings.cluster, settings.group);
+        expect(updateAndStoreAccounts).toHaveBeenCalled();
+      })
     })
-    afterEach(() => {
-      mockCallback.mockClear();
-      chrome.storage.local.get.mockRestore();
-    })
-    it('calls convertAccountsToSchema1 when storageSchema is not set in local storage', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({alerts: "test alert", accounts: {}});
+
+    describe("onMessage", () => {
+      describe("'change page'", () => {
+        it("sets the page in storage", () => {
+          //@ts-ignore
+          chrome.runtime.onMessage.addListener((request, sender, sendResponse) => index.onMessage(request, sender, sendResponse))
+          chrome.runtime.sendMessage({
+            msg: "change page",
+            data: {
+              page: "tokens"
+            }
+          })
+        })
       })
 
-      index.forTestingOnly.updateLocalStorageSchema(mockCallback);
-      expect(chrome.storage.local.get).toHaveBeenCalled();
-      expect(chrome.storage.local.set).toHaveBeenCalledWith({
-        "storageSchema": 1,
-        "tokenAlerts": "test alert",
-        "accounts": mockUpdatedAccounts
-      }, expect.any(Function));
-      expect(chrome.storage.local.remove).toHaveBeenCalled();
-      expect(spy).toHaveBeenCalled();
-    })
-    it('does nothing if schema is up to date', () => {
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({storageSchema: 1, alerts: "test alert", accounts: {}});
-      })
+      describe("'onPopup'", () => {})
+      describe("'refresh tokensInfo'", () => {})
+      describe("'tokensInfo refreshed'", () => {})
+      describe("'change toggles'", () => {})
+      describe("'update token alerts'", () => {})
+      describe("'change alert type'", () => {})
+      describe("'update accounts'", () => {})
+      describe("'add account alert'", () => {})
+      describe("'update account alerts'", () => {})
+      describe("undefined message", () => {})
+      describe("other message", () => {})
 
-      index.forTestingOnly.updateLocalStorageSchema(mockCallback);
-      expect(index.forTestingOnly.convertAccountsToSchema1).not.toHaveBeenCalled();
-      expect(mockCallback).toHaveBeenCalled();
     })
-  });
+  })
+
+  // describe("updateLocalStorageSchema", () => {
+  //   let mockCallback = jest.fn();
+  //   const mockUpdatedAccounts = {
+  //     "12345": {
+  //       name: "Test Account",
+  //       balance: parseFloat("100"),
+  //       health: parseFloat("100"),
+  //     }
+  //   }
+  //   beforeAll(() => {
+  //     chrome.storage.local.set.mockImplementation((data, callback) => {
+  //       callback()
+  //     })
+  //   })
+  //   afterAll(() => {
+  //     chrome.storage.local.get.mockRestore();
+  //   })
+  //   afterEach(() => {
+  //     mockCallback.mockClear();
+  //     chrome.storage.local.get.mockRestore();
+  //   })
+
+    // it('calls convertAccountsToSchema1 when storageSchema is not set in local storage', () => {
+    //   chrome.storage.local.get.mockImplementation((keys, callback) => {
+    //     callback({alerts: "test alert", accounts: {}});
+    //   })
+
+    //   index.updateLocalStorageSchema(mockCallback);
+    //   expect(chrome.storage.local.get).toHaveBeenCalled();
+    //   expect(chrome.storage.local.set).toHaveBeenCalledWith({
+    //     "storageSchema": 1,
+    //     "tokenAlerts": "test alert",
+    //     "accounts": mockUpdatedAccounts
+    //   }, expect.any(Function));
+    //   expect(chrome.storage.local.remove).toHaveBeenCalled();
+    //   expect(spy).toHaveBeenCalled();
+    // })
+
+    // it('does nothing if schema is up to date', () => {
+    //   chrome.storage.local.get.mockImplementation((keys, callback) => {
+    //     callback({storageSchema: 1, alerts: "test alert", accounts: {}});
+    //   })
+
+    //   index.forTestingOnly.updateLocalStorageSchema(mockCallback);
+    //   expect(index.forTestingOnly.convertAccountsToSchema1).not.toHaveBeenCalled();
+    //   expect(mockCallback).toHaveBeenCalled();
+    // })
+
+    
 });
