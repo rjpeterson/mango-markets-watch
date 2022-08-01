@@ -27,6 +27,7 @@ const onPopup = (sendResponse: Function) => {
       debug('onPopup failed: ', chrome.runtime.lastError)
       return
     }
+    sendResponse(result);
     refreshTokensInfo(settings.cluster, settings.group)
     const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
@@ -34,7 +35,6 @@ const onPopup = (sendResponse: Function) => {
     checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();
-    sendResponse(result);
   });
 };
 
@@ -136,6 +136,15 @@ export const onStartup = () => {
 export const onMessage = (request: any, sender: chrome.runtime.MessageSender, sendResponse: Function) => {
   debug('background received msg:', request.msg, 'data:', JSON.stringify(request.data, null, 2));
   switch (request.msg) {
+    case "add account alert": 
+      addAccountAlert(request.data.alert, sendResponse)
+      break;
+    case "change alert type":
+      changeAlertType(request.data.browser, request.data.os)
+      return false;
+    case "change toggles":
+      chrome.storage.local.set({ toggles: request.data.toggles });
+      return false;
     case "change page":
       chrome.storage.local.set({ page: request.data.page})
       return false;
@@ -147,24 +156,14 @@ export const onMessage = (request: any, sender: chrome.runtime.MessageSender, se
       break;
     case "tokensInfo refreshed":
       return false;
-    case "change toggles":
-      chrome.storage.local.set({ toggles: request.data.toggles });
-      return false;
-    case "update token alerts":
-      updateTokenAlerts(request.data.tokenAlerts, sendResponse)
-      break;
-    case "change alert type":
-      changeAlertType(request.data.browser, request.data.os)
-      return false;
     case "update accounts":
-      debug('recieved message: update accounts')
       updateAccountsData(request.data.accounts, sendResponse)
-      break;
-    case "add account alert": 
-      addAccountAlert(request.data.alert, sendResponse)
       break;
     case "update account alerts": 
       updateAccountAlerts(request.data.alerts, sendResponse)
+      break;
+    case "update token alerts":
+      updateTokenAlerts(request.data.tokenAlerts, sendResponse)
       break;
     case undefined:
       return false;
