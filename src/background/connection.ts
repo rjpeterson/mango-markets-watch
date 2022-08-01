@@ -38,7 +38,7 @@ interface Oracle {
   symbol: string;
   publicKey: string;
 }
-interface Market {
+export interface Market {
   name: string;
   publicKey: string;
   baseSymbol: string;
