@@ -1,10 +1,11 @@
 import * as index from ".";
 import { refreshTokensInfo } from "./tokenData";
-import { updateAndStoreAccounts } from "./accountData";
-import { triggeredTokenAlerts } from "./tokenAlerts";
-import { triggeredAccountAlerts } from "./accountAlerts";
+import { storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from "./accountData";
+import { checkTokenAlerts, updateTokenAlerts } from "./tokenAlerts";
+import { addAccountAlert, updateAccountAlerts } from "./accountAlerts";
 import settings from './settings';
 import { chrome } from "jest-chrome";
+import { changeAlertType } from "./toggles";
 
 const localstorage = {}
 jest.mock("./tokenData", () => ({
@@ -17,37 +18,41 @@ jest.mock("./accountData", () => ({
   updateAccountsData: jest.fn((accounts) => accounts),
   updateAndStoreAccounts: jest.fn(() => {})
 }));
-// jest.mock("./tokenAlerts", () => ({
-//   __esModule: true,
-//   checkTokenAlerts: jest.fn(() => {}),
-//   triggeredTokenAlerts: 5
-// }));
-// jest.mock("./accountAlerts", () => ({
-//   __esModule: true,
-//   checkAccountAlerts: jest.fn(() => {}),
-//   triggeredAccountAlerts: 3
-// }));
+jest.mock("./tokenAlerts", () => ({
+  __esModule: true,
+  checkTokenAlerts: jest.fn(() => {}),
+}));
+jest.mock("./toggles", () => ({
+  __esModule: true,
+  changeAlertType: jest.fn(() => {}),
+}))
+jest.mock("./accountAlerts", () => ({
+  __esModule: true,
+  updateAccountAlerts: jest.fn(() => {}),
+  addAccountAlert: jest.fn(() => {}),
+  checkAccountAlerts: jest.fn(() => {}),
+}));
 
 describe("index", () => {
-  describe("updateBadgeText", () => {
-    beforeAll(() => {
-      // TODO use localstorage instead
-      triggeredTokenAlerts = 5
-      triggeredAccountAlerts = 3
-      const result = {
-        alertTypes: {
-          browser: true
-        }
-      }
-      chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback(result);
-      });
-    })
-    it("updates badge text", () => {
-      index.updateBadgeText();
-      expect(chrome.browserAction.setBadgeText).toHaveBeenCalledWith({ text: "8" });
-    });
-  });
+  // describe("updateBadgeText", () => {
+  //   beforeAll(() => {
+  //     // TODO use localstorage instead
+  //     triggeredTokenAlerts = 5
+  //     triggeredAccountAlerts = 3
+  //     const result = {
+  //       alertTypes: {
+  //         browser: true
+  //       }
+  //     }
+  //     chrome.storage.local.get.mockImplementation((keys, callback) => {
+  //       callback(result);
+  //     });
+  //   })
+  //   it("updates badge text", () => {
+  //     index.updateBadgeText();
+  //     expect(chrome.browserAction.setBadgeText).toHaveBeenCalledWith({ text: "8" });
+  //   });
+  // });
 
   describe.only("runtime listeners", () => {
     describe("onInstalled", () => {
@@ -96,30 +101,153 @@ describe("index", () => {
     })
 
     describe("onMessage", () => {
+      beforeAll(() => {
+        //@ts-ignore
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => index.onMessage(request, sender, sendResponse))
+      })
+
       describe("'change page'", () => {
         it("sets the page in storage", () => {
-          //@ts-ignore
-          chrome.runtime.onMessage.addListener((request, sender, sendResponse) => index.onMessage(request, sender, sendResponse))
           chrome.runtime.sendMessage({
             msg: "change page",
             data: {
               page: "tokens"
             }
           })
+          chrome.storage.local.get("page", (result) => {
+            expect(result.page).toBe("tokens")
+          })
         })
       })
 
-      describe("'onPopup'", () => {})
-      describe("'refresh tokensInfo'", () => {})
+      describe("'onPopup'", () => {
+        let spy: jest.SpyInstance;
+        beforeAll(() => {
+          spy = jest.spyOn(index, "updateBadgeText").mockImplementation(() => {})
+        })
+        afterAll(() => {
+          spy.mockRestore()
+        })
+
+        it("gets, returns, and refreshes stored data", () => {
+          const storedData = {data: "test"}
+          chrome.storage.local.set(storedData)
+  
+          chrome.runtime.sendMessage({
+            msg: "onPopup",
+          }, (response) => {
+            expect(response).toEqual(storedData)
+          })
+          expect(refreshTokensInfo).toHaveBeenCalled();
+          expect(updateAccountsData).toHaveBeenCalled();
+          expect(storeHistoricalData).toHaveBeenCalled();
+          expect(checkTokenAlerts).toHaveBeenCalled();
+          expect(spy).toHaveBeenCalled();
+        })
+      })
+
+      describe("'refresh tokensInfo'", () => {
+        it("calls refreshTokensInfo", () => {
+          const callback = jest.fn()
+          chrome.runtime.sendMessage({
+            msg: "refresh tokensInfo"
+          }, callback)
+
+          expect(refreshTokensInfo).toHaveBeenCalledWith(settings.cluster, settings.group, callback)
+        })
+      })
+
       describe("'tokensInfo refreshed'", () => {})
-      describe("'change toggles'", () => {})
-      describe("'update token alerts'", () => {})
-      describe("'change alert type'", () => {})
-      describe("'update accounts'", () => {})
-      describe("'add account alert'", () => {})
-      describe("'update account alerts'", () => {})
+      describe("'change toggles'", () => {
+        it("stores toggles", () => {
+          chrome.runtime.sendMessage({
+            msg: "change toggles", 
+            data: {
+              toggles: "test"
+            }
+          })
+
+          chrome.storage.local.get("toggles", (result) => {
+            expect(result.toggles).toBe("test")
+          })
+        })
+      })
+      describe("'update token alerts'", () => {
+        it("calls updateTokenAlerts", () => {
+          const callback = jest.fn()
+          chrome.runtime.sendMessage({
+            msg: "update token alerts",
+            data: {
+              tokenAlerts: "test"
+            }
+          }, callback)
+
+          expect(updateTokenAlerts).toHaveBeenCalledWith("test", callback)
+        })
+      })
+      describe("'change alert type'", () => {
+        it("calls changeAlertType", () => {
+          chrome.runtime.sendMessage({
+            msg: "change alert type",
+            data: {
+              browser: "test",
+              os: "test"
+            }
+          })
+
+          expect(changeAlertType).toHaveBeenCalledWith("test", "test")
+        })
+      })
+      describe("'update accounts'", () => {
+        it("calls updateAccountsData", () => {
+          const callback = jest.fn()
+          chrome.runtime.sendMessage({
+            msg: "update accounts",
+            data: {
+              accounts: "test"
+            }
+          }, callback)
+
+          expect(updateAccountsData).toHaveBeenCalledWith("test", callback)
+        })
+      })
+      describe("'add account alert'", () => {
+        it("calls addAccountAlert", () => {
+          const callback = jest.fn()
+          chrome.runtime.sendMessage({
+            msg: "add account alert",
+            data: {
+              alert: "test"
+            }
+          }, callback)
+
+          expect(addAccountAlert).toHaveBeenCalledWith("test", callback)
+        })
+      })
+      describe("'update account alerts'", () => {
+        it("calls updateAccountAlerts", () => {
+          const callback = jest.fn()
+          chrome.runtime.sendMessage({
+            msg: "update account alerts",
+            data: {
+              alerts: "test"
+            }
+          }, callback)
+
+          expect(updateAccountAlerts).toHaveBeenCalledWith("test", callback)
+        })
+      })
       describe("undefined message", () => {})
-      describe("other message", () => {})
+      describe("other message", () => {
+        it("throws and returns an error", () => {
+          chrome.runtime.sendMessage({
+            msg: "unfamiliar message"
+          })
+
+          //TODO expect to throw
+          expect(true).toBeFalsy(); 
+        })
+      })
 
     })
   })
