@@ -27,18 +27,18 @@ export interface ClusterData {
   perpMarkets?: Market[] | null;
   spotMarkets?: Market[] | null;
 }
-export interface Token {
+interface Token {
   symbol: string;
   mintKey: string;
   decimals: number;
   rootKey: string;
   nodeKeys?: string[] | null;
 }
-export interface Oracle {
+interface Oracle {
   symbol: string;
   publicKey: string;
 }
-export interface Market {
+interface Market {
   name: string;
   publicKey: string;
   baseSymbol: string;
