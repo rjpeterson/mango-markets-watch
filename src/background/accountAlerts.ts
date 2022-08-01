@@ -1,4 +1,3 @@
-import { AccountInfo } from "./accountData";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import objectSupport from "dayjs/plugin/objectSupport";
@@ -6,6 +5,7 @@ import debugCreator from "debug";
 import { AlertTypes, updateBadgeText } from ".";
 
 import {
+  AccountInfo,
   Accounts,
   HistoricalEntry,
   updateAndStoreAccounts,
