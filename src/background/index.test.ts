@@ -1,7 +1,7 @@
 import * as index from ".";
 import { refreshTokensInfo } from "./tokenData";
 import { storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from "./accountData";
-import { checkTokenAlerts, updateTokenAlerts } from "./tokenAlerts";
+import { checkAllTokenAlerts, updateTokenAlerts } from "./tokenAlerts";
 import { addAccountAlert, updateAccountAlerts } from "./accountAlerts";
 import settings from './settings';
 import { chrome } from "jest-chrome";
@@ -20,7 +20,7 @@ jest.mock("./accountData", () => ({
 }));
 jest.mock("./tokenAlerts", () => ({
   __esModule: true,
-  checkTokenAlerts: jest.fn(() => {}),
+  checkAllTokenAlerts: jest.fn(() => {}),
 }));
 jest.mock("./toggles", () => ({
   __esModule: true,
@@ -141,7 +141,7 @@ describe("index", () => {
           expect(refreshTokensInfo).toHaveBeenCalled();
           expect(updateAccountsData).toHaveBeenCalled();
           expect(storeHistoricalData).toHaveBeenCalled();
-          expect(checkTokenAlerts).toHaveBeenCalled();
+          expect(checkAllTokenAlerts).toHaveBeenCalled();
           expect(spy).toHaveBeenCalled();
         })
       })

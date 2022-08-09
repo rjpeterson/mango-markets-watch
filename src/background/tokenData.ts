@@ -9,7 +9,7 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js';
 
 import { ClusterData, establishConnection, Market } from './connection';
-import { checkTokenAlerts } from './tokenAlerts';
+import { checkAllTokenAlerts } from './tokenAlerts';
 import { checkToggles } from './toggles';
 import settings from './settings';
 
@@ -169,7 +169,7 @@ export const refreshTokensInfo = async (cluster: Cluster, group: string, sendRes
   const tokensInfo = await getTokenInfo(cluster, group);
   chrome.storage.local.set({ tokensInfo: tokensInfo });
   chrome.storage.local.get(['tokenAlerts', 'alertTypes'], (result) => {
-    checkTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkAllTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes);
     checkToggles(tokensInfo);
     
     if (sendResponse) {

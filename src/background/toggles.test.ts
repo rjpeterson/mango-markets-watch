@@ -1,7 +1,7 @@
 import { chrome } from "jest-chrome";
 import { TokensInfo } from "./tokenData";
 import { checkToggles, changeAlertType } from "./toggles";
-import { checkTokenAlerts } from "./tokenAlerts";
+import { checkAllTokenAlerts } from "./tokenAlerts";
 import { updateBadgeText } from ".";
 import { checkAccountAlerts } from "./accountAlerts";
 jest.mock(".", () => ({
@@ -14,7 +14,7 @@ jest.mock("./accountAlerts", () => ({
 }))
 jest.mock("./tokenAlerts", () => ({
   __esModule: true,
-  checkTokenAlerts: jest.fn(),
+  checkAllTokenAlerts: jest.fn(),
 }))
 
 describe("toggles", () => {
@@ -84,10 +84,10 @@ describe("toggles", () => {
       });
     });
 
-    it("calls checkTokenAlerts, checkAccountAlerts and updateBadgeText", () => {
+    it("calls checkAllTokenAlerts, checkAccountAlerts and updateBadgeText", () => {
       changeAlertType(true, true);
       expect(chrome.storage.local.get).toHaveBeenCalled();
-      expect(checkTokenAlerts).toHaveBeenCalled();
+      expect(checkAllTokenAlerts).toHaveBeenCalled();
       expect(checkAccountAlerts).toHaveBeenCalled();
       expect(updateBadgeText).toHaveBeenCalled();
     });

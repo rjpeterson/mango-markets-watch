@@ -5,7 +5,7 @@ import { Accounts, storeHistoricalData, updateAccountsData, updateAndStoreAccoun
 import { setAlarmListener, setFetchAlarm } from './alarms';
 import settings from './settings';
 import { changeAlertType } from './toggles';
-import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
+import { checkAllTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
 import { refreshTokensInfo } from './tokenData';
 
 export interface AlertTypes {
@@ -32,7 +32,7 @@ const onPopup = (sendResponse: Function) => {
     const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
     storeHistoricalData(accounts)
-    checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkAllTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();
   });

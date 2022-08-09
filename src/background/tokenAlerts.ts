@@ -1,7 +1,7 @@
 import debugCreator from 'debug';
 import { AlertTypes, updateBadgeText } from '.';
 import settings from './settings';
-import { getTokenInfo, TokensInfo } from './tokenData';
+import { getTokenInfo, TokensInfo, Token } from './tokenData';
 
 const debug = debugCreator('background:tokenAlerts')
 export let triggeredTokenAlerts = 0
@@ -59,14 +59,33 @@ export const updateTokenAlerts = async (tokenAlerts:  TokenAlert[], sendResponse
   chrome.storage.local.set({ tokenAlerts: tokenAlerts });
   const tokensInfo = await getTokenInfo(settings.cluster, settings.group)
   chrome.storage.local.get(['alertTypes'], (result) => {
-    checkTokenAlerts(tokensInfo, tokenAlerts, result.alertTypes)
+    checkAllTokenAlerts(tokensInfo, tokenAlerts, result.alertTypes)
     updateBadgeText()
     sendResponse({ msg: "tokenAlerts updated successfully" });
   })
 }
 
-export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], alertTypes: AlertTypes): void => {
-  debug("calling checkTokenAlerts...");
+const checkSingleTokenAlert = (token: Token, tokenAlert: TokenAlert) => {
+  debug('comparing tokenAlert', JSON.stringify(tokenAlert, null, 2), 'to token data', JSON.stringify(token, null, 2));
+  if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
+    debug(`${tokenAlert.type} rate of ${token.baseSymbol} is not a number`);
+    return;
+  }
+  if ((tokenAlert.side === "above" && parseFloat(token[tokenAlert.type]) > tokenAlert.percent) || (tokenAlert.side === "below" && parseFloat(token[tokenAlert.type]) < tokenAlert.percent)) {
+    return {
+      triggered: true,
+      rate: parseFloat(token[tokenAlert.type])
+    }
+  } else {
+    return {
+      triggered: false,
+      rate: undefined  
+    }
+  }
+}
+
+export const checkAllTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert[], alertTypes: AlertTypes): void => {
+  debug("calling checkAllTokenAlerts...");
     // debug('got tokenAlerts:', JSON.stringify(response.tokenAlerts), 'alertTypes:', JSON.stringify(response.alertTypes))
     let triggeredAlerts = 0;
     for (const entry in tokenAlerts) {
@@ -76,26 +95,7 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
       tokensInfo
         .filter((token) => {return token.baseSymbol === tokenAlert.baseSymbol})
         .forEach((token) => {
-          debug('comparing tokenAlert', JSON.stringify(tokenAlert, null, 2), 'to token data', JSON.stringify(token, null, 2));
-          if (token[tokenAlert.type] !== '0.00' && !parseFloat(token[tokenAlert.type])) {
-            debug(`${tokenAlert.type} rate of ${token.baseSymbol} is not a number`);
-            return;
-          }
-          if (tokenAlert.side === "above") {
-            if (parseFloat(token[tokenAlert.type]) > tokenAlert.percent) {
-              triggered = true
-              rate = parseFloat(token[tokenAlert.type])
-            } else {
-              triggered = false
-            }
-          } else {
-            if (parseFloat(token[tokenAlert.type]) < tokenAlert.percent) {
-              triggered = true
-              rate = parseFloat(token[tokenAlert.type])
-            } else {
-              triggered = false
-            }
-          }
+          ({triggered, rate} = checkSingleTokenAlert(token, tokenAlert))
         });
       if (triggered) {
         debug(`token notification triggered`);
@@ -110,8 +110,3 @@ export const checkTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAlert
       ? triggeredTokenAlerts = triggeredAlerts
       : triggeredTokenAlerts = 0
 };
-
-export const forTestingOnly = {
-  onTriggered,
-  onUntriggered
-}

@@ -2,6 +2,7 @@ import { chrome } from "jest-chrome";
 import * as tokenAlerts from "./tokenAlerts";
 import { AlertTypes, updateBadgeText } from ".";
 import { getTokenInfo, TokensInfo } from "./tokenData";
+import { AnyKindOfDictionary } from "lodash";
 
 jest.mock(".", () => ({
   __esModule: true,
@@ -13,99 +14,99 @@ jest.mock("./tokenData", () => ({
 }));
 
 describe("tokenAlerts", () => {
-  describe("onTriggered", () => {
-    let mockTokenAlertId: string;
-    let mockTokenAlert: tokenAlerts.TokenAlert;
-    let mockAlertTypes: AlertTypes;
-    let mockRate: number;
-    beforeAll(() => {
-      mockTokenAlertId = "2";
-      mockTokenAlert = {
-        baseSymbol: "BTC",
-        type: tokenAlerts.TokenRateType.Borrow,
-        side: tokenAlerts.AlertSide.Above,
-        percent: 50,
-      };
-      mockAlertTypes = {
-        browser: true,
-        os: true,
-      };
-      mockRate = 12;
-    });
-    it("creates a new os notification", () => {
-      tokenAlerts.forTestingOnly.onTriggered(
-        mockTokenAlertId,
-        mockTokenAlert,
-        mockAlertTypes,
-        mockRate
-      );
-      expect(chrome.notifications.create).toHaveBeenCalledWith(
-        mockTokenAlertId,
-        expect.any(Object)
-      );
-    });
-    it("sends an alert triggered message", () => {
-      tokenAlerts.forTestingOnly.onTriggered(
-        mockTokenAlertId,
-        mockTokenAlert,
-        mockAlertTypes,
-        mockRate
-      );
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-        msg: "tokenAlert triggered",
-        data: {
-          tokenAlertId: mockTokenAlertId,
-          tokenAlert: mockTokenAlert,
-        },
-      });
-    });
-  });
-  describe("onUntriggered", () => {
-    let mockTokenAlertId: string;
-    let mockTokenAlert: tokenAlerts.TokenAlert;
-    let mockAlertTypes: AlertTypes;
-    beforeAll(() => {
-      mockTokenAlertId = "2";
-      mockTokenAlert = {
-        baseSymbol: "BTC",
-        type: tokenAlerts.TokenRateType.Borrow,
-        side: tokenAlerts.AlertSide.Above,
-        percent: 50,
-      };
-      mockAlertTypes = {
-        browser: true,
-        os: true,
-      };
-    });
-    it("clears an os notification", () => {
-      tokenAlerts.forTestingOnly.onUntriggered(
-        mockTokenAlertId,
-        mockTokenAlert,
-        mockAlertTypes
-      );
-      expect(chrome.notifications.clear).toHaveBeenCalledWith(mockTokenAlertId);
-    });
-    it("sends an alert untriggered message", () => {
-      tokenAlerts.forTestingOnly.onUntriggered(
-        mockTokenAlertId,
-        mockTokenAlert,
-        mockAlertTypes,
-      );
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-        msg: "tokenAlert untriggered",
-        data: {
-          tokenAlertId: mockTokenAlertId,
-          tokenAlert: mockTokenAlert,
-        },
-      });
-    });
-  });
+  // describe("onTriggered", () => {
+  //   let mockTokenAlertId: string;
+  //   let mockTokenAlert: tokenAlerts.TokenAlert;
+  //   let mockAlertTypes: AlertTypes;
+  //   let mockRate: number;
+  //   beforeAll(() => {
+  //     mockTokenAlertId = "2";
+  //     mockTokenAlert = {
+  //       baseSymbol: "BTC",
+  //       type: tokenAlerts.TokenRateType.Borrow,
+  //       side: tokenAlerts.AlertSide.Above,
+  //       percent: 50,
+  //     };
+  //     mockAlertTypes = {
+  //       browser: true,
+  //       os: true,
+  //     };
+  //     mockRate = 12;
+  //   });
+  //   it("creates a new os notification", () => {
+  //     tokenAlerts.forTestingOnly.onTriggered(
+  //       mockTokenAlertId,
+  //       mockTokenAlert,
+  //       mockAlertTypes,
+  //       mockRate
+  //     );
+  //     expect(chrome.notifications.create).toHaveBeenCalledWith(
+  //       mockTokenAlertId,
+  //       expect.any(Object)
+  //     );
+  //   });
+  //   it("sends an alert triggered message", () => {
+  //     tokenAlerts.forTestingOnly.onTriggered(
+  //       mockTokenAlertId,
+  //       mockTokenAlert,
+  //       mockAlertTypes,
+  //       mockRate
+  //     );
+  //     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+  //       msg: "tokenAlert triggered",
+  //       data: {
+  //         tokenAlertId: mockTokenAlertId,
+  //         tokenAlert: mockTokenAlert,
+  //       },
+  //     });
+  //   });
+  // });
+  // describe("onUntriggered", () => {
+  //   let mockTokenAlertId: string;
+  //   let mockTokenAlert: tokenAlerts.TokenAlert;
+  //   let mockAlertTypes: AlertTypes;
+  //   beforeAll(() => {
+  //     mockTokenAlertId = "2";
+  //     mockTokenAlert = {
+  //       baseSymbol: "BTC",
+  //       type: tokenAlerts.TokenRateType.Borrow,
+  //       side: tokenAlerts.AlertSide.Above,
+  //       percent: 50,
+  //     };
+  //     mockAlertTypes = {
+  //       browser: true,
+  //       os: true,
+  //     };
+  //   });
+  //   it("clears an os notification", () => {
+  //     tokenAlerts.forTestingOnly.onUntriggered(
+  //       mockTokenAlertId,
+  //       mockTokenAlert,
+  //       mockAlertTypes
+  //     );
+  //     expect(chrome.notifications.clear).toHaveBeenCalledWith(mockTokenAlertId);
+  //   });
+  //   it("sends an alert untriggered message", () => {
+  //     tokenAlerts.forTestingOnly.onUntriggered(
+  //       mockTokenAlertId,
+  //       mockTokenAlert,
+  //       mockAlertTypes,
+  //     );
+  //     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+  //       msg: "tokenAlert untriggered",
+  //       data: {
+  //         tokenAlertId: mockTokenAlertId,
+  //         tokenAlert: mockTokenAlert,
+  //       },
+  //     });
+  //   });
+  // });
   describe("updateTokenAlerts", () => {
     let mockTokenAlerts: tokenAlerts.TokenAlert[];
     let mockCheckTokenAlerts: jest.SpyInstance
     let spy = jest.fn();
     beforeAll(() => {
-      mockCheckTokenAlerts = jest.spyOn(tokenAlerts, 'checkTokenAlerts').mockImplementation(() => {});
+      mockCheckTokenAlerts = jest.spyOn(tokenAlerts, 'checkAllTokenAlerts').mockImplementation(() => {});
       mockTokenAlerts = [
         {
           baseSymbol: "BTC",
@@ -144,31 +145,23 @@ describe("tokenAlerts", () => {
       expect(spy).toHaveBeenCalledWith({msg: "tokenAlerts updated successfully"});
     })
   });
-  describe("checkTokenAlerts", () => {
-    let mockTokenAlerts: tokenAlerts.TokenAlert[];
+  describe("checkAllTokenAlerts", () => {
+    let mockTokenAlerts: AnyKindOfDictionary;
     let mockTokensInfo: TokensInfo;
     let mockAlertTypes: AlertTypes;
-    let onTriggeredSpy: jest.SpyInstance;
-    let onUntriggeredSpy: jest.SpyInstance;
     beforeAll(() => {
-      mockTokenAlerts = [
-        {
+      mockTokenAlerts = {
+        "1": {
           baseSymbol: "BTC",
           type: tokenAlerts.TokenRateType.Borrow,
           side: tokenAlerts.AlertSide.Below,
           percent: 50,
         }
-      ];
+      };
       mockAlertTypes = {
         browser: true,
         os: true,
       }
-      onTriggeredSpy = jest.spyOn(tokenAlerts.forTestingOnly, "onTriggered").mockImplementation(() => {});
-      onUntriggeredSpy = jest.spyOn(tokenAlerts.forTestingOnly, "onUntriggered").mockImplementation(() => {});
-    })
-    afterAll(() => {
-      onTriggeredSpy.mockRestore();
-      onUntriggeredSpy.mockRestore();
     })
     it("calls onTriggered when alert is triggered", () => {
       mockTokensInfo = [
@@ -179,9 +172,9 @@ describe("tokenAlerts", () => {
           funding: "0.1",
         }
       ]
-      tokenAlerts.checkTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
-      expect(onUntriggeredSpy).not.toHaveBeenCalled();
-      expect(onTriggeredSpy).toHaveBeenCalled();
+      tokenAlerts.checkAllTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
+      expect(chrome.notifications.create).toHaveBeenCalled();
+      expect(chrome.runtime.sendMessage).toHaveBeenCalled();
     })
     it("calls onUntriggered when alert is not triggered", () => {
       mockTokensInfo = [
@@ -192,9 +185,14 @@ describe("tokenAlerts", () => {
           funding: "0.1",
         }
       ]
-      tokenAlerts.checkTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
-      expect(onTriggeredSpy).not.toHaveBeenCalled();
-      expect(onUntriggeredSpy).toHaveBeenCalled();
+      tokenAlerts.checkAllTokenAlerts(mockTokensInfo, mockTokenAlerts, mockAlertTypes);
+      expect(chrome.notifications.clear).toHaveBeenCalled();
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+        msg: "tokenAlert untriggered",
+        data: {
+          tokenAlertId: 
+        }
+      })
     })
   });
 });

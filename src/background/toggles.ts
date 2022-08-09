@@ -1,6 +1,6 @@
 import { updateBadgeText } from ".";
 import { checkAccountAlerts } from "./accountAlerts";
-import { checkTokenAlerts } from "./tokenAlerts";
+import { checkAllTokenAlerts } from "./tokenAlerts";
 import { TokensInfo } from "./tokenData";
 
 export const checkToggles = (tokensInfo: TokensInfo) => {
@@ -43,7 +43,7 @@ export const changeAlertType = (browser: boolean, os: boolean): void => {
       "accountsHistory",
     ],
     (result) => {
-      checkTokenAlerts(
+      checkAllTokenAlerts(
         result.tokensInfo,
         result.tokenAlerts,
         result.alertTypes
