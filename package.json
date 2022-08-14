@@ -1,6 +1,6 @@
 {
     "name": "mango-markets-watch",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "scripts": {
         "watch:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css -w",
         "dev:tailwind": "NODE_ENV=development postcss src/tailwind.css -o extension/dist/tailwind.dist.css",
@@ -20,6 +20,7 @@
         "@alpinejs/collapse": "^3.5.1",
         "@types/chrome": "^0.0.176",
         "@types/debug": "^4.1.7",
+        "@types/lodash": "^4.14.182",
         "alpinejs": "^3.2.4",
         "autoprefixer": "^9.7.4",
         "concurrently": "^5.1.0",
