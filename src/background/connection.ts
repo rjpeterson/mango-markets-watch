@@ -51,17 +51,18 @@ export interface Market {
 }
 
 export async function establishConnection(cluster: Cluster, group: string) {
+  const config = new Config(IDS);
+  const groupConfig = config.getGroup(cluster, group);
+  if (!groupConfig) {
+    throw new Error("Unable to get Mango Group Config");
+  }
+  const mangoGroupKey = groupConfig.publicKey;
+
   const clusterData = IDS.groups.find((g: ClusterData) => {
     return g.name === group && g.cluster === cluster;
   });
   const mangoProgramIdPk = new PublicKey(clusterData.mangoProgramId);
 
-  const config = new Config(IDS);
-  const groupConfig = config.getGroup(cluster, group);
-  if (!groupConfig) {
-    throw new Error("unable to get mango group config");
-  }
-  const mangoGroupKey = groupConfig.publicKey;
 
   let connection;
   try {

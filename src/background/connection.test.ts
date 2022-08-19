@@ -3,7 +3,7 @@ import {
   MangoClient,
   Config,
 } from "@blockworks-foundation/mango-client-v3";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Cluster, Connection, PublicKey } from "@solana/web3.js";
 import { establishConnection } from "./connection";
 
 const mockGroupConfig = {
@@ -23,8 +23,8 @@ const mockIDS = {
   groups: [mockClusterData],
 };
 const mockConfig = {
-  getGroup: jest.fn().mockImplementation(() => {
-    return mockGroupConfig;
+  getGroup: jest.fn().mockImplementation((cluster: Cluster, group: string) => {
+    return mockIDS.groups.find(item => {return item.cluster == cluster && item.name == group});
   }),
 };
 const mockCache = {
@@ -51,11 +51,11 @@ jest.mock("@blockworks-foundation/mango-client-v3", () => ({
         quoteSymbol: "SOL",
         mangoProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
         serumProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-      },
-    ],
+      }
+    ]
   },
   Config: jest.fn().mockImplementation(() => {
-    return mockConfig;
+    return mockConfig
   }),
   Connection: jest.fn().mockImplementation(() => {}),
   MangoClient: jest.fn().mockImplementation(() => {
@@ -66,16 +66,25 @@ jest.mock("@solana/web3.js");
 
 describe("connection", () => {
   describe("establishConnection", () => {
-    it("should return the requested objects", async () => {
-      const result = await establishConnection("devnet", "test group");
-      expect(result).toStrictEqual({
-        mangoGroup: mockMangoGroup,
-        client: mockMangoClient,
-        connection: expect.any(Connection),
-        groupConfig: mockGroupConfig,
-        clusterData: mockClusterData,
-        mangoCache: mockCache,
+    describe('when the connection is successful', () => {
+      it("should return the requested objects", async () => {
+        const result = await establishConnection("devnet", "test group");
+        expect(result).toStrictEqual({
+          mangoGroup: mockMangoGroup,
+          client: mockMangoClient,
+          connection: expect.any(Connection),
+          groupConfig: mockGroupConfig,
+          clusterData: mockClusterData,
+          mangoCache: mockCache,
+        });
       });
-    });
+    })
+    describe('when the connection is unsuccessful', () => {
+      describe('when an invalid group is provided',() => {
+        it('throws an error', async () => {
+          await expect(async () => establishConnection("devnet", "devnet.6")).rejects.toThrow()
+        })
+      })
+    })
   });
 });

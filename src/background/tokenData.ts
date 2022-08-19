@@ -39,13 +39,15 @@ async function fetchPerpStats(groupConfig: GroupConfig, marketName: string): Pro
   const urlParams = new URLSearchParams({ mangoGroup: groupConfig.name })
   urlParams.append('market', marketName)
   const assembledUrl = `https://mango-stats-v3.herokuapp.com/perp/funding_rate?` + urlParams
+  // console.log(`fetching ${assembledUrl}`)
   const response = await fetch(assembledUrl)
   if (response.status !== 200) {
-    throw new Error('Failed to fetch perp stats')
+    throw new Error(`Failed to fetch perp stats from ${assembledUrl}: ${response.status} ${response.statusText}`)
   } else {
     let perpStats: PerpStat[]
     try {
       perpStats = await response.json()
+      // console.log(`${marketName}: ${JSON.stringify(perpStats)}`)
       return perpStats
     } catch (error) {
       throw new Error(`Failed to parse perp stats: ${error}`)
