@@ -58,3 +58,8 @@ export const changeAlertType = (browser: boolean, os: boolean): void => {
     }
   );
 };
+
+export default {
+  checkToggles,
+  changeAlertType
+}

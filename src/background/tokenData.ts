@@ -1,7 +1,7 @@
 import BN from 'bn.js'
 import debugCreator from 'debug'
 import _ from 'lodash-joins'
-
+import * as tokenData from './tokenData'
 import {
   Cluster,
   GroupConfig,
@@ -142,8 +142,8 @@ export async function getTokenInfo(cluster: Cluster, group: string): Promise<Tok
 
 // ONSTARTUP: get token info & send to storage
 // ONALARM: get token info, send to storage, send to popup
-export const refreshTokensInfo = async (cluster: Cluster, group: string, sendResponse?: Function) => {
-  const tokensInfo = await getTokenInfo(cluster, group)
+export const refreshTokensInfo = async (cluster: Cluster, group: string, sendResponse?: Function, testCallback?: Function) => {
+  const tokensInfo = await tokenData.getTokenInfo(cluster, group)
   chrome.storage.local.set({ tokensInfo: tokensInfo })
   chrome.storage.local.get(['tokenAlerts', 'alertTypes'], result => {
     checkAllTokenAlerts(tokensInfo, result.tokenAlerts, result.alertTypes)
@@ -159,5 +159,11 @@ export const refreshTokensInfo = async (cluster: Cluster, group: string, sendRes
         },
       })
     }
+    testCallback()
   })
 }
+
+export default {
+  getTokenInfo,
+  refreshTokensInfo
+} 

@@ -1,35 +1,32 @@
+import { createMock } from "ts-auto-mock";
 import {
   IDS,
   MangoClient,
   Config,
+  GroupConfig,
+  MangoCache,
 } from "@blockworks-foundation/mango-client-v3";
 import { Cluster, Connection, PublicKey } from "@solana/web3.js";
-import { establishConnection } from "./connection";
+import { ClusterData, establishConnection } from "./connection";
 
-const mockGroupConfig = {
-  name: "test group",
-  cluster: "devnet",
-  publicKey: "BKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-};
-const mockClusterData = {
-  cluster: "devnet",
-  name: "test group",
-  publicKey: "BKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-  quoteSymbol: "SOL",
-  mangoProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-  serumProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-};
+const mockGroupConfig = createMock<GroupConfig>();
+mockGroupConfig.name = "test group"
+const mockClusterData = createMock<ClusterData>();
+mockClusterData.cluster = "devnet";
+mockClusterData.name = "test group"
+
 const mockIDS = {
-  groups: [mockClusterData],
+  groups: [mockGroupConfig],
 };
 const mockConfig = {
   getGroup: jest.fn().mockImplementation((cluster: Cluster, group: string) => {
     return mockIDS.groups.find(item => {return item.cluster == cluster && item.name == group});
   }),
 };
-const mockCache = {
-  cache: "mockCache",
-};
+const mockCache = createMock<MangoCache>();
+// const mockCache = {
+//   cache: "mockCache",
+// };
 const mockMangoGroup = {
   loadCache: () => {
     return mockCache;
@@ -42,15 +39,16 @@ const mockMangoClient = {
 };
 jest.mock("@blockworks-foundation/mango-client-v3", () => ({
   __esModule: true,
-  IDS: {
+  IDS:
+  {
     groups: [
       {
         cluster: "devnet",
         name: "test group",
-        publicKey: "BKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-        quoteSymbol: "SOL",
-        mangoProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
-        serumProgramId: "AKvqsuNcnwWqPzzuhLmGi4rzzh55FhJtGizkhHaEJqiV",
+        publicKey: "",
+        quoteSymbol: "",
+        mangoProgramId: "",
+        serumProgramId: "",
       }
     ]
   },

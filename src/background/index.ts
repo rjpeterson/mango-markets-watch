@@ -168,7 +168,7 @@ export const onMessage = (request: any, sender: chrome.runtime.MessageSender, se
     case undefined:
       return false;
     default:
-      throw new Error(`unfamiliar message received: ${request.msg}`);
+      sendResponse(new Error(`unfamiliar message received: ${request.msg}`));
   }
   return true;
 }

@@ -121,3 +121,8 @@ export const checkAllTokenAlerts = (tokensInfo: TokensInfo, tokenAlerts: TokenAl
     ? (triggeredTokenAlerts = triggeredAlerts)
     : (triggeredTokenAlerts = 0)
 }
+
+export default {
+  updateTokenAlerts,
+  checkAllTokenAlerts
+}

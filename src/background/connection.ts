@@ -83,3 +83,7 @@ export async function establishConnection(cluster: Cluster, group: string) {
     mangoCache,
   };
 }
+
+export default {
+  establishConnection
+}

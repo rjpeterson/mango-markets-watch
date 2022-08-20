@@ -128,6 +128,9 @@ describe("index", () => {
         afterAll(() => {
           spy.mockRestore()
         })
+        beforeEach(() => {
+          jest.resetAllMocks()
+        })
 
         it("gets, returns, and refreshes stored data", () => {
           const storedData = {data: "test"}
@@ -137,27 +140,25 @@ describe("index", () => {
             msg: "onPopup",
           }, (response) => {
             expect(response).toEqual(storedData)
+            expect(refreshTokensInfo).toHaveBeenCalled();
+            expect(updateAccountsData).toHaveBeenCalled();
+            expect(storeHistoricalData).toHaveBeenCalled();
+            expect(checkAllTokenAlerts).toHaveBeenCalled();
+            expect(spy).toHaveBeenCalled();
           })
-          expect(refreshTokensInfo).toHaveBeenCalled();
-          expect(updateAccountsData).toHaveBeenCalled();
-          expect(storeHistoricalData).toHaveBeenCalled();
-          expect(checkAllTokenAlerts).toHaveBeenCalled();
-          expect(spy).toHaveBeenCalled();
         })
       })
 
       describe("'refresh tokensInfo'", () => {
         it("calls refreshTokensInfo", () => {
-          const callback = jest.fn()
+          const callback = () => expect(refreshTokensInfo).toHaveBeenCalled();
+
           chrome.runtime.sendMessage({
             msg: "refresh tokensInfo"
           }, callback)
-
-          expect(refreshTokensInfo).toHaveBeenCalledWith(settings.cluster, settings.group, callback)
         })
       })
 
-      describe("'tokensInfo refreshed'", () => {})
       describe("'change toggles'", () => {
         it("stores toggles", () => {
           chrome.runtime.sendMessage({
@@ -174,15 +175,14 @@ describe("index", () => {
       })
       describe("'update token alerts'", () => {
         it("calls updateTokenAlerts", () => {
-          const callback = jest.fn()
+          const callback = () => expect(updateTokenAlerts).toHaveBeenCalled();
+          
           chrome.runtime.sendMessage({
             msg: "update token alerts",
             data: {
               tokenAlerts: "test"
             }
           }, callback)
-
-          expect(updateTokenAlerts).toHaveBeenCalledWith("test", callback)
         })
       })
       describe("'change alert type'", () => {
@@ -195,57 +195,55 @@ describe("index", () => {
             }
           })
 
-          expect(changeAlertType).toHaveBeenCalledWith("test", "test")
+          chrome.storage.local.get("alertTypes", (result) => {
+            expect(result.data.browser).toBe("test")
+            expect(result.data.os).toBe("test")
+          })
         })
       })
       describe("'update accounts'", () => {
         it("calls updateAccountsData", () => {
-          const callback = jest.fn()
+          const callback = () => expect(updateAccountsData).toHaveBeenCalled();
+
           chrome.runtime.sendMessage({
             msg: "update accounts",
             data: {
               accounts: "test"
             }
           }, callback)
-
-          expect(updateAccountsData).toHaveBeenCalledWith("test", callback)
         })
       })
       describe("'add account alert'", () => {
         it("calls addAccountAlert", () => {
-          const callback = jest.fn()
+          const callback = () => expect(addAccountAlert).toHaveBeenCalled();
+          
           chrome.runtime.sendMessage({
             msg: "add account alert",
             data: {
               alert: "test"
             }
           }, callback)
-
-          expect(addAccountAlert).toHaveBeenCalledWith("test", callback)
         })
       })
       describe("'update account alerts'", () => {
         it("calls updateAccountAlerts", () => {
-          const callback = jest.fn()
+          const callback = () => expect(updateAccountAlerts).toHaveBeenCalled()
+
           chrome.runtime.sendMessage({
             msg: "update account alerts",
             data: {
               alerts: "test"
             }
           }, callback)
-
-          expect(updateAccountAlerts).toHaveBeenCalledWith("test", callback)
         })
       })
       describe("undefined message", () => {})
       describe("other message", () => {
-        it("throws and returns an error", () => {
+        it("throws and returns an error", async () => {
           chrome.runtime.sendMessage({
-            msg: "unfamiliar message"
-          })
-
-          //TODO expect to throw
-          expect(true).toBeFalsy(); 
+              msg: "unfamiliar message"
+            }, (response) => {expect(response).toBe(Error)}
+          )
         })
       })
 
