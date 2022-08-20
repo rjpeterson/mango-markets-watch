@@ -10,7 +10,17 @@
       "baseUrl": "types",
       "paths": {
         "alpinejs": ["./alpinejs"],
-      }
+      },
+      "types": [
+        "jest",
+        "chrome",
+      ],
+      "plugins": [
+        {
+          "transform": "ts-auto-mock/transformer",
+          "cacheBetweenTests": false
+        }
+      ]
   },
   "include": [
     "./src/**/*", 

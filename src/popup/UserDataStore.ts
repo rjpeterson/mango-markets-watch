@@ -1,5 +1,5 @@
 import { XData } from "alpinejs";
-import { MetricType, PriceType } from "./NewAccountAlert";
+import { MetricType, TriggerType } from "./NewAccountAlert";
 
 export interface UserDataStoreType extends XData {
   toggles: Toggles,
@@ -47,7 +47,7 @@ export interface AccountData {
 export interface AccountAlert {
   id: number,
   address: string,
-  priceType: PriceType,
+  triggerType: TriggerType,
   metricType: MetricType,
   triggerValue: number,
   deltaValue: number,
