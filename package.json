@@ -10,7 +10,7 @@
         "test": "jest"
     },
     "dependencies": {
-        "@blockworks-foundation/mango-client-v3": "https://github.com/blockworks-foundation/mango-client-v3",
+        "@blockworks-foundation/mango-client-v3": "https://github.com/blockworks-foundation/mango-client-v3.git",
         "@solana/web3.js": "^1.24.1",
         "bn.js": "^5.2.0",
         "dayjs": "^1.10.7",
