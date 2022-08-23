@@ -1,6 +1,6 @@
 import { updateBadgeText } from ".";
 import { checkAccountAlerts } from "./accountAlerts";
-import { checkTokenAlerts } from "./tokenAlerts";
+import { checkAllTokenAlerts } from "./tokenAlerts";
 import { TokensInfo } from "./tokenData";
 
 export const checkToggles = (tokensInfo: TokensInfo) => {
@@ -18,24 +18,48 @@ export const checkToggles = (tokensInfo: TokensInfo) => {
 
 export const changeAlertType = (browser: boolean, os: boolean): void => {
   !browser ? chrome.browserAction.setBadgeText({ text: undefined }) : undefined;
-      if(!os) {
-        chrome.notifications.getAll((notifications) => {
-          if (notifications) {
-            for (let item in notifications) {
-              chrome.notifications.clear(item)
-            }
-          }
-        })
+  if (!os) {
+    chrome.notifications.getAll((notifications) => {
+      if (notifications) {
+        for (let item in notifications) {
+          chrome.notifications.clear(item);
+        }
       }
-      chrome.storage.local.set({
-        alertTypes: {
-          browser: browser,
-          os: os,
-        },
-      });
-      chrome.storage.local.get(['tokensInfo', 'tokenAlerts', 'alertTypes', 'accounts', 'accountAlerts', 'accountsHistory'], (result) => {
-        checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes)
-        checkAccountAlerts(result.accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
-        updateBadgeText()
-      })
+    });
+  }
+  chrome.storage.local.set({
+    alertTypes: {
+      browser: browser,
+      os: os,
+    },
+  });
+  chrome.storage.local.get(
+    [
+      "tokensInfo",
+      "tokenAlerts",
+      "alertTypes",
+      "accounts",
+      "accountAlerts",
+      "accountsHistory",
+    ],
+    (result) => {
+      checkAllTokenAlerts(
+        result.tokensInfo,
+        result.tokenAlerts,
+        result.alertTypes
+      );
+      checkAccountAlerts(
+        result.accounts,
+        result.accountAlerts,
+        result.accountsHistory,
+        result.alertTypes
+      );
+      updateBadgeText();
+    }
+  );
+};
+
+export default {
+  checkToggles,
+  changeAlertType
 }

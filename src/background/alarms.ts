@@ -1,16 +1,17 @@
-import debugCreator from 'debug';
-import { updateBadgeText } from '.';
+import debugCreator from "debug";
+import { updateBadgeText } from ".";
 
-import { updateAndStoreAccounts } from './accountData';
-import { refreshTokensInfo } from './tokenData';
+import { updateAndStoreAccounts } from "./accountData";
+import settings from "./settings";
+import { refreshTokensInfo } from "./tokenData";
 
-const debug = debugCreator('background:alarms')
+const debug = debugCreator("background:alarms");
 
 //schedule a new fetch every 5 minutes
 export const refreshAlarmPeriod = 5;
 
 export function setFetchAlarm() {
-  debug('schedule refresh alarm to', refreshAlarmPeriod, 'minutes...');
+  debug("schedule refresh alarm to", refreshAlarmPeriod, "minutes...");
   chrome.alarms.create("refresh", { periodInMinutes: refreshAlarmPeriod });
 }
 
@@ -18,16 +19,15 @@ export function setFetchAlarm() {
 export function setAlarmListener() {
   chrome.alarms.onAlarm.addListener((alarm) => {
     if (!alarm) {
-      debug('alarm triggered with no alarm');
+      debug("alarm triggered with no alarm");
     }
-  
+
     if (alarm.name === "refresh") {
       //if refresh alarm triggered, start a new request
       debug("Refresh alarm triggered");
-      refreshTokensInfo(); 
+      refreshTokensInfo(settings.cluster, settings.group);
       updateAndStoreAccounts();
-      updateBadgeText()
+      updateBadgeText();
     }
   });
-  
 }

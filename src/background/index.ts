@@ -3,8 +3,9 @@ import debugCreator from 'debug';
 import { addAccountAlert, checkAccountAlerts, triggeredAccountAlerts, updateAccountAlerts } from './accountAlerts';
 import { Accounts, storeHistoricalData, updateAccountsData, updateAndStoreAccounts } from './accountData';
 import { setAlarmListener, setFetchAlarm } from './alarms';
+import settings from './settings';
 import { changeAlertType } from './toggles';
-import { checkTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
+import { checkAllTokenAlerts, triggeredTokenAlerts, updateTokenAlerts } from './tokenAlerts';
 import { refreshTokensInfo } from './tokenData';
 
 export interface AlertTypes {
@@ -14,26 +15,31 @@ export interface AlertTypes {
 
 localStorage.debug = '*';
 const debug = debugCreator('background:index')
-let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts;
+let triggeredAlerts = triggeredAccountAlerts + triggeredTokenAlerts; //TODO this doesn't work in manifest v3. vars should be store in local storage instead
 
-// ONPOPUP: send message 'onPopup', get all versions from storage, send response, display version from storage, send refresh version message, send to storage, send response, display fresh data
+// ONPOPUP: send message 'onPopup', 
+// get all versions from storage, send response, 
+// display version from storage, send refresh version message, 
+// send to storage, send response, display fresh data
 const onPopup = (sendResponse: Function) => {
   chrome.storage.local.get(null, async (result) => {
     if (chrome.runtime.lastError) {
       debug('onPopup failed: ', chrome.runtime.lastError)
       return
     }
-    refreshTokensInfo()
+    sendResponse(result);
+    refreshTokensInfo(settings.cluster, settings.group)
     const accounts = await updateAccountsData(result.accounts)
     debug('onpopup fetched storage: ', JSON.stringify(result, null, 2))
     storeHistoricalData(accounts)
-    checkTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
+    checkAllTokenAlerts(result.tokensInfo, result.tokenAlerts, result.alertTypes);
     checkAccountAlerts(accounts, result.accountAlerts, result.accountsHistory, result.alertTypes)
     updateBadgeText();
-    sendResponse(result);
   });
 };
 
+// updates badge text with number of activated alerts 
+// if browser notifications are enabled
 export const updateBadgeText = () => {
   chrome.storage.local.get('alertTypes', (result) => {
     if (result.alertTypes.browser) {
@@ -45,16 +51,20 @@ export const updateBadgeText = () => {
   })
 }
 
-export interface OldSchemaAccountInfo {
+interface OldSchemaAccountInfo {
   equity: string,
   healthRatio: string,
   name: string,
 }
 
-export interface OldSchemaAccounts {
+interface OldSchemaAccounts {
   [address: string]: OldSchemaAccountInfo,
 }
 
+  // Convert old storage to Schema1
+  // "alerts" -> "tokenAlerts"
+  // accounts[address].equity: string -> accounts[address].balance: number
+  // accounts[address].healthRatio: string -> accounts[address].health: number
 const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
   if (!accounts) {return {}}
   const accountsSchema1: Accounts = {};
@@ -70,10 +80,6 @@ const convertAccountsToSchema1 = (accounts: OldSchemaAccounts) => {
 
 const updateLocalStorageSchema = (callback: Function) => {
   debug('checking storage schema...')
-  // Convert old storage to Schema1
-  // "alerts" -> "tokenAlerts"
-  // accounts[address].equity: string -> accounts[address].balance: number
-  // accounts[address].healthRatio: string -> accounts[address].health: number
   chrome.storage.local.get(['storageSchema', 'tokenAlerts', 'alerts', 'accounts'], (result) => {
     if(!result.storageSchema || result.storageSchema !== 1) {
       debug('updating to storage schema1')
@@ -92,7 +98,8 @@ const updateLocalStorageSchema = (callback: Function) => {
 }
 
 //fires on new install or update
-chrome.runtime.onInstalled.addListener(() => { 
+//TODO use reason to only check schema updates if version # lower than latest schema
+export const onInstalled = (reason?: chrome.runtime.InstalledDetails) => {
   debug("onInstalled...");
   updateLocalStorageSchema(() => {
     chrome.storage.local.get({
@@ -113,22 +120,31 @@ chrome.runtime.onInstalled.addListener(() => {
     debug("setting fetch alarm...");
     setFetchAlarm();
     debug("refreshing tokens info...");
-    refreshTokensInfo();
+    refreshTokensInfo(settings.cluster, settings.group);
   })
-});
+}
 
 // fetch and save data when chrome restarted, alarm will continue running when chrome is restarted
-chrome.runtime.onStartup.addListener(() => {
+export const onStartup = () => {
   debug("onStartup....");
   debug("refreshing tokens info...");
-  refreshTokensInfo();
+  refreshTokensInfo(settings.cluster, settings.group);
   updateAndStoreAccounts();
-});
+}
 
 // listen for various messages from popup
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+export const onMessage = (request: any, sender: chrome.runtime.MessageSender, sendResponse: Function) => {
   debug('background received msg:', request.msg, 'data:', JSON.stringify(request.data, null, 2));
   switch (request.msg) {
+    case "add account alert": 
+      addAccountAlert(request.data.alert, sendResponse)
+      break;
+    case "change alert type":
+      changeAlertType(request.data.browser, request.data.os)
+      return false;
+    case "change toggles":
+      chrome.storage.local.set({ toggles: request.data.toggles });
+      return false;
     case "change page":
       chrome.storage.local.set({ page: request.data.page})
       return false;
@@ -136,33 +152,27 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       onPopup(sendResponse);
       break;
     case "refresh tokensInfo":
-      refreshTokensInfo(sendResponse);
+      refreshTokensInfo(settings.cluster, settings.group, sendResponse);
       break;
     case "tokensInfo refreshed":
       return false;
-    case "change toggles":
-      chrome.storage.local.set({ toggles: request.data.toggles });
-      return false;
-    case "update token alerts":
-      updateTokenAlerts(request.data.tokenAlerts, sendResponse)
-      break;
-    case "change alert type":
-      changeAlertType(request.data.browser, request.data.os)
-      return false;
     case "update accounts":
-      debug('recieved message: update accounts')
       updateAccountsData(request.data.accounts, sendResponse)
-      break;
-    case "add account alert": 
-      addAccountAlert(request.data.alert, sendResponse)
       break;
     case "update account alerts": 
       updateAccountAlerts(request.data.alerts, sendResponse)
       break;
+    case "update token alerts":
+      updateTokenAlerts(request.data.tokenAlerts, sendResponse)
+      break;
     case undefined:
       return false;
     default:
-      throw new Error(`unfamiliar message received: ${request.msg}`);
+      sendResponse(new Error(`unfamiliar message received: ${request.msg}`));
   }
   return true;
-});
+}
+
+chrome.runtime.onInstalled.addListener((reason) => onInstalled(reason));
+chrome.runtime.onStartup.addListener(() => onStartup());
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => onMessage(request, sender, sendResponse));

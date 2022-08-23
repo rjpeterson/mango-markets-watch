@@ -3,7 +3,7 @@ import debugCreator from 'debug';
 import { UserDataStoreType } from './UserDataStore';
 
 export interface NewAccountAlertStoreType extends XData {
-  priceType: PriceType,
+  triggerType: TriggerType,
   metricType: MetricType,
   triggerValue: number | undefined,
   deltaValue: number | undefined,
@@ -13,7 +13,7 @@ export interface NewAccountAlertStoreType extends XData {
   errorText: string,
 }
 
-export enum PriceType {
+export enum TriggerType {
   Static = 'static',
   Delta = 'change %'
 }
@@ -41,7 +41,7 @@ export default () => ({
   },
   validateInput(): void {
     debug('validating inputs for new alert: ', JSON.stringify(NewAccountAlertStore, null, 2))
-    if (NewAccountAlertStore.priceType === PriceType.Delta && NewAccountAlertStore.timeFrame <= 0) {
+    if (NewAccountAlertStore.triggerType === TriggerType.Delta && NewAccountAlertStore.timeFrame <= 0) {
       NewAccountAlertStore.inputError = true
       NewAccountAlertStore.errorText = 'Period must be positive'
     } else {
@@ -54,7 +54,7 @@ export default () => ({
     const newAlert = {
       id: this.generateId(),
       address: address,
-      priceType: NewAccountAlertStore.priceType,
+      triggerType: NewAccountAlertStore.triggerType,
       metricType: NewAccountAlertStore.metricType,
       triggerValue: NewAccountAlertStore.triggerValue,
       deltaValue: NewAccountAlertStore.deltaValue,
